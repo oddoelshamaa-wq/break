@@ -30,7 +30,21 @@ html
             padding: 40px 20px;
             min-height: 100vh;
             color: var(--dark-text);
+            transition: background 0.3s;
         }
+
+        /* 🔴🔴 كود الوميض الأحمر 🔴🔴 */
+        @keyframes flash-red {
+            0% { background-color: #ffcccc; box-shadow: inset 0 0 0 0 red; }
+            50% { background-color: #ff0000; box-shadow: inset 0 0 50px 20px red; }
+            100% { background-color: #ffcccc; box-shadow: inset 0 0 0 0 red; }
+        }
+
+        .alarm-mode {
+            background: none !important; /* إلغاء التدرج اللوني */
+            animation: flash-red 0.8s infinite; /* تشغيل الأنيميشن */
+        }
+        /* ------------------------- */
 
         .container {
             max-width: 1100px;
@@ -123,6 +137,12 @@ html
     <div class="loader"></div>
     <h3 style="color: var(--primary-color);">جاري تحميل النظام...</h3>
 </div>
+
+<!-- 🔴🔴 عنصر الصوت المخفي 🔴🔴 -->
+<audio id="alarmSound" loop>
+    <!-- رابط صوت إنذار (بيب) -->
+    <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+</audio>
 
 <div class="container hidden" id="mainContainer">
     <!-- تسجيل الدخول -->
@@ -302,7 +322,7 @@ html
 
     function showAdmin() { showSection('adminSection'); switchAdminTab('monitor'); startTimer(); }
     function showEmployee() { showSection('employeeSection'); initUserDash(); }
-    function logout() { localStorage.removeItem('break_sys_crud'); currentUser=null; clearInterval(timerInterval); showSection('loginSection'); }
+    function logout() { localStorage.removeItem('break_sys_crud'); currentUser=null; clearInterval(timerInterval); showSection('loginSection'); document.body.classList.remove('alarm-mode'); const s = document.getElementById('alarmSound'); s.pause(); s.currentTime=0; }
 
     function showSection(id) {
         ['loginSection','adminSection','employeeSection'].forEach(s => document.getElementById(s).classList.add('hidden'));
@@ -477,25 +497,45 @@ html
         });
     }
 
-    // --- User UI ---
+    // --- User UI (تعديل لدعم الإنذار) ---
     function initUserDash() { document.getElementById('welcomeMsg').innerText = `أهلاً، ${currentUser.realName}`; startTimer(); }
+    
+    // 🔴🔴 دالة تحديث الواجهة المعدلة 🔴🔴
     function updateUserUI() {
         let t = currentUser.usedSeconds || 0;
         if(currentUser.isOnBreak) t += Math.floor((Date.now() - currentUser.lastStartTime) / 1000);
         document.getElementById('userTimer').innerText = formatTime(t);
+        
         const diff = (currentUser.allowance * 60) - t;
         const statusEl = document.getElementById('userStatusMsg');
         const alertEl = document.getElementById('overtimeAlert');
         const btn = document.getElementById('btnToggleBreak');
-        
+        const audio = document.getElementById('alarmSound'); // عنصر الصوت
+
+        // التحقق من انتهاء الوقت
         if(diff >= 0) {
+            // الحالة الطبيعية
             statusEl.innerText = `المتبقي: ${formatTime(diff)}`;
             statusEl.style.color = "var(--success-color)";
             alertEl.classList.add('hidden');
+            
+            // إيقاف الإنذار
+            document.body.classList.remove('alarm-mode');
+            audio.pause();
+            audio.currentTime = 0;
         } else {
+            // حالة التجاوز
             statusEl.innerText = "انتهى الوقت";
             statusEl.style.color = "var(--accent-color)";
             alertEl.classList.remove('hidden');
+
+            // إذا كان المستخدم حالياً في البريك (وليس فقط يشاهد سجل قديم)
+            if(currentUser.isOnBreak) {
+                document.body.classList.add('alarm-mode'); // تفعيل الوميض
+                if (audio.paused) {
+                    audio.play().catch(e => console.log("الصوت يحتاج تفاعل من المستخدم"));
+                }
+            }
         }
 
         if(currentUser.isOnBreak) {
@@ -505,6 +545,11 @@ html
         } else {
             btn.innerHTML = "بدء البريك"; btn.className = "btn btn-success";
             document.getElementById('breakReason').disabled = false;
+            
+            // إذا ضغط إنهاء، نتأكد من إيقاف الإنذار فوراً
+            document.body.classList.remove('alarm-mode');
+            audio.pause();
+            audio.currentTime = 0;
         }
     }
 
