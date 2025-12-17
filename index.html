@@ -135,7 +135,7 @@ html
             <input type="text" id="loginUser" placeholder="اسم المستخدم">
             <input type="password" id="loginPass" placeholder="كلمة المرور">
             <button onclick="attemptLogin()" class="btn btn-primary" style="width:100%; margin-top: 10px;">دخول</button>
-            <p style="text-align: center; margin-top: 20px; color: #aaa; font-size: 0.9em;">Admin: admin / 123</p>
+            <p style="text-align: center; margin-top: 20px; color: #aaa; font-size: 0.9em;">Admin: admin / 20002</p>
         </div>
     </div>
 
@@ -174,7 +174,7 @@ html
             </table>
         </div>
 
-        <!-- تبويب إدارة الموظفين (المعدل) -->
+        <!-- تبويب إدارة الموظفين -->
         <div id="tab-users" class="hidden">
             <h3>إدارة بيانات الموظفين</h3>
             
@@ -230,7 +230,7 @@ html
 </div>
 
 <script>
-    // 🔴🔴 ضع رابط قاعدة البيانات الخاص بك هنا 🔴🔴
+    // 🔴🔴 رابط قاعدة البيانات 🔴🔴
     const firebaseConfig = {
         apiKey: "AIzaSyC2J8fVx7qAz_g33gUNQxXMEJHsWeFrjuk",
         authDomain: "break-3ccd9.firebaseapp.com",
@@ -251,7 +251,7 @@ html
     let currentUser = null;
     let timerInterval = null;
     let isDataLoaded = false;
-    let isEditing = false; // متغير عشان نعرف احنا بنعدل ولا بنضيف
+    let isEditing = false; 
 
     // --- الاتصال بالسيرفر ---
     db.ref('users').on('value', (snapshot) => {
@@ -267,7 +267,7 @@ html
 
         if(!document.getElementById('adminSection').classList.contains('hidden')) {
             renderMonitorTable();
-            renderUserManagementTable(); // تحديث جدول الإدارة
+            renderUserManagementTable();
             updateReportSelect();
         }
         
@@ -288,9 +288,18 @@ html
     function attemptLogin() {
         const u = document.getElementById('loginUser').value.trim();
         const p = document.getElementById('loginPass').value.trim();
-        if(u === 'admin' && p === '123') { localStorage.setItem('break_sys_crud', 'admin'); showAdmin(); }
-        else if(allUsersData[u] && allUsersData[u].password === p) { localStorage.setItem('break_sys_crud', u); currentUser = allUsersData[u]; showEmployee(); }
-        else alert('بيانات خطأ');
+        
+        // 🔴🔴 هنا تم تغيير الباسورد 🔴🔴
+        if(u === 'admin' && p === '20002') { 
+            localStorage.setItem('break_sys_crud', 'admin'); 
+            showAdmin(); 
+        } else if(allUsersData[u] && allUsersData[u].password === p) { 
+            localStorage.setItem('break_sys_crud', u); 
+            currentUser = allUsersData[u]; 
+            showEmployee(); 
+        } else {
+            alert('بيانات خطأ');
+        }
     }
 
     function showAdmin() { showSection('adminSection'); switchAdminTab('monitor'); startTimer(); }
@@ -315,9 +324,8 @@ html
         }, 1000);
     }
 
-    // --- إدارة الموظفين (إضافة / تعديل / حذف) ---
+    // --- إدارة الموظفين ---
     
-    // 1. عرض جدول الإدارة
     function renderUserManagementTable() {
         const tbody = document.getElementById('usersManagementBody');
         tbody.innerHTML = '';
@@ -340,7 +348,6 @@ html
         });
     }
 
-    // 2. دالة الحفظ (تشتغل إضافة أو تعديل حسب الحالة)
     function saveUser() {
         const u = document.getElementById('newUsername').value.trim();
         const p = document.getElementById('newPassword').value;
@@ -350,58 +357,48 @@ html
         if(!u || !p || !n) return alert("البيانات ناقصة");
 
         if(isEditing) {
-            // كود التعديل
             db.ref('users/' + u).update({
                 realName: n,
                 password: p,
                 allowance: a
             }).then(() => {
-                alert("تم تحديث البيانات بنجاح ✅");
+                alert("تم التحديث ✅");
                 cancelEdit();
             });
         } else {
-            // كود الإضافة الجديدة
-            if(allUsersData[u]) return alert("اسم المستخدم موجود بالفعل!");
+            if(allUsersData[u]) return alert("اسم المستخدم موجود!");
             db.ref('users/' + u).set({
                 username: u, realName: n, password: p, allowance: a,
                 usedSeconds: 0, isOnBreak: false, lastReason: "-"
             }).then(() => {
-                alert("تم إضافة الموظف ✅");
-                cancelEdit(); // لتفريغ الحقول
+                alert("تم الإضافة ✅");
+                cancelEdit();
             });
         }
     }
 
-    // 3. تجهيز الفورم للتعديل
     window.prepareEdit = (username) => {
         const user = allUsersData[username];
         if(!user) return;
-
         isEditing = true;
-        document.getElementById('formTitle').innerText = "✏️ تعديل بيانات الموظف: " + user.realName;
+        document.getElementById('formTitle').innerText = "✏️ تعديل: " + user.realName;
         document.getElementById('saveUserBtn').innerText = "حفظ التعديلات";
         document.getElementById('saveUserBtn').className = "btn btn-info";
         document.getElementById('cancelEditBtn').classList.remove('hidden');
-
-        // ملء البيانات
         document.getElementById('newRealName').value = user.realName;
         document.getElementById('newUsername').value = user.username;
-        document.getElementById('newUsername').disabled = true; // ممنوع تغيير اليوزر نيم لأنه هو الـ Key
+        document.getElementById('newUsername').disabled = true; 
         document.getElementById('newPassword').value = user.password;
         document.getElementById('newAllowance').value = user.allowance;
-        
-        // الانتقال لأعلى الصفحة
         document.getElementById('tab-users').scrollIntoView({ behavior: 'smooth' });
     }
 
-    // 4. إلغاء التعديل
     window.cancelEdit = () => {
         isEditing = false;
         document.getElementById('formTitle').innerText = "➕ إضافة موظف جديد";
         document.getElementById('saveUserBtn').innerText = "حفظ البيانات";
         document.getElementById('saveUserBtn').className = "btn btn-success";
         document.getElementById('cancelEditBtn').classList.add('hidden');
-
         document.getElementById('newRealName').value = '';
         document.getElementById('newUsername').value = '';
         document.getElementById('newUsername').disabled = false;
@@ -409,15 +406,13 @@ html
         document.getElementById('newAllowance').value = '45';
     }
 
-    // 5. حذف موظف
     window.deleteUser = (username) => {
-        if(confirm("تحذير: هل أنت متأكد من حذف الموظف (" + username + ") نهائياً؟ \n سيتم حذف كل سجلاته أيضاً.")) {
-            db.ref('users/' + username).remove()
-            .then(() => alert("تم الحذف بنجاح 🗑️"));
+        if(confirm("حذف الموظف (" + username + ") نهائياً؟")) {
+            db.ref('users/' + username).remove().then(() => alert("تم الحذف 🗑️"));
         }
     }
 
-    // --- باقي وظائف الأدمن (المراقبة والتقارير) ---
+    // --- باقي وظائف الأدمن ---
     function renderMonitorTable() {
         const tbody = document.getElementById('monitorBody');
         tbody.innerHTML = '';
