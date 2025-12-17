@@ -1,10 +1,9 @@
-html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة البريكات</title>
+    <title>نظام إدارة البريكات المطور</title>
     
     <!-- الخطوط -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
@@ -41,10 +40,9 @@ html
         }
 
         .alarm-mode {
-            background: none !important; /* إلغاء التدرج اللوني */
-            animation: flash-red 0.8s infinite; /* تشغيل الأنيميشن */
+            background: none !important;
+            animation: flash-red 0.8s infinite;
         }
-        /* ------------------------- */
 
         .container {
             max-width: 1100px;
@@ -77,6 +75,7 @@ html
         .btn-warning { background: linear-gradient(45deg, #ff9f43, #feca57); color: #333; }
         .btn-dark { background: #2d3436; }
         .btn-info { background: #0984e3; }
+        .btn-sm { padding: 5px 10px; font-size: 0.85rem; }
 
         input, select {
             padding: 12px;
@@ -126,8 +125,32 @@ html
         
         .timer-display { font-size: 3.5rem; font-weight: 800; color: var(--primary-color); margin: 15px 0; }
         
-        /* زرار التعديل */
         .action-btns { display: flex; justify-content: center; gap: 5px; }
+
+        /* تنسيق بوكس الفلتر الجديد */
+        .filter-box {
+            background: #f1f2f6;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            align-items: end;
+            border: 1px solid #ddd;
+        }
+        
+        .summary-box {
+            background: #ffeaa7;
+            color: #d35400;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            border: 2px solid #fdcb6e;
+        }
     </style>
 </head>
 <body>
@@ -140,7 +163,6 @@ html
 
 <!-- 🔴🔴 عنصر الصوت المخفي 🔴🔴 -->
 <audio id="alarmSound" loop>
-    <!-- رابط صوت إنذار (بيب) -->
     <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
 </audio>
 
@@ -183,10 +205,34 @@ html
             </table>
         </div>
 
-        <!-- تبويب التقارير -->
+        <!-- تبويب التقارير (تم التعديل) -->
         <div id="tab-reports" class="hidden">
-            <h3>أرشيف السجلات</h3>
-            <select id="reportUserSelect" onchange="renderUserReport()"><option value="">-- اختر موظف --</option></select>
+            <h3>أرشيف السجلات وتحليل الأداء</h3>
+            
+            <!-- فلتر التقارير الجديد -->
+            <div class="filter-box">
+                <div>
+                    <label>اختر الموظف:</label>
+                    <select id="reportUserSelect" style="margin-bottom: 0;">
+                        <option value="">-- اختر موظف --</option>
+                    </select>
+                </div>
+                <div>
+                    <label>من تاريخ:</label>
+                    <input type="date" id="filterStartDate" style="margin-bottom: 0;">
+                </div>
+                <div>
+                    <label>إلى تاريخ:</label>
+                    <input type="date" id="filterEndDate" style="margin-bottom: 0;">
+                </div>
+                <div>
+                    <button onclick="renderUserReport()" class="btn btn-primary" style="width: 100%;">بحث 🔍</button>
+                </div>
+            </div>
+
+            <!-- ملخص التجاوز -->
+            <div id="overtimeSummary" class="hidden summary-box"></div>
+
             <table id="reportTable">
                 <thead><tr><th>التاريخ</th><th>التفاصيل</th><th>الإجمالي</th><th>المسموح</th><th>الحالة</th></tr></thead>
                 <tbody id="reportBody"></tbody>
@@ -197,7 +243,6 @@ html
         <div id="tab-users" class="hidden">
             <h3>إدارة بيانات الموظفين</h3>
             
-            <!-- فورم الإضافة والتعديل -->
             <div style="background: #f8f9fa; padding: 20px; border-radius: 15px; border: 1px dashed #ccc; margin-bottom: 20px;">
                 <h4 style="margin-top:0; color: var(--primary-color);" id="formTitle">➕ إضافة موظف جديد</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -212,7 +257,6 @@ html
                 </div>
             </div>
 
-            <!-- جدول الموظفين للحذف والتعديل -->
             <table id="usersManagementTable">
                 <thead>
                     <tr>
@@ -223,14 +267,12 @@ html
                         <th>إجراءات</th>
                     </tr>
                 </thead>
-                <tbody id="usersManagementBody">
-                    <!-- سيتم ملؤه بالجافاسكريبت -->
-                </tbody>
+                <tbody id="usersManagementBody"></tbody>
             </table>
         </div>
     </div>
 
-    <!-- شاشة الموظف -->
+    <!-- شاشة الموظف (تم التعديل) -->
     <div id="employeeSection" class="hidden">
         <div style="text-align: right;"><button onclick="logout()" class="btn btn-dark btn-sm">خروج</button></div>
         <div style="text-align: center;">
@@ -242,6 +284,13 @@ html
             </div>
             <div style="max-width: 500px; margin: auto;">
                 <input type="text" id="breakReason" placeholder="سبب البريك..." style="text-align: center;">
+                
+                <!-- أزرار الاختيار السريع الجديدة -->
+                <div style="display: flex; gap: 5px; justify-content: center; margin-bottom: 10px;">
+                    <button onclick="setReason('صلاة 🕌')" class="btn btn-info btn-sm" style="flex:1;">صلاة 🕌</button>
+                    <button onclick="setReason('ميتنج 🤝')" class="btn btn-warning btn-sm" style="flex:1;">ميتنج 🤝</button>
+                </div>
+
                 <button onclick="toggleBreak()" id="btnToggleBreak" class="btn btn-success" style="width:100%; padding: 15px; font-size: 1.2rem;">بدء</button>
             </div>
         </div>
@@ -343,7 +392,6 @@ html
     }
 
     // --- إدارة الموظفين ---
-    
     function renderUserManagementTable() {
         const tbody = document.getElementById('usersManagementBody');
         tbody.innerHTML = '';
@@ -430,7 +478,7 @@ html
         }
     }
 
-    // --- باقي وظائف الأدمن ---
+    // --- الأدمن: مراقبة ---
     function renderMonitorTable() {
         const tbody = document.getElementById('monitorBody');
         tbody.innerHTML = '';
@@ -476,31 +524,98 @@ html
         db.ref().update(updates).then(() => alert("تم الإقفال ✅"));
     }
 
+    // --- التقارير المطورة (مع الفلتر وحساب التجاوز) ---
     window.updateReportSelect = () => {
         const sel = document.getElementById('reportUserSelect');
-        if(sel.options.length > 1) return;
-        Object.values(allUsersData).forEach(u => sel.innerHTML += `<option value="${u.username}">${u.realName}</option>`);
+        // نحفظ القيمة الحالية عشان ما تضيعش لما نعمل ريفريش
+        const currentVal = sel.value;
+        if(sel.options.length <= 1) { // فقط لو القائمة فاضية نملأها من جديد
+             Object.values(allUsersData).forEach(u => sel.innerHTML += `<option value="${u.username}">${u.realName}</option>`);
+        }
     }
 
     window.renderUserReport = () => {
         const uName = document.getElementById('reportUserSelect').value;
+        const startDateVal = document.getElementById('filterStartDate').value;
+        const endDateVal = document.getElementById('filterEndDate').value;
+        const summaryBox = document.getElementById('overtimeSummary');
+        
         const tbody = document.getElementById('reportBody');
         tbody.innerHTML = '';
-        if(!uName || !allUsersData[uName].history) { tbody.innerHTML='<tr><td colspan="5">لا يوجد سجلات</td></tr>'; return; }
-        const hist = Object.values(allUsersData[uName].history).reverse();
-        hist.forEach(h => {
-            const diff = h.allowance - h.totalUsed;
-            let dList = '<ul style="text-align:right; margin:0; padding-right:15px;">';
-            if(h.details) Object.values(h.details).forEach(d => dList += `<li>${d.reason} <small>(${formatTime(d.duration)})</small></li>`);
-            dList += '</ul>';
-            tbody.innerHTML += `<tr><td>${h.date}</td><td>${dList}</td><td>${formatTime(h.totalUsed)}</td><td>${formatTime(h.allowance)}</td><td>${diff>=0?'<span class="status-badge bg-green">تمام</span>':'<span class="status-badge bg-red">تجاوز</span>'}</td></tr>`;
+        summaryBox.classList.add('hidden');
+
+        if(!uName) return alert("الرجاء اختيار موظف أولاً");
+        if(!allUsersData[uName].history) { 
+            tbody.innerHTML='<tr><td colspan="5">لا يوجد سجلات لهذا الموظف</td></tr>'; 
+            return; 
+        }
+
+        const histObj = allUsersData[uName].history;
+        let histKeys = Object.keys(histObj).sort().reverse(); // ترتيب من الأحدث للأقدم
+
+        // تحويل تواريخ الفلتر إلى Timestamp للمقارنة
+        let startTs = startDateVal ? new Date(startDateVal).setHours(0,0,0,0) : 0;
+        let endTs = endDateVal ? new Date(endDateVal).setHours(23,59,59,999) : 9999999999999;
+
+        let totalOvertimeInPeriod = 0;
+        let hasRecords = false;
+
+        histKeys.forEach(key => {
+            // المفتاح هو Timestamp، نستخدمه للمقارنة
+            const recordTs = parseInt(key);
+
+            if (recordTs >= startTs && recordTs <= endTs) {
+                hasRecords = true;
+                const h = histObj[key];
+                const diff = h.allowance - h.totalUsed;
+                
+                // حساب التجاوز التراكمي
+                if (diff < 0) {
+                    totalOvertimeInPeriod += Math.abs(diff);
+                }
+
+                let dList = '<ul style="text-align:right; margin:0; padding-right:15px;">';
+                if(h.details) Object.values(h.details).forEach(d => dList += `<li>${d.reason} <small>(${formatTime(d.duration)})</small></li>`);
+                dList += '</ul>';
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${h.date}</td>
+                        <td>${dList}</td>
+                        <td>${formatTime(h.totalUsed)}</td>
+                        <td>${formatTime(h.allowance)}</td>
+                        <td>${diff>=0?'<span class="status-badge bg-green">تمام</span>':'<span class="status-badge bg-red">تجاوز</span>'}</td>
+                    </tr>
+                `;
+            }
         });
+
+        if (!hasRecords) {
+            tbody.innerHTML='<tr><td colspan="5">لا توجد نتائج في هذه الفترة</td></tr>';
+        } else {
+            // عرض ملخص التجاوز
+            summaryBox.classList.remove('hidden');
+            if(totalOvertimeInPeriod > 0) {
+                summaryBox.innerHTML = `⚠️ إجمالي وقت التجاوز (Overtime) في هذه الفترة: ${formatTime(totalOvertimeInPeriod)}`;
+                summaryBox.style.background = "#ffeaa7";
+                summaryBox.style.color = "#d35400";
+            } else {
+                summaryBox.innerHTML = `✅ لا يوجد أي تجاوزات في هذه الفترة! الموظف ملتزم.`;
+                summaryBox.style.background = "#daf7dc";
+                summaryBox.style.color = "#27ae60";
+            }
+        }
     }
 
-    // --- User UI (تعديل لدعم الإنذار) ---
+    // --- User UI ---
     function initUserDash() { document.getElementById('welcomeMsg').innerText = `أهلاً، ${currentUser.realName}`; startTimer(); }
     
-    // 🔴🔴 دالة تحديث الواجهة المعدلة 🔴🔴
+    // دالة الأزرار السريعة الجديدة
+    window.setReason = (reasonText) => {
+        if(currentUser.isOnBreak) return alert("أنت في بريك بالفعل!");
+        document.getElementById('breakReason').value = reasonText;
+    }
+
     function updateUserUI() {
         let t = currentUser.usedSeconds || 0;
         if(currentUser.isOnBreak) t += Math.floor((Date.now() - currentUser.lastStartTime) / 1000);
@@ -510,31 +625,22 @@ html
         const statusEl = document.getElementById('userStatusMsg');
         const alertEl = document.getElementById('overtimeAlert');
         const btn = document.getElementById('btnToggleBreak');
-        const audio = document.getElementById('alarmSound'); // عنصر الصوت
+        const audio = document.getElementById('alarmSound'); 
 
-        // التحقق من انتهاء الوقت
         if(diff >= 0) {
-            // الحالة الطبيعية
             statusEl.innerText = `المتبقي: ${formatTime(diff)}`;
             statusEl.style.color = "var(--success-color)";
             alertEl.classList.add('hidden');
-            
-            // إيقاف الإنذار
             document.body.classList.remove('alarm-mode');
             audio.pause();
             audio.currentTime = 0;
         } else {
-            // حالة التجاوز
             statusEl.innerText = "انتهى الوقت";
             statusEl.style.color = "var(--accent-color)";
             alertEl.classList.remove('hidden');
-
-            // إذا كان المستخدم حالياً في البريك (وليس فقط يشاهد سجل قديم)
             if(currentUser.isOnBreak) {
-                document.body.classList.add('alarm-mode'); // تفعيل الوميض
-                if (audio.paused) {
-                    audio.play().catch(e => console.log("الصوت يحتاج تفاعل من المستخدم"));
-                }
+                document.body.classList.add('alarm-mode');
+                if (audio.paused) audio.play().catch(e => console.log("Sound error"));
             }
         }
 
@@ -545,8 +651,6 @@ html
         } else {
             btn.innerHTML = "بدء البريك"; btn.className = "btn btn-success";
             document.getElementById('breakReason').disabled = false;
-            
-            // إذا ضغط إنهاء، نتأكد من إيقاف الإنذار فوراً
             document.body.classList.remove('alarm-mode');
             audio.pause();
             audio.currentTime = 0;
