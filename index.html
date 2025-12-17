@@ -4,7 +4,7 @@ html
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سيستم البريكات (Online & Persistent)</title>
+    <title>سيستم البريكات (Online)</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
         .container { max-width: 1200px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -29,15 +29,21 @@ html
         .over-limit { color: #c0392b; font-weight: bold; background-color: #fadbd8; padding: 5px; border-radius: 4px; display: inline-block; }
         .under-limit { color: #27ae60; font-weight: bold; }
         
-        /* Loading Overlay */
-        #loading { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:flex; justify-content:center; align-items:center; z-index:999; font-size: 1.5rem; color: #333; flex-direction: column; }
+        /* شاشة التحميل */
+        #loading { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,1); display:flex; justify-content:center; align-items:center; z-index:9999; flex-direction: column; }
+        .loader { border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
+<!-- شاشة التحميل -->
 <div id="loading">
-    <div>⏳ جاري تحميل البيانات...</div>
-    <div style="font-size: 0.8rem; margin-top: 10px; color: #777;">برجاء الانتظار</div>
+    <div class="loader"></div>
+    <div style="font-size: 1.2rem; font-weight: bold; color: #333;">جاري الاتصال بالسيرفر...</div>
+    <div id="errorMsg" style="color: red; margin-top: 15px; font-size: 0.9rem; display: none;">
+        تأخر التحميل.. تأكد من الرابط (databaseURL) في الكود!
+    </div>
 </div>
 
 <div class="container hidden" id="mainContainer">
@@ -119,7 +125,7 @@ html
                 <input type="number" id="newAllowance" placeholder="المدة (د)" value="45">
                 <button id="btnAddUser" class="btn btn-success" style="width: 150px;">إضافة</button>
             </div>
-            <div style="margin-top:20px; color:red; font-size:0.9em;">* ملاحظة: اسم المستخدم (User) يجب أن يكون بالانجليزية وبدون مسافات.</div>
+            <div style="margin-top:20px; color:red; font-size:0.9em;">* اسم المستخدم (User) يجب أن يكون بالانجليزية وبدون مسافات.</div>
         </div>
     </div>
 
@@ -147,14 +153,13 @@ html
 
 </div>
 
-<!-- ربط Firebase -->
+<!-- إعدادات Firebase -->
 <script type="module">
-    // 1. استدعاء مكتبات Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getDatabase, ref, set, update, onValue, remove, get, child } 
+    import { getDatabase, ref, set, update, onValue } 
     from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-    // 2. إعدادات المشروع (الخاصة بك)
+    // 🔴🔴 هام جداً: تأكد أن الرابط databaseURL هو الرابط الموجود في صفحة Realtime Database في الكونسول 🔴🔴
     const firebaseConfig = {
         apiKey: "AIzaSyC2J8fVx7qAz_g33gUNQxXMEJHsWeFrjuk",
         authDomain: "break-3ccd9.firebaseapp.com",
@@ -163,80 +168,85 @@ html
         messagingSenderId: "785237776836",
         appId: "1:785237776836:web:0a0062bf07359391fd6c91",
         measurementId: "G-ZWXTBPXK59",
-        databaseURL: "https://break-3ccd9-default-rtdb.firebaseio.com/"
+        // لقد وضعت لك الرابط الافتراضي، إذا لم يعمل، انسخ الرابط من موقع فايربيز والصقه هنا
+        databaseURL: "https://break-3ccd9-default-rtdb.firebaseio.com/" 
     };
 
-    // 3. تشغيل Firebase
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // متغيرات عامة
     let allUsersData = {};
     let currentUser = null;
     let timerInterval = null;
     let isDataLoaded = false;
 
-    // --- تحميل البيانات لحظياً (Realtime Listener) ---
+    // مراقب التحميل (عشان لو طول يظهرلك رسالة خطأ)
+    setTimeout(() => {
+        if(!isDataLoaded) {
+            document.getElementById('errorMsg').style.display = 'block';
+            document.getElementById('errorMsg').innerText = "تنبيه: فشل الاتصال بقاعدة البيانات. تأكد من أن رابط (databaseURL) في الكود صحيح ومطابق لمشروعك في Firebase Console.";
+        }
+    }, 7000); // بعد 7 ثواني
+
+    // --- الاتصال بالسيرفر ---
     const usersRef = ref(db, 'users');
     
     onValue(usersRef, (snapshot) => {
         const data = snapshot.val();
         allUsersData = data || {}; 
         
-        // بمجرد وصول البيانات لأول مرة، نتأكد من الجلسة المحفوظة
+        // بمجرد وصول البيانات
         if (!isDataLoaded) {
             isDataLoaded = true;
-            checkSavedSession(); // دالة جديدة للتحقق من الريفرش
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('mainContainer').classList.remove('hidden');
+            checkSavedSession(); // فحص الريفرش
         }
 
-        document.getElementById('loading').classList.add('hidden');
-        document.getElementById('mainContainer').classList.remove('hidden');
-        
-        // تحديث واجهة الأدمن لو مفتوحة
+        // تحديث الأدمن
         if(!document.getElementById('adminSection').classList.contains('hidden')) {
             renderMonitorTable();
             updateReportSelect();
         }
         
-        // تحديث واجهة الموظف لو مفتوحة
+        // تحديث الموظف
         if(currentUser && allUsersData[currentUser.username]) {
             currentUser = allUsersData[currentUser.username];
             updateUserUI();
         } else if (currentUser && !allUsersData[currentUser.username]) {
-            // لو الحساب اتمسح وأنا فاتح
-            alert("تم حذف حسابك من قبل الإدارة");
+            alert("تم حذف حسابك");
             logout();
         }
+    }, (error) => {
+        // في حالة وجود خطأ في الصلاحيات
+        document.getElementById('errorMsg').style.display = 'block';
+        document.getElementById('errorMsg').innerText = "خطأ: " + error.message + " (تأكد من فتح Rules في الفايربيز)";
     });
 
-    // --- دالة التحقق من الجلسة المحفوظة (Fix for Refresh) ---
+    // --- فحص الجلسة المحفوظة ---
     function checkSavedSession() {
-        const savedSession = localStorage.getItem('break_system_session');
+        const savedSession = localStorage.getItem('break_system_session_v2');
         if (savedSession) {
             if (savedSession === 'admin') {
-                // استعادة جلسة الأدمن
                 showSection('adminSection');
                 switchAdminTab('monitor');
                 if(timerInterval) clearInterval(timerInterval);
                 timerInterval = setInterval(renderMonitorTable, 1000);
             } else {
-                // استعادة جلسة الموظف
                 if (allUsersData[savedSession]) {
                     currentUser = allUsersData[savedSession];
                     showSection('employeeSection');
                     initUserDash();
                 } else {
-                    // لو اليوزر كان محفوظ بس اتمسح من الداتا
-                    localStorage.removeItem('break_system_session');
+                    localStorage.removeItem('break_system_session_v2');
                 }
             }
         } else {
-            // مفيش جلسة، إظهار تسجيل الدخول
             showSection('loginSection');
         }
     }
 
-    // --- دوال المساعدة ---
+    // --- Helpers ---
     window.switchAdminTab = (tabName) => {
         document.getElementById('tab-monitor').classList.add('hidden');
         document.getElementById('tab-reports').classList.add('hidden');
@@ -250,24 +260,20 @@ html
         return `${m}:${sec}`;
     }
 
-    // --- تسجيل الدخول والخروج ---
+    // --- Login / Logout ---
     document.getElementById('btnLogin').addEventListener('click', () => {
         const u = document.getElementById('loginUser').value.trim();
         const p = document.getElementById('loginPass').value.trim();
 
         if(u === 'admin' && p === '123') {
-            // حفظ الجلسة
-            localStorage.setItem('break_system_session', 'admin');
-            
+            localStorage.setItem('break_system_session_v2', 'admin');
             showSection('adminSection');
             switchAdminTab('monitor');
             if(timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(renderMonitorTable, 1000);
         } else {
             if(allUsersData[u] && allUsersData[u].password === p) {
-                // حفظ الجلسة
-                localStorage.setItem('break_system_session', u);
-
+                localStorage.setItem('break_system_session_v2', u);
                 currentUser = allUsersData[u];
                 showSection('employeeSection');
                 initUserDash();
@@ -285,9 +291,7 @@ html
     }
 
     function logout() {
-        // حذف الجلسة عند الخروج
-        localStorage.removeItem('break_system_session');
-        
+        localStorage.removeItem('break_system_session_v2');
         currentUser = null;
         if(timerInterval) clearInterval(timerInterval);
         document.getElementById('loginUser').value = '';
@@ -297,7 +301,7 @@ html
     document.getElementById('btnUserLogout').addEventListener('click', logout);
     document.getElementById('btnAdminLogout').addEventListener('click', logout);
 
-    // --- عمليات الأدمن ---
+    // --- Admin Functions ---
     document.getElementById('btnAddUser').addEventListener('click', () => {
         const name = document.getElementById('newRealName').value;
         const username = document.getElementById('newUsername').value.trim();
@@ -305,7 +309,7 @@ html
         const allow = parseInt(document.getElementById('newAllowance').value);
 
         if(!username || !pass) return alert("البيانات ناقصة");
-        if(allUsersData[username]) return alert("اسم المستخدم هذا موجود بالفعل");
+        if(allUsersData[username]) return alert("المستخدم موجود");
 
         set(ref(db, 'users/' + username), {
             username: username,
@@ -316,13 +320,12 @@ html
             isOnBreak: false,
             lastReason: "-"
         }).then(() => {
-            alert("تمت الإضافة بنجاح");
+            alert("تمت الإضافة");
             document.getElementById('newRealName').value = '';
             document.getElementById('newUsername').value = '';
-        }).catch((err) => alert("حدث خطأ: " + err.message));
+        }).catch((err) => alert("خطأ: " + err.message));
     });
 
-    // Live Monitor
     function renderMonitorTable() {
         if(document.getElementById('tab-monitor').classList.contains('hidden')) return;
         const tbody = document.getElementById('monitorBody');
@@ -393,7 +396,6 @@ html
         updates['users/' + targetUsername + '/isOnBreak'] = false;
         updates['users/' + targetUsername + '/usedSeconds'] = newUsed;
         updates['users/' + targetUsername + '/lastStartTime'] = null;
-        
         const newLogKey = new Date().getTime(); 
         updates['users/' + targetUsername + '/dailyLogs/' + newLogKey] = logEntry;
 
@@ -401,7 +403,7 @@ html
     };
 
     document.getElementById('btnEndDay').addEventListener('click', () => {
-        if(!confirm("⚠️ تحذير: سيتم ترحيل البيانات للأرشيف وتصفير العدادات للجميع.")) return;
+        if(!confirm("⚠️ تحذير: سيتم ترحيل البيانات للأرشيف وتصفير العدادات.")) return;
         
         const todayDate = new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
         const updates = {};
@@ -437,12 +439,10 @@ html
             updates['users/' + u.username + '/dailyLogs'] = null; 
         });
 
-        update(ref(db), updates)
-            .then(() => alert("تم إقفال اليوم بنجاح ✅"))
-            .catch(err => alert("خطأ: " + err.message));
+        update(ref(db), updates).then(() => alert("تم إقفال اليوم بنجاح ✅"));
     });
 
-    // Reports Logic
+    // --- Reports ---
     function updateReportSelect() {
         const sel = document.getElementById('reportUserSelect');
         const currentVal = sel.value;
@@ -469,7 +469,6 @@ html
 
         historyArr.forEach(record => {
             const diff = record.allowance - record.totalUsed;
-            
             let detailsHtml = '<ul class="details-list">';
             if(record.details) {
                 Object.values(record.details).forEach(log => {
@@ -495,7 +494,7 @@ html
         });
     });
 
-    // --- عمليات الموظف ---
+    // --- Employee ---
     function initUserDash() {
         document.getElementById('welcomeMsg').innerText = currentUser.realName;
         document.getElementById('userAllowanceVal').innerText = currentUser.allowance;
@@ -511,20 +510,17 @@ html
         }
 
         document.getElementById('userTimer').innerText = formatTime(total);
-        
         const allowed = currentUser.allowance * 60;
         const diff = allowed - total;
-        const statusMsg = document.getElementById('userStatusMsg');
-        const alertBox = document.getElementById('overtimeAlert');
-
+        
         if(diff >= 0) {
-            statusMsg.innerText = `متبقي لك: ${formatTime(diff)}`;
-            statusMsg.style.color = "green";
-            alertBox.classList.add('hidden');
+            document.getElementById('userStatusMsg').innerText = `متبقي لك: ${formatTime(diff)}`;
+            document.getElementById('userStatusMsg').style.color = "green";
+            document.getElementById('overtimeAlert').classList.add('hidden');
         } else {
-            statusMsg.innerText = "انتهى الوقت!";
-            statusMsg.style.color = "red";
-            alertBox.classList.remove('hidden');
+            document.getElementById('userStatusMsg').innerText = "انتهى الوقت!";
+            document.getElementById('userStatusMsg').style.color = "red";
+            document.getElementById('overtimeAlert').classList.remove('hidden');
             document.getElementById('overtimeValue').innerText = formatTime(Math.abs(diff));
         }
 
