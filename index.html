@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة البريكات - إصدار المديرين</title>
+    <title>نظام إدارة البريكات - الإدارة المتقدمة</title>
     
     <!-- الخطوط -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
@@ -14,15 +14,15 @@
 
     <style>
         :root {
-            --primary-color: #4e54c8;
-            --secondary-color: #8f94fb;
-            --accent-color: #ff6b6b;
-            --success-color: #1dd1a1;
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
             --meeting-color: #f39c12;
-            --prayer-color: #3498db;
+            --prayer-color: #2980b9;
             --emergency-color: #c0392b;
             --dark-text: #2d3436;
-            --light-bg: #f7f9fc;
+            --light-bg: #ecf0f1;
         }
 
         body {
@@ -32,10 +32,9 @@
             padding: 40px 20px;
             min-height: 100vh;
             color: var(--dark-text);
-            transition: background 0.3s;
         }
 
-        /* وميض أحمر للبريك العام أو الاضطراري */
+        /* وميض أحمر */
         @keyframes flash-red {
             0% { background-color: #ffcccc; box-shadow: inset 0 0 0 0 red; }
             50% { background-color: #ff0000; box-shadow: inset 0 0 50px 20px red; }
@@ -71,11 +70,11 @@
         }
         .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         
-        .btn-primary { background: linear-gradient(45deg, #4e54c8, #8f94fb); }
-        .btn-danger { background: linear-gradient(45deg, #ee5253, #ff6b6b); }
-        .btn-success { background: linear-gradient(45deg, #10ac84, #1dd1a1); }
+        .btn-primary { background: linear-gradient(45deg, #2980b9, #3498db); }
+        .btn-danger { background: linear-gradient(45deg, #c0392b, #e74c3c); }
+        .btn-success { background: linear-gradient(45deg, #27ae60, #2ecc71); }
         .btn-warning { background: linear-gradient(45deg, #f39c12, #f1c40f); color: #fff; }
-        .btn-info { background: linear-gradient(45deg, #3498db, #2980b9); }
+        .btn-info { background: linear-gradient(45deg, #8e44ad, #9b59b6); }
         .btn-dark { background: #2d3436; }
         .btn-purple { background: linear-gradient(45deg, #8e44ad, #9b59b6); } 
         .btn-emergency { background: linear-gradient(45deg, #c0392b, #e74c3c); animation: pulse 2s infinite; }
@@ -106,7 +105,7 @@
             box-shadow: 0 0 20px rgba(0,0,0,0.05);
             font-size: 0.95rem;
         }
-        th { background: #2d3436; color: white; padding: 15px; }
+        th { background: #2c3e50; color: white; padding: 15px; }
         td { padding: 12px; text-align: center; border-bottom: 1px solid #f0f0f0; }
         tr:hover { background-color: #f8f9fa; }
 
@@ -175,6 +174,9 @@
         .manager-info {
             background: #2d3436; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem;
         }
+        
+        /* تحسين شكل جدول التقارير */
+        #overtimeReportTable th { background-color: #8e44ad; }
     </style>
 </head>
 <body>
@@ -182,7 +184,7 @@
 <!-- شاشة التحميل -->
 <div id="loading">
     <div class="loader"></div>
-    <h3 style="color: var(--primary-color);">جاري تحميل النظام...</h3>
+    <h3 style="color: var(--primary-color);">جاري الاتصال بالنظام...</h3>
 </div>
 
 <!-- عنصر الصوت -->
@@ -194,17 +196,17 @@
     <!-- تسجيل الدخول -->
     <div id="loginSection">
         <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: var(--primary-color);">👋 أهلاً بك</h1>
-            <p>نظام إدارة البريكات والأوفر تايم (المطور)</p>
+            <h1 style="color: var(--primary-color);">👋 مرحباً بك</h1>
+            <p style="font-size: 1.1rem; color: #555;">نظام إدارة البريكات والأوفر تايم</p>
         </div>
-        <div style="max-width: 400px; margin: auto;">
-            <input type="text" id="loginUser" placeholder="اسم المستخدم (manager1, manager2...)">
-            <input type="password" id="loginPass" placeholder="كلمة المرور">
-            <button onclick="attemptLogin()" class="btn btn-primary" style="width:100%; margin-top: 10px;">دخول</button>
-            <p style="margin-top:15px; font-size:0.8rem; color:#777; text-align:center;">
-                المديرين الافتراضيين: manager1, manager2, manager3<br>
-                كلمة المرور للجميع: 123
-            </p>
+        <div style="max-width: 400px; margin: auto; padding: 30px; background: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.05); border-radius: 15px;">
+            <label style="display:block; margin-bottom:5px; font-weight:bold;">اسم المستخدم</label>
+            <input type="text" id="loginUser" placeholder="أدخل اسم المستخدم">
+            
+            <label style="display:block; margin-bottom:5px; font-weight:bold;">كلمة المرور</label>
+            <input type="password" id="loginPass" placeholder="******">
+            
+            <button onclick="attemptLogin()" class="btn btn-primary" style="width:100%; margin-top: 20px; padding: 12px;">تسجيل الدخول</button>
         </div>
     </div>
 
@@ -215,22 +217,22 @@
                 <h2>لوحة الإدارة 🚀</h2>
                 <span id="currentManagerDisplay" class="manager-info"></span>
             </div>
-            <button onclick="logout()" class="btn btn-dark">خروج 🔒</button>
+            <button onclick="logout()" class="btn btn-dark">تسجيل خروج 🔒</button>
         </div>
 
         <div class="nav-tabs">
-            <button onclick="switchAdminTab('monitor')" class="btn btn-primary">📡 المراقبة</button>
-            <button onclick="switchAdminTab('requests')" class="btn btn-emergency">🚨 الطلبات العاجلة</button>
-            <button onclick="switchAdminTab('overtime')" class="btn btn-purple">🕒 الأوفر تايم</button>
+            <button onclick="switchAdminTab('monitor')" class="btn btn-primary">📡 المراقبة الحية</button>
+            <button onclick="switchAdminTab('requests')" class="btn btn-emergency">🚨 الطوارئ</button>
+            <button onclick="switchAdminTab('overtime')" class="btn btn-purple">🕒 طلبات الأوفر تايم</button>
             <button onclick="switchAdminTab('reports')" class="btn btn-warning">📊 التقارير التفصيلية</button>
-            <button onclick="switchAdminTab('users')" class="btn btn-success">⚙️ الموظفين</button>
+            <button onclick="switchAdminTab('users')" class="btn btn-success">⚙️ إدارة الموظفين</button>
         </div>
 
         <!-- تبويب المراقبة -->
         <div id="tab-monitor">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h3>حالة الموظفين الآن</h3>
-                <button onclick="endDay()" class="btn btn-danger">🛑 إقفال اليوم</button>
+                <button onclick="endDay()" class="btn btn-danger">🛑 إقفال اليوم للجميع</button>
             </div>
             <div id="activeBreakCount" style="text-align:center; margin:10px 0; font-weight:bold; color:var(--primary-color);"></div>
             <table id="monitorTable">
@@ -259,7 +261,7 @@
 
         <!-- تبويب الأوفر تايم والإعدادات -->
         <div id="tab-overtime" class="hidden">
-            <h3>⚙️ طلبات الأوفر تايم</h3>
+            <h3>⚙️ طلبات الأوفر تايم الواردة</h3>
             <div class="settings-box">
                 <label style="font-weight:bold;">الحد الأقصى للموظفين في البريك العام:</label>
                 <div style="display:flex; max-width:300px; margin:10px auto; gap:10px;">
@@ -277,24 +279,32 @@
         <div id="tab-reports" class="hidden">
             <h3>سجلات الأداء والتفاصيل</h3>
             <div class="filter-box">
-                <div><label>الموظف:</label><select id="reportUserSelect"><option value="">-- اختر --</option></select></div>
-                <div><label>من:</label><input type="date" id="filterStartDate"></div>
-                <div><label>إلى:</label><input type="date" id="filterEndDate"></div>
-                <div><button onclick="renderUserReport()" class="btn btn-primary" style="width: 100%;">بحث 🔍</button></div>
+                <div><label>اختر الموظف:</label><select id="reportUserSelect"><option value="">-- اختر --</option></select></div>
+                <div><label>من تاريخ:</label><input type="date" id="filterStartDate"></div>
+                <div><label>إلى تاريخ:</label><input type="date" id="filterEndDate"></div>
+                <div><button onclick="renderUserReport()" class="btn btn-primary" style="width: 100%;">استخراج التقرير 🔍</button></div>
             </div>
             
-            <div style="margin-top:20px;">
-                <h4>تفاصيل الأوفر تايم (من وافق عليه)</h4>
+            <div style="margin-top:30px; border: 2px solid #8e44ad; border-radius: 10px; padding: 10px; background: #fbf6ff;">
+                <h4 style="color: #8e44ad;">📊 سجل الأوفر تايم التفصيلي (Audit Log)</h4>
+                <div id="overtimeStats" style="text-align: center; margin-bottom: 10px; font-weight: bold;"></div>
                 <table id="overtimeReportTable">
-                    <thead><tr><th>التاريخ</th><th>الساعات</th><th>الموافق (المدير)</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>اسم الموظف</th>
+                            <th>التاريخ</th>
+                            <th>عدد الساعات</th>
+                            <th>تمت الموافقة بواسطة (المدير)</th>
+                        </tr>
+                    </thead>
                     <tbody id="overtimeReportBody"></tbody>
                 </table>
             </div>
 
-            <div style="margin-top:20px;">
-                <h4>الملخص اليومي</h4>
+            <div style="margin-top:30px;">
+                <h4>🗓️ الملخص اليومي للحضور والبريكات</h4>
                 <table id="reportTable">
-                    <thead><tr><th>التاريخ</th><th>إجمالي بريك</th><th>صلاة</th><th>ميتنج</th><th>إجمالي أوفر تايم</th></tr></thead>
+                    <thead><tr><th>التاريخ</th><th>إجمالي بريك</th><th>صلاة</th><th>ميتنج</th><th>إجمالي أوفر تايم (لليوم)</th></tr></thead>
                     <tbody id="reportBody"></tbody>
                 </table>
             </div>
@@ -337,7 +347,7 @@
 
             <div id="controlsArea">
                 <div style="max-width: 400px; margin: auto; margin-bottom: 15px;">
-                    <input type="text" id="breakReason" placeholder="سبب البريك..." style="text-align: center;">
+                    <input type="text" id="breakReason" placeholder="أكتب سبب البريك هنا..." style="text-align: center;">
                 </div>
 
                 <div class="employee-controls">
@@ -353,7 +363,7 @@
                         <h4>🤝 ميتنج</h4>
                         <button onclick="startMyBreak('meeting')" class="btn btn-warning" style="width:100%">بدء</button>
                     </div>
-                    <!-- بطاقة الطوارئ الجديدة -->
+                    <!-- بطاقة الطوارئ -->
                     <div class="control-card card-emergency">
                         <h4>🚨 خروج اضطراري</h4>
                         <p style="font-size:0.75rem; color:#c0392b;">يتطلب موافقة المدير</p>
@@ -402,29 +412,36 @@
 
     let allUsersData = {};
     let globalSettings = { maxGeneralBreaks: 100 };
-    let currentUser = null; // يحمل بيانات الموظف أو المدير
+    let currentUser = null; 
     let timerInterval = null;
     let isDataLoaded = false;
     
-    // قائمة المديرين المسموح لهم (للتجربة السريعة يمكننا اعتبارهم مستخدمين عاديين بصفة مدير)
-    // في الواقع سنخزنهم في قاعدة البيانات
-    const MANAGERS = ['manager1', 'manager2', 'manager3'];
+    // إعداد المديرين بالبيانات الجديدة
+    const MANAGERS_CONFIG = [
+        { username: 'mahmoud', name: 'محمود', pass: '112233' },
+        { username: 'abutamim', name: 'أبو تميم', pass: '445566' },
+        { username: 'ahmed', name: 'أحمد يحيى', pass: '778899' }
+    ];
 
-    // تهيئة المديرين في قاعدة البيانات إذا لم يكونوا موجودين
+    // تهيئة المديرين في قاعدة البيانات
     function initManagers() {
-        MANAGERS.forEach(m => {
-            db.ref('users/' + m).once('value', snap => {
+        MANAGERS_CONFIG.forEach(m => {
+            db.ref('users/' + m.username).once('value', snap => {
                 if (!snap.exists()) {
-                    db.ref('users/' + m).set({
-                        username: m,
-                        realName: "المدير " + m.replace('manager',''),
-                        password: "123",
+                    db.ref('users/' + m.username).set({
+                        username: m.username,
+                        realName: m.name,
+                        password: m.pass,
                         role: "admin",
                         state: "offline"
                     });
                 } else {
-                    // تأكد أن لديهم صلاحية أدمن
-                    if(snap.val().role !== 'admin') db.ref('users/' + m).update({ role: 'admin' });
+                    // تحديث البيانات إذا كانت موجودة لضمان الاسم الصحيح والصلاحية
+                    db.ref('users/' + m.username).update({
+                        realName: m.name,
+                        role: 'admin',
+                        password: m.pass // تحديث الباسورد إذا تغير
+                    });
                 }
             });
         });
@@ -443,7 +460,7 @@
         
         if (!isDataLoaded) {
             isDataLoaded = true;
-            initManagers(); // تأكد من وجود المديرين
+            initManagers(); // تأكد من إنشاء المديرين
             document.getElementById('loading').style.display = 'none';
             document.getElementById('mainContainer').classList.remove('hidden');
             checkSavedSession();
@@ -458,12 +475,9 @@
         }
         
         if(currentUser && allUsersData[currentUser.username]) {
-            // تحديث بيانات المستخدم الحالي (سواء كان مدير أو موظف)
             const updated = allUsersData[currentUser.username];
-            // الحفاظ على الرول
             updated.role = currentUser.role; 
             currentUser = updated;
-            
             if(currentUser.role !== 'admin') updateUserUI();
         }
     });
@@ -471,15 +485,17 @@
     // --- المصادقة ---
     function checkSavedSession() {
         const savedUser = localStorage.getItem('break_sys_user');
-        const savedRole = localStorage.getItem('break_sys_role');
         
         if(savedUser && allUsersData[savedUser]) {
             currentUser = allUsersData[savedUser];
-            // إذا كان محفوظ كأدمن
-            if (currentUser.role === 'admin' || MANAGERS.includes(savedUser)) {
-                currentUser.role = 'admin'; // تأكيد الصلاحية
+            // التحقق هل هو أحد المديرين
+            const isManager = MANAGERS_CONFIG.some(m => m.username === savedUser) || currentUser.role === 'admin';
+            
+            if (isManager) {
+                currentUser.role = 'admin';
                 showAdmin();
             } else {
+                currentUser.role = 'employee';
                 setupPresence(savedUser);
                 showEmployee();
             }
@@ -497,16 +513,14 @@
             
             if(currentUser.role === 'admin') {
                 localStorage.setItem('break_sys_user', u);
-                localStorage.setItem('break_sys_role', 'admin');
                 showAdmin();
             } else {
                 localStorage.setItem('break_sys_user', u);
-                localStorage.setItem('break_sys_role', 'employee');
                 setupPresence(u);
                 showEmployee();
             }
         } else {
-            alert('بيانات خطأ');
+            alert('اسم المستخدم أو كلمة المرور غير صحيحة');
         }
     }
 
@@ -529,7 +543,6 @@
             db.ref("users/" + currentUser.username + "/state").set("offline");
         }
         localStorage.removeItem('break_sys_user'); 
-        localStorage.removeItem('break_sys_role');
         currentUser=null; 
         clearInterval(timerInterval); 
         showSection('loginSection'); 
@@ -557,7 +570,7 @@
         }, 1000);
     }
 
-    // --- (جديد) إدارة طلبات الخروج الاضطراري (Admin) ---
+    // --- إدارة طلبات الخروج الاضطراري (Admin) ---
     function renderEmergencyRequests() {
         const tbody = document.getElementById('emergencyRequestsBody');
         tbody.innerHTML = '';
@@ -587,12 +600,12 @@
         
         const updates = {};
         updates[`users/${username}/emergencyRequest/status`] = approved ? 'approved' : 'rejected';
-        updates[`users/${username}/emergencyRequest/approvedBy`] = currentUser.realName; // تسجيل اسم المدير
+        updates[`users/${username}/emergencyRequest/approvedBy`] = currentUser.realName; 
         
         db.ref().update(updates).then(() => alert(approved ? "تم قبول الطلب" : "تم الرفض"));
     }
 
-    // --- (جديد) إدارة طلبات الأوفر تايم (Admin) ---
+    // --- إدارة طلبات الأوفر تايم (Admin) ---
     function renderOvertimeRequests() {
         const tbody = document.getElementById('overtimeRequestsBody');
         tbody.innerHTML = '';
@@ -612,7 +625,7 @@
                 `;
             }
         });
-        if(tbody.innerHTML === '') tbody.innerHTML = '<tr><td colspan="4">لا توجد طلبات</td></tr>';
+        if(tbody.innerHTML === '') tbody.innerHTML = '<tr><td colspan="4">لا توجد طلبات حالياً</td></tr>';
     }
 
     window.handleOvertime = (username, approved) => {
@@ -624,16 +637,15 @@
         updates[`users/${username}/overtimeRequest/handledBy`] = currentUser.realName;
 
         if(approved) {
-            // إضافة الساعات للرصيد
             const currentBalance = allUsersData[username].approvedOvertimeBalance || 0;
             updates[`users/${username}/approvedOvertimeBalance`] = currentBalance + parseFloat(req.hours);
             
-            // (جديد) تسجيل في سجل الأوفر تايم التاريخي
+            // تسجيل تفصيلي للأوفر تايم مع اسم المدير
             const historyKey = Date.now();
             updates[`users/${username}/overtimeHistory/${historyKey}`] = {
                 date: new Date().toLocaleDateString('ar-EG'),
                 hours: parseFloat(req.hours),
-                approvedBy: currentUser.realName // تخزين اسم المدير الذي وافق
+                approvedBy: currentUser.realName // تخزين اسم المدير الحالي (محمود، أبو تميم، أو أحمد)
             };
         }
         
@@ -645,7 +657,7 @@
         const tbody = document.getElementById('usersManagementBody');
         tbody.innerHTML = '';
         Object.values(allUsersData).forEach(u => {
-            if(u.role === 'admin') return; // لا تعرض المديرين هنا
+            if(u.role === 'admin') return; 
             tbody.innerHTML += `
                 <tr>
                     <td>${u.realName}</td>
@@ -669,13 +681,13 @@
         db.ref('users/' + u).set({
             username: u, realName: n, password: p, allowance: a,
             role: 'employee', state: 'offline'
-        }).then(() => alert("تم الإضافة"));
+        }).then(() => alert("تم إضافة الموظف بنجاح"));
     }
 
-    window.deleteUser = (u) => { if(confirm("حذف الموظف؟")) db.ref('users/'+u).remove(); }
+    window.deleteUser = (u) => { if(confirm("هل أنت متأكد من حذف هذا الموظف؟")) db.ref('users/'+u).remove(); }
     window.saveSettings = () => {
         const max = document.getElementById('maxBreaksInput').value;
-        db.ref('settings').update({ maxGeneralBreaks: parseInt(max) }).then(()=>alert("تم الحفظ"));
+        db.ref('settings').update({ maxGeneralBreaks: parseInt(max) }).then(()=>alert("تم حفظ الإعدادات"));
     }
 
     // --- المراقبة ---
@@ -685,7 +697,7 @@
         let activeGeneralBreaks = 0;
 
         Object.values(allUsersData).forEach(u => {
-            if(u.role === 'admin') return; // إخفاء المديرين من المراقبة
+            if(u.role === 'admin') return; 
 
             let gen = u.usedSeconds || 0;
             let currentDuration = 0;
@@ -711,7 +723,7 @@
 
             const allowanceSec = u.allowance * 60;
             const remaining = allowanceSec - gen;
-            const remDisplay = remaining >= 0 ? formatTime(remaining) : `<span style="color:red">${formatTime(Math.abs(remaining))}</span>`;
+            const remDisplay = remaining >= 0 ? formatTime(remaining) : `<span style="color:red; font-weight:bold;">${formatTime(Math.abs(remaining))}</span>`;
 
             const actionBtn = u.isOnBreak ? `<button onclick="forceStop('${u.username}')" class="btn btn-warning btn-sm">إنهاء</button>` : '-';
 
@@ -729,11 +741,11 @@
 
         const limit = globalSettings.maxGeneralBreaks || 100;
         document.getElementById('activeBreakCount').innerHTML = 
-            `في البريك العام: <span style="font-size:1.2em; ${activeGeneralBreaks >= limit ? 'color:red' : 'color:green'}">${activeGeneralBreaks} / ${limit}</span>`;
+            `الموظفين في البريك العام: <span style="font-size:1.2em; ${activeGeneralBreaks >= limit ? 'color:red' : 'color:green'}">${activeGeneralBreaks} / ${limit}</span>`;
     }
 
     window.forceStop = (username) => {
-        if(!confirm("إنهاء للموظف؟")) return;
+        if(!confirm("هل تريد إنهاء نشاط الموظف قسرياً؟")) return;
         const u = allUsersData[username];
         const d = Math.floor((Date.now() - u.lastStartTime) / 1000);
         
@@ -746,14 +758,13 @@
     }
 
     window.endDay = () => {
-        if(!confirm("إقفال اليوم للجميع؟")) return;
+        if(!confirm("تحذير: سيتم إقفال اليوم وتصفير العدادات لجميع الموظفين. هل أنت متأكد؟")) return;
         const today = new Date().toLocaleDateString('ar-EG');
         const updates = {};
         
         Object.values(allUsersData).forEach(u => {
             if(u.role === 'admin') return;
 
-            // حساب التوتال
             let gen = u.usedSeconds || 0;
             let pra = u.prayerSeconds || 0;
             let met = u.meetingSeconds || 0;
@@ -773,7 +784,6 @@
                 approvedOvertime: u.approvedOvertimeBalance || 0
             };
             
-            // تصفير العدادات اليومية
             updates['users/'+u.username+'/usedSeconds'] = 0;
             updates['users/'+u.username+'/prayerSeconds'] = 0;
             updates['users/'+u.username+'/meetingSeconds'] = 0;
@@ -782,11 +792,9 @@
             updates['users/'+u.username+'/breakType'] = null;
             updates['users/'+u.username+'/emergencyRequest'] = null;
             updates['users/'+u.username+'/overtimeRequest'] = null;
-            // ملاحظة: لا نصفر approvedOvertimeBalance هنا إذا أردنا الاحتفاظ برصيد الشهر، 
-            // لكن حسب الطلب يبدو أنه حساب يومي، فسنصفره
             updates['users/'+u.username+'/approvedOvertimeBalance'] = 0;
         });
-        db.ref().update(updates).then(() => alert("تم الإقفال ✅"));
+        db.ref().update(updates).then(() => alert("تم إقفال اليوم بنجاح ✅"));
     }
 
     // --- التقارير والتفاصيل ---
@@ -803,37 +811,46 @@
         const uName = document.getElementById('reportUserSelect').value;
         const tbody = document.getElementById('reportBody');
         const otBody = document.getElementById('overtimeReportBody');
+        const otStats = document.getElementById('overtimeStats');
         
-        tbody.innerHTML = ''; otBody.innerHTML = '';
+        tbody.innerHTML = ''; otBody.innerHTML = ''; otStats.innerHTML = '';
         
-        if(!uName) return;
+        if(!uName) return alert("الرجاء اختيار موظف");
         const user = allUsersData[uName];
 
-        // 1. تقرير الأوفر تايم التفصيلي
+        // 1. تقرير الأوفر تايم التفصيلي (Audit)
+        // يعرض: اسم الموظف | التاريخ | الساعات | من وافق عليه
         if(user.overtimeHistory) {
             let otCount = 0;
             let totalOtHours = 0;
-            Object.values(user.overtimeHistory).forEach(ot => {
+            
+            // ترتيب التواريخ من الأحدث للأقدم
+            const sortedOt = Object.values(user.overtimeHistory).sort((a,b) => b.date.localeCompare(a.date));
+
+            sortedOt.forEach(ot => {
                 otCount++;
                 totalOtHours += ot.hours;
                 otBody.innerHTML += `
                     <tr>
+                        <td>${user.realName}</td>
                         <td>${ot.date}</td>
                         <td style="color:#8e44ad; font-weight:bold;">${ot.hours} ساعة</td>
-                        <td>✅ ${ot.approvedBy || 'غير محدد'}</td>
+                        <td style="color:green;">✅ ${ot.approvedBy || 'غير محدد'}</td>
                     </tr>
                 `;
             });
+            
             if(otCount > 0) {
-                otBody.innerHTML += `<tr style="background:#f0f0f0; font-weight:bold;"><td colspan="3">الإجمالي: ${otCount} مرات | مجموع الساعات: ${totalOtHours}</td></tr>`;
+                otStats.innerHTML = `عدد مرات الأوفر تايم: ${otCount} مرة | إجمالي الساعات: ${totalOtHours} ساعة`;
+                otBody.innerHTML += `<tr style="background:#f0f0f0; font-weight:bold;"><td colspan="4">الإجمالي: ${otCount} مرة - مجموع ${totalOtHours} ساعة</td></tr>`;
             }
         } else {
-            otBody.innerHTML = '<tr><td colspan="3">لا يوجد سجل أوفر تايم</td></tr>';
+            otBody.innerHTML = '<tr><td colspan="4">لا يوجد سجل أوفر تايم لهذا الموظف</td></tr>';
         }
 
-        // 2. التقرير اليومي العادي
+        // 2. التقرير اليومي العادي (بريكات)
         if(user.history) {
-            Object.values(user.history).forEach(h => {
+            Object.values(user.history).reverse().forEach(h => {
                 tbody.innerHTML += `
                     <tr>
                         <td>${h.date}</td>
@@ -845,7 +862,7 @@
                 `;
             });
         } else {
-            tbody.innerHTML = '<tr><td colspan="5">لا يوجد سجلات</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5">لا يوجد سجلات حضور</td></tr>';
         }
     }
 
@@ -855,10 +872,9 @@
         startTimer();
     }
 
-    // طلب الخروج الاضطراري
     window.requestEmergency = () => {
         const reason = document.getElementById('breakReason').value.trim();
-        if(!reason) return alert("يرجى كتابة سبب الخروج في خانة السبب أعلاه ☝️");
+        if(!reason) return alert("⚠️ هام: يجب كتابة سبب الخروج في خانة 'سبب البريك' بالأعلى قبل الضغط على طلب الخروج!");
 
         db.ref(`users/${currentUser.username}/emergencyRequest`).set({
             reason: reason,
@@ -869,13 +885,13 @@
 
     window.requestOvertime = () => {
         const h = document.getElementById('otHours').value;
-        if(!h || h <= 0) return alert("أدخل ساعات");
+        if(!h || h <= 0) return alert("يرجى إدخال عدد الساعات");
         
         db.ref(`users/${currentUser.username}/overtimeRequest`).set({
             hours: h,
             status: 'pending',
             timestamp: Date.now()
-        }).then(() => alert("تم إرسال الطلب"));
+        }).then(() => alert("تم إرسال طلب الأوفر تايم للمدير ✅"));
     }
 
     window.startMyBreak = (type) => {
@@ -883,7 +899,6 @@
 
         // منطق الخروج الاضطراري
         if(type === 'emergency') {
-            // هذا الزر سيتم تفعيله فقط بعد الموافقة، ولكن للتحقق الإضافي:
             const req = currentUser.emergencyRequest;
             if(!req || req.status !== 'approved') return alert("يجب الحصول على موافقة المدير أولاً!");
         }
@@ -900,7 +915,7 @@
         if(type === 'meeting') reason = "ميتنج";
         if(type === 'emergency') reason = currentUser.emergencyRequest.reason + " (اضطراري)";
         
-        if((type === 'general' || type === 'emergency') && !reason) return alert("اكتب السبب");
+        if((type === 'general' || type === 'emergency') && !reason) return alert("من فضلك اكتب السبب");
 
         db.ref('users/' + currentUser.username).update({
             isOnBreak: true,
@@ -921,7 +936,6 @@
         else if(type === 'prayer') updates.prayerSeconds = (currentUser.prayerSeconds || 0) + duration;
         else if(type === 'meeting') updates.meetingSeconds = (currentUser.meetingSeconds || 0) + duration;
 
-        // إذا كان اضطراري، امسح الطلب ليعود لحالته الطبيعية
         if(type === 'emergency') updates.emergencyRequest = null;
 
         db.ref('users/' + currentUser.username).update(updates);
@@ -932,7 +946,6 @@
         const timerDisplay = document.getElementById('userTimer');
         const label = document.getElementById('timerLabel');
         const statusMsg = document.getElementById('userStatusMsg');
-        const btnReqEmergency = document.getElementById('btnReqEmergency');
         const emStatusArea = document.getElementById('emergencyStatusArea');
         const otStatus = document.getElementById('overtimeStatus');
 
@@ -946,7 +959,7 @@
                                           <p style="font-size:0.7rem; color:green;">وافق: ${currentUser.emergencyRequest.approvedBy}</p>`;
             } else if(st === 'rejected') {
                 emStatusArea.innerHTML = `<span class="status-badge bg-red">❌ تم رفض الطلب</span> 
-                                          <button onclick="clearEmergencyReq()" style="font-size:0.7rem; border:none; background:none; text-decoration:underline; cursor:pointer">محو</button>`;
+                                          <button onclick="clearEmergencyReq()" style="font-size:0.7rem; border:none; background:none; text-decoration:underline; cursor:pointer">إغلاق</button>`;
             }
         } else {
             emStatusArea.innerHTML = `<button onclick="requestEmergency()" class="btn btn-dark btn-sm" style="width:100%">طلب خروج</button>`;
@@ -976,7 +989,6 @@
                 statusMsg.innerText = "";
                 stopAlarm();
             } else {
-                // عام أو اضطراري
                 const totalUsed = (currentUser.usedSeconds || 0) + elapsed;
                 const remaining = (currentUser.allowance * 60) - totalUsed;
                 label.innerText = `في الخارج: ${currentUser.lastReason}`;
