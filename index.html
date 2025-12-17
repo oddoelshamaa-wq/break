@@ -4,7 +4,7 @@ html
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم الذكية (إدارة كاملة)</title>
+    <title>نظام إدارة البريكات</title>
     
     <!-- الخطوط -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
@@ -135,7 +135,6 @@ html
             <input type="text" id="loginUser" placeholder="اسم المستخدم">
             <input type="password" id="loginPass" placeholder="كلمة المرور">
             <button onclick="attemptLogin()" class="btn btn-primary" style="width:100%; margin-top: 10px;">دخول</button>
-            <p style="text-align: center; margin-top: 20px; color: #aaa; font-size: 0.9em;">Admin: admin / 20002</p>
         </div>
     </div>
 
@@ -289,7 +288,6 @@ html
         const u = document.getElementById('loginUser').value.trim();
         const p = document.getElementById('loginPass').value.trim();
         
-        // 🔴🔴 هنا تم تغيير الباسورد 🔴🔴
         if(u === 'admin' && p === '20002') { 
             localStorage.setItem('break_sys_crud', 'admin'); 
             showAdmin(); 
