@@ -4,252 +4,586 @@ html
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سيستم البريكات (الإصلاح الذاتي)</title>
+    <title>لوحة التحكم الذكية</title>
+    
+    <!-- استدعاء خط "Cairo" عشان العربي يبقى شكله حلو -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    
     <!-- مكتبات فايربيز -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .hidden { display: none; }
-        .btn { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; color: white; margin: 5px; }
-        .btn-primary { background-color: #3498db; }
-        .btn-danger { background-color: #e74c3c; }
-        .btn-success { background-color: #27ae60; }
-        .btn-dark { background-color: #34495e; }
-        input { padding: 10px; width: 100%; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; margin-bottom: 10px; }
-        
+        :root {
+            --primary-color: #4e54c8;
+            --secondary-color: #8f94fb;
+            --accent-color: #ff6b6b;
+            --success-color: #1dd1a1;
+            --dark-text: #2d3436;
+            --light-bg: #f7f9fc;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            padding: 40px 20px;
+            min-height: 100vh;
+            color: var(--dark-text);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        h2, h3 {
+            color: #2c3e50;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        /* تنسيق الأزرار */
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            font-family: 'Cairo', sans-serif;
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin: 5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(0,0,0,0.15);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary { background: linear-gradient(45deg, #4e54c8, #8f94fb); }
+        .btn-danger { background: linear-gradient(45deg, #ee5253, #ff6b6b); }
+        .btn-success { background: linear-gradient(45deg, #10ac84, #1dd1a1); }
+        .btn-warning { background: linear-gradient(45deg, #ff9f43, #feca57); color: #333; }
+        .btn-dark { background: #2d3436; }
+
+        /* حقول الإدخال */
+        input, select {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        /* الجداول */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 25px;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        th {
+            background: #2d3436;
+            color: white;
+            padding: 18px;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.95rem;
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background-color: #f8f9fa; }
+
+        /* التبويبات */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        .hidden { display: none !important; }
+
         /* شاشة التحميل */
-        #loading { position: fixed; top:0; left:0; width:100%; height:100%; background:white; display:flex; justify-content:center; align-items:center; z-index:9999; flex-direction: column; text-align: center; }
-        .loader { border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        #loading {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.95);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999; flex-direction: column;
+        }
+        .loader {
+            border: 5px solid #f3f3f3; border-top: 5px solid var(--primary-color);
+            border-radius: 50%; width: 60px; height: 60px;
+            animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* حالة التجاوز */
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+        .bg-red { background-color: #ff7675; color: white; }
+        .bg-green { background-color: #55efc4; color: #2d3436; }
+        .bg-orange { background-color: #ffeaa7; color: #2d3436; }
+
+        .timer-display {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin: 20px 0;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+        }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
-        th { background-color: #2c3e50; color: white; }
+        /* الهيدر الخاص بالأدمن */
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
     </style>
 </head>
 <body>
 
+<!-- شاشة التحميل -->
 <div id="loading">
     <div class="loader"></div>
-    <h3>جاري الاتصال بالسيرفر...</h3>
-    <div id="configArea" style="display:none; margin-top:20px; padding:20px; background:#f9f9f9; border:1px solid #ddd; border-radius:10px;">
-        <p style="color:red; font-weight:bold;">الرابط القديم خطأ! من فضلك ادخل رابط قاعدة البيانات الصحيح:</p>
-        <p style="font-size:0.9em; color:#555;">(هتلاقيه في Firebase Console -> Realtime Database)</p>
-        <input type="text" id="manualUrl" placeholder="https://your-project.firebaseio.com/">
-        <button onclick="saveUrlAndReload()" class="btn btn-success">حفظ وإعادة المحاولة</button>
-    </div>
+    <h3 style="color: var(--primary-color);">جاري الاتصال بالنظام...</h3>
 </div>
 
 <div class="container hidden" id="mainContainer">
-    <!-- Login -->
+    <!-- تسجيل الدخول -->
     <div id="loginSection">
-        <h2>🔐 تسجيل الدخول</h2>
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: var(--primary-color); font-size: 2.5rem;">👋 أهلاً بك</h1>
+            <p style="color: #636e72;">سجل الدخول للمتابعة</p>
+        </div>
         <div style="max-width: 400px; margin: auto;">
             <input type="text" id="loginUser" placeholder="اسم المستخدم">
             <input type="password" id="loginPass" placeholder="كلمة المرور">
-            <button onclick="attemptLogin()" class="btn btn-primary" style="width:100%">دخول</button>
-            <p style="text-align: center; color:#777; font-size:0.8em; margin-top:10px;">Admin: admin / 123</p>
+            <button onclick="attemptLogin()" class="btn btn-primary" style="width:100%; margin-top: 10px;">تسجيل الدخول</button>
+            <p style="text-align: center; margin-top: 20px; color: #b2bec3; font-size: 0.9em;">بيانات المدير: admin / 123</p>
         </div>
     </div>
 
-    <!-- Admin -->
+    <!-- لوحة الأدمن -->
     <div id="adminSection" class="hidden">
-        <div style="display:flex; justify-content:space-between;"><h2>الإدارة</h2><button onclick="logout()" class="btn btn-dark">خروج</button></div>
-        <button onclick="switchTab('monitor')" class="btn btn-primary">المراقبة</button>
-        <button onclick="switchTab('users')" class="btn btn-success">الموظفين</button>
-        <button onclick="switchTab('reports')" class="btn btn-dark">التقارير</button>
-        
-        <div id="tab-monitor">
-            <h3>المراقبة الحية</h3>
-            <button onclick="endDay()" class="btn btn-danger">إقفال اليوم</button>
-            <table id="monitorTable"><thead><tr><th>الاسم</th><th>الحالة</th><th>الوقت</th><th>تحكم</th></tr></thead><tbody id="monitorBody"></tbody></table>
-        </div>
-        
-        <div id="tab-users" class="hidden">
-            <h3>إضافة موظف</h3>
-            <input id="nUser" placeholder="User"><input id="nPass" placeholder="Pass"><input id="nName" placeholder="Name">
-            <button onclick="addUser()" class="btn btn-success">إضافة</button>
+        <div class="admin-header">
+            <div>
+                <h2 style="margin:0; text-align: right;">لوحة القيادة 🚀</h2>
+                <span style="color: #636e72; font-size: 0.9em;">مرحباً أيها المدير</span>
+            </div>
+            <button onclick="logout()" class="btn btn-dark">تسجيل خروج 🔒</button>
         </div>
 
-         <div id="tab-reports" class="hidden">
-            <h3>التقارير</h3>
-            <select id="repUser" onchange="renderRep()"><option>اختر موظف</option></select>
-            <table id="repTable"><thead><tr><th>التاريخ</th><th>اجمالي</th><th>الحالة</th></tr></thead><tbody id="repBody"></tbody></table>
+        <div class="nav-tabs">
+            <button onclick="switchAdminTab('monitor')" class="btn btn-primary">📡 المراقبة الحية</button>
+            <button onclick="switchAdminTab('reports')" class="btn btn-warning">📊 التقارير</button>
+            <button onclick="switchAdminTab('users')" class="btn btn-success">👥 الموظفين</button>
+        </div>
+
+        <div id="tab-monitor">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+                <h3 style="margin:0">حالة الموظفين الآن</h3>
+                <button onclick="endDay()" class="btn btn-danger">🛑 إقفال اليوم</button>
+            </div>
+            <table id="monitorTable">
+                <thead><tr><th>الاسم</th><th>الحالة</th><th>الوقت المستهلك</th><th>المتبقي / التجاوز</th><th>إجراءات</th></tr></thead>
+                <tbody id="monitorBody"></tbody>
+            </table>
+        </div>
+
+        <div id="tab-reports" class="hidden">
+            <h3>أرشيف السجلات</h3>
+            <select id="reportUserSelect" onchange="renderUserReport()"><option value="">-- اختر موظف لعرض تقريره --</option></select>
+            <table id="reportTable">
+                <thead><tr><th>التاريخ</th><th>التفاصيل</th><th>الإجمالي</th><th>المسموح</th><th>النتيجة</th></tr></thead>
+                <tbody id="reportBody"></tbody>
+            </table>
+        </div>
+
+        <div id="tab-users" class="hidden">
+            <h3 style="margin-bottom: 20px;">إضافة عضو جديد للفريق</h3>
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; border: 1px dashed #ccc;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <input type="text" id="newRealName" placeholder="الاسم الحقيقي (مثلاً: أحمد محمد)">
+                    <input type="text" id="newUsername" placeholder="User Name (للدخول)">
+                    <input type="password" id="newPassword" placeholder="كلمة المرور">
+                    <input type="number" id="newAllowance" placeholder="مدة البريك (دقيقة)" value="45">
+                </div>
+                <button onclick="addUser()" class="btn btn-success" style="width: 100%; margin-top: 15px;">إضافة الموظف +</button>
+            </div>
         </div>
     </div>
 
-    <!-- User -->
+    <!-- شاشة الموظف -->
     <div id="employeeSection" class="hidden">
-        <h2 id="welc"></h2>
-        <h1 id="timer">00:00</h1>
-        <input id="reason" placeholder="السبب">
-        <button onclick="toggleBreak()" class="btn btn-success" id="btnBrk">بدء</button>
-        <br><br><button onclick="logout()" class="btn btn-dark">خروج</button>
+        <div style="text-align: right; margin-bottom: 20px;">
+             <button onclick="logout()" class="btn btn-dark" style="font-size: 0.8rem;">خروج</button>
+        </div>
+        
+        <div style="text-align: center;">
+            <h2 id="welcomeMsg" style="margin-bottom: 5px;"></h2>
+            <p style="color: #636e72;">أتمنى لك يوماً سعيداً في العمل ❤️</p>
+            
+            <div style="background: #f1f2f6; padding: 40px; border-radius: 30px; margin: 30px auto; max-width: 500px; box-shadow: inset 0 0 20px rgba(0,0,0,0.05);">
+                <div class="timer-display" id="userTimer">00:00</div>
+                <h3 id="userStatusMsg" style="margin-top: 0;"></h3>
+                <div id="overtimeAlert" class="hidden status-badge bg-red" style="font-size: 1.2rem; padding: 10px;">⚠️ لقد تجاوزت الوقت المسموح!</div>
+            </div>
+
+            <div style="max-width: 500px; margin: auto;">
+                <input type="text" id="breakReason" placeholder="اكتب سبب البريك هنا (صلاة، غداء..)" style="text-align: center;">
+                <button onclick="toggleBreak()" id="btnToggleBreak" class="btn btn-success" style="width:100%; padding: 15px; font-size: 1.2rem;">☕ بدء البريك</button>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-    // استرجاع الرابط المحفوظ أو استخدام الافتراضي
-    let savedUrl = localStorage.getItem('my_db_url');
-    // 👇👇 حط رابطك هنا لو عارفه 👇👇
-    let defaultUrl = "https://break-3ccd9-default-rtdb.firebaseio.com/"; 
-    
-    const config = {
+    // --- إعدادات فايربيز (الرابط الصحيح) ---
+    const firebaseConfig = {
         apiKey: "AIzaSyC2J8fVx7qAz_g33gUNQxXMEJHsWeFrjuk",
         authDomain: "break-3ccd9.firebaseapp.com",
         projectId: "break-3ccd9",
         storageBucket: "break-3ccd9.firebasestorage.app",
         messagingSenderId: "785237776836",
         appId: "1:785237776836:web:0a0062bf07359391fd6c91",
-        databaseURL: savedUrl || defaultUrl
+        databaseURL: "https://break-3ccd9-default-rtdb.firebaseio.com/"
     };
 
-    let app, db;
-    
-    // محاولة الاتصال
+    // تهيئة التطبيق
+    let db;
     try {
-        app = firebase.initializeApp(config);
+        firebase.initializeApp(firebaseConfig);
         db = firebase.database();
-    } catch(e) { console.log(e); }
-
-    let connected = false;
-    let users = {};
-    let currentUser = null;
-
-    // مراقب الاتصال (لو طول 5 ثواني يظهر شاشة ادخال الرابط)
-    setTimeout(() => {
-        if(!connected) {
-            document.querySelector('.loader').style.display = 'none';
-            document.querySelector('h3').innerText = "فشل الاتصال!";
-            document.getElementById('configArea').style.display = 'block';
-        }
-    }, 5000);
-
-    function saveUrlAndReload() {
-        const url = document.getElementById('manualUrl').value;
-        if(url) {
-            localStorage.setItem('my_db_url', url);
-            location.reload();
-        }
+    } catch (e) {
+        console.error("Firebase Error:", e);
     }
 
-    // الاستماع للبيانات
-    db.ref('.info/connected').on('value', snap => {
-        if(snap.val() === true) console.log("Connected!");
+    let allUsersData = {};
+    let currentUser = null;
+    let timerInterval = null;
+    let isDataLoaded = false;
+
+    // --- الاتصال بالسيرفر ---
+    const usersRef = db.ref('users');
+    usersRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        allUsersData = data || {};
+        
+        if (!isDataLoaded) {
+            isDataLoaded = true;
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('mainContainer').classList.remove('hidden');
+            checkSavedSession();
+        }
+
+        if(!document.getElementById('adminSection').classList.contains('hidden')) {
+            renderMonitorTable();
+            updateReportSelect();
+        }
+        
+        if(currentUser && allUsersData[currentUser.username]) {
+            currentUser = allUsersData[currentUser.username];
+            updateUserUI();
+        }
     });
 
-    db.ref('users').on('value', snap => {
-        connected = true;
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('mainContainer').classList.remove('hidden');
-        users = snap.val() || {};
-        checkSession();
-        if(!document.getElementById('adminSection').classList.contains('hidden')) renderMon();
-        if(currentUser) { currentUser = users[currentUser.username]; upUI(); }
-        updateRepSelect();
-    });
-
-    // --- Logic ---
-    function checkSession() {
-        let s = localStorage.getItem('ses');
-        if(s === 'admin') showAdmin();
-        else if(s && users[s]) { currentUser = users[s]; showEmp(); }
+    // --- المنطق ---
+    function checkSavedSession() {
+        const saved = localStorage.getItem('break_sys_ui');
+        if(saved === 'admin') {
+            showAdmin();
+        } else if(saved && allUsersData[saved]) {
+            currentUser = allUsersData[saved];
+            showEmployee();
+        } else {
+            showSection('loginSection');
+        }
     }
 
     function attemptLogin() {
-        let u = document.getElementById('loginUser').value;
-        let p = document.getElementById('loginPass').value;
-        if(u=='admin' && p=='123') { localStorage.setItem('ses','admin'); showAdmin(); }
-        else if(users[u] && users[u].password == p) { localStorage.setItem('ses',u); currentUser=users[u]; showEmp(); }
-        else alert('خطأ');
+        const u = document.getElementById('loginUser').value.trim();
+        const p = document.getElementById('loginPass').value.trim();
+
+        if(u === 'admin' && p === '123') {
+            localStorage.setItem('break_sys_ui', 'admin');
+            showAdmin();
+        } else if(allUsersData[u] && allUsersData[u].password === p) {
+            localStorage.setItem('break_sys_ui', u);
+            currentUser = allUsersData[u];
+            showEmployee();
+        } else {
+            alert('بيانات الدخول غير صحيحة ❌');
+        }
     }
 
-    function showAdmin() { show('adminSection'); renderMon(); }
-    function showEmp() { show('employeeSection'); upUI(); document.getElementById('welc').innerText=currentUser.realName; }
-    function logout() { localStorage.removeItem('ses'); location.reload(); }
-    function show(id) { 
-        ['loginSection','adminSection','employeeSection'].forEach(d=>document.getElementById(d).classList.add('hidden'));
+    function showAdmin() {
+        showSection('adminSection');
+        switchAdminTab('monitor');
+        startTimer();
+    }
+
+    function showEmployee() {
+        showSection('employeeSection');
+        initUserDash();
+    }
+
+    function logout() {
+        localStorage.removeItem('break_sys_ui');
+        currentUser = null;
+        if(timerInterval) clearInterval(timerInterval);
+        showSection('loginSection');
+        document.getElementById('loginUser').value = '';
+        document.getElementById('loginPass').value = '';
+    }
+
+    function showSection(id) {
+        ['loginSection','adminSection','employeeSection'].forEach(s => document.getElementById(s).classList.add('hidden'));
         document.getElementById(id).classList.remove('hidden');
     }
-    function switchTab(t) {
-        ['tab-monitor','tab-users','tab-reports'].forEach(d=>document.getElementById(d).classList.add('hidden'));
-        document.getElementById('tab-'+t).classList.remove('hidden');
+
+    function switchAdminTab(tab) {
+        ['tab-monitor','tab-reports','tab-users'].forEach(t => document.getElementById(t).classList.add('hidden'));
+        document.getElementById('tab-'+tab).classList.remove('hidden');
     }
 
-    // Admin
+    function startTimer() {
+        if(timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            if(!document.getElementById('adminSection').classList.contains('hidden')) renderMonitorTable();
+            if(!document.getElementById('employeeSection').classList.contains('hidden')) updateUserUI();
+        }, 1000);
+    }
+
+    // --- Admin Logic ---
     function addUser() {
-        let u = document.getElementById('nUser').value;
-        let p = document.getElementById('nPass').value;
-        let n = document.getElementById('nName').value;
-        if(u && p) db.ref('users/'+u).set({username:u, password:p, realName:n, allowance:45, usedSeconds:0, isOnBreak:false});
-    }
-    function renderMon() {
-        let h = '';
-        Object.values(users).forEach(u => {
-            let t = u.usedSeconds + (u.isOnBreak ? Math.floor((Date.now()-u.lastStartTime)/1000) : 0);
-            h += `<tr><td>${u.realName}</td><td>${u.isOnBreak?'⛔':'✅'}</td><td>${fmt(t)}</td>
-            <td>${u.isOnBreak ? `<button onclick="stop('${u.username}')" class="btn btn-warning">انهاء</button>` : ''}</td></tr>`;
+        const u = document.getElementById('newUsername').value.trim();
+        const p = document.getElementById('newPassword').value;
+        const n = document.getElementById('newRealName').value;
+        const a = parseInt(document.getElementById('newAllowance').value);
+
+        if(!u || !p) return alert("الرجاء إكمال البيانات");
+        if(allUsersData[u]) return alert("المستخدم موجود مسبقاً");
+
+        db.ref('users/' + u).set({
+            username: u, realName: n, password: p, allowance: a,
+            usedSeconds: 0, isOnBreak: false, lastReason: "-"
+        }).then(() => {
+            alert("تمت إضافة الموظف بنجاح ✅");
+            document.getElementById('newRealName').value = '';
+            document.getElementById('newUsername').value = '';
+            document.getElementById('newPassword').value = '';
         });
-        document.getElementById('monitorBody').innerHTML = h;
-    }
-    function stop(u) {
-        let usr = users[u];
-        let d = Math.floor((Date.now()-usr.lastStartTime)/1000);
-        db.ref('users/'+u).update({isOnBreak:false, usedSeconds:usr.usedSeconds+d, lastStartTime:null});
-    }
-    function endDay() {
-        if(!confirm('تصفير؟')) return;
-        let today = new Date().toLocaleDateString('ar-EG');
-        let up = {};
-        Object.values(users).forEach(u => {
-            let t = u.usedSeconds + (u.isOnBreak ? Math.floor((Date.now()-u.lastStartTime)/1000) : 0);
-            up['users/'+u.username+'/history/'+Date.now()] = {date:today, total:t, allow:u.allowance*60};
-            up['users/'+u.username+'/usedSeconds'] = 0;
-            up['users/'+u.username+'/isOnBreak'] = false;
-        });
-        db.ref().update(up);
-    }
-    
-    // Reports
-    function updateRepSelect() {
-        let s = document.getElementById('repUser');
-        s.innerHTML = '<option>اختر</option>';
-        Object.values(users).forEach(u => s.innerHTML+=`<option value="${u.username}">${u.realName}</option>`);
-    }
-    function renderRep() {
-        let u = users[document.getElementById('repUser').value];
-        let h = '';
-        if(u.history) Object.values(u.history).reverse().forEach(r => {
-            h += `<tr><td>${r.date}</td><td>${fmt(r.total)}</td><td>${r.total > r.allow ? 'تجاوز' : 'تمام'}</td></tr>`;
-        });
-        document.getElementById('repBody').innerHTML = h;
     }
 
-    // User
-    function upUI() {
-        let t = currentUser.usedSeconds + (currentUser.isOnBreak ? Math.floor((Date.now()-currentUser.lastStartTime)/1000) : 0);
-        document.getElementById('timer').innerText = fmt(t);
-        let btn = document.getElementById('btnBrk');
-        if(currentUser.isOnBreak) { btn.innerText='انهاء'; btn.className='btn btn-danger'; }
-        else { btn.innerText='بدء'; btn.className='btn btn-success'; }
-        setTimeout(() => { if(!document.getElementById('employeeSection').classList.contains('hidden')) upUI(); }, 1000);
-    }
-    function toggleBreak() {
-        if(!currentUser.isOnBreak) db.ref('users/'+currentUser.username).update({isOnBreak:true, lastStartTime:Date.now(), lastReason: document.getElementById('reason').value});
-        else stop(currentUser.username);
+    function renderMonitorTable() {
+        const tbody = document.getElementById('monitorBody');
+        tbody.innerHTML = '';
+        if(!allUsersData) return;
+
+        Object.values(allUsersData).forEach(u => {
+            let total = u.usedSeconds || 0;
+            if(u.isOnBreak && u.lastStartTime) {
+                total += Math.floor((Date.now() - u.lastStartTime) / 1000);
+            }
+            const allowed = u.allowance * 60;
+            const diff = allowed - total;
+            
+            const status = u.isOnBreak 
+                ? `<span class="status-badge bg-orange">⛔ في بريك (${u.lastReason})</span>` 
+                : `<span class="status-badge bg-green">✅ متاح للعمل</span>`;
+                
+            const rem = diff >= 0 
+                ? `<span style="color:var(--success-color); font-weight:bold;">${formatTime(diff)}</span>` 
+                : `<span class="status-badge bg-red">تجاوز ${formatTime(Math.abs(diff))}</span>`;
+            
+            let btn = u.isOnBreak ? `<button onclick="forceStop('${u.username}')" class="btn btn-warning" style="padding:5px 10px; font-size:0.8rem;">إجبار الرجوع</button>` : '-';
+
+            tbody.innerHTML += `<tr>
+                <td style="font-weight:bold;">${u.realName}</td>
+                <td>${status}</td>
+                <td style="font-family:monospace; font-size:1.1rem;">${formatTime(total)}</td>
+                <td>${rem}</td>
+                <td>${btn}</td>
+            </tr>`;
+        });
     }
 
-    function fmt(s) { return new Date(s * 1000).toISOString().substr(14, 5); }
+    window.forceStop = (username) => {
+        if(!confirm("هل أنت متأكد من إنهاء البريك لهذا الموظف؟")) return;
+        const u = allUsersData[username];
+        const duration = Math.floor((Date.now() - u.lastStartTime) / 1000);
+        const logEntry = { reason: u.lastReason + " (إداري)", duration: duration, time: new Date().toLocaleTimeString('ar-EG') };
+        
+        db.ref('users/'+username).update({
+            isOnBreak: false, usedSeconds: (u.usedSeconds||0) + duration, lastStartTime: null
+        });
+        db.ref('users/'+username+'/dailyLogs/'+Date.now()).set(logEntry);
+    }
+
+    window.endDay = () => {
+        if(!confirm("⚠️ تحذير: سيتم ترحيل البيانات للأرشيف وتصفير العدادات للجميع.")) return;
+        const today = new Date().toLocaleDateString('ar-EG');
+        const updates = {};
+        
+        Object.values(allUsersData).forEach(u => {
+            let current = u.usedSeconds || 0;
+            let logs = u.dailyLogs || {};
+            if(u.isOnBreak) {
+                const d = Math.floor((Date.now() - u.lastStartTime) / 1000);
+                current += d;
+                logs['auto'] = { reason: "إغلاق تلقائي", duration: d, time: "نهاية اليوم" };
+            }
+            const histKey = Date.now();
+            updates['users/'+u.username+'/history/'+histKey] = {
+                date: today, totalUsed: current, allowance: u.allowance*60, details: logs
+            };
+            updates['users/'+u.username+'/usedSeconds'] = 0;
+            updates['users/'+u.username+'/isOnBreak'] = false;
+            updates['users/'+u.username+'/lastStartTime'] = null;
+            updates['users/'+u.username+'/dailyLogs'] = null;
+            updates['users/'+u.username+'/lastReason'] = "-";
+        });
+        db.ref().update(updates).then(() => alert("تم إقفال اليوم بنجاح ✅"));
+    }
+
+    // --- Reports ---
+    window.updateReportSelect = () => {
+        const sel = document.getElementById('reportUserSelect');
+        if(sel.options.length > 1) return;
+        Object.values(allUsersData).forEach(u => sel.innerHTML += `<option value="${u.username}">${u.realName}</option>`);
+    }
+
+    window.renderUserReport = () => {
+        const uName = document.getElementById('reportUserSelect').value;
+        const tbody = document.getElementById('reportBody');
+        tbody.innerHTML = '';
+        if(!uName || !allUsersData[uName].history) { tbody.innerHTML='<tr><td colspan="5">لا توجد سجلات سابقة</td></tr>'; return; }
+
+        const hist = Object.values(allUsersData[uName].history).reverse();
+        hist.forEach(h => {
+            const diff = h.allowance - h.totalUsed;
+            let dets = '<ul style="text-align:right; margin:0; padding-right:15px;">';
+            if(h.details) Object.values(h.details).forEach(d => dets += `<li>${d.reason} <small>(${formatTime(d.duration)})</small></li>`);
+            dets += '</ul>';
+            
+            const result = diff >= 0 ? '<span class="status-badge bg-green">ملتزم</span>' : '<span class="status-badge bg-red">غير ملتزم</span>';
+
+            tbody.innerHTML += `<tr>
+                <td>${h.date}</td>
+                <td>${dets}</td>
+                <td>${formatTime(h.totalUsed)}</td>
+                <td>${formatTime(h.allowance)}</td>
+                <td>${result}</td>
+            </tr>`;
+        });
+    }
+
+    // --- User ---
+    function initUserDash() {
+        document.getElementById('welcomeMsg').innerText = `أهلاً بك، ${currentUser.realName}`;
+        startTimer();
+    }
+
+    function updateUserUI() {
+        let total = currentUser.usedSeconds || 0;
+        if(currentUser.isOnBreak) total += Math.floor((Date.now() - currentUser.lastStartTime) / 1000);
+        
+        document.getElementById('userTimer').innerText = formatTime(total);
+        const diff = (currentUser.allowance * 60) - total;
+        
+        const statusEl = document.getElementById('userStatusMsg');
+        const alertEl = document.getElementById('overtimeAlert');
+        const btn = document.getElementById('btnToggleBreak');
+        const inp = document.getElementById('breakReason');
+
+        if(diff >= 0) {
+            statusEl.innerText = `المتبقي لك: ${formatTime(diff)}`;
+            statusEl.style.color = "var(--success-color)";
+            alertEl.classList.add('hidden');
+        } else {
+            statusEl.innerText = "لقد انتهى رصيدك لهذا اليوم";
+            statusEl.style.color = "var(--accent-color)";
+            alertEl.classList.remove('hidden');
+        }
+
+        if(currentUser.isOnBreak) {
+            btn.innerHTML = "⏹ إنهاء البريك";
+            btn.className = "btn btn-danger";
+            inp.disabled = true;
+            inp.value = currentUser.lastReason;
+        } else {
+            btn.innerHTML = "☕ بدء البريك";
+            btn.className = "btn btn-success";
+            inp.disabled = false;
+        }
+    }
+
+    window.toggleBreak = () => {
+        const inp = document.getElementById('breakReason');
+        if(!currentUser.isOnBreak) {
+            if(!inp.value.trim()) return alert("يجب كتابة سبب الخروج أولاً!");
+            db.ref('users/'+currentUser.username).update({
+                isOnBreak: true, lastStartTime: Date.now(), lastReason: inp.value
+            });
+        } else {
+            const d = Math.floor((Date.now() - currentUser.lastStartTime) / 1000);
+            const logEntry = { reason: currentUser.lastReason, duration: d, time: new Date().toLocaleTimeString('ar-EG') };
+            db.ref('users/'+currentUser.username).update({
+                isOnBreak: false, lastStartTime: null, usedSeconds: (currentUser.usedSeconds||0) + d
+            });
+            db.ref('users/'+currentUser.username+'/dailyLogs/'+Date.now()).set(logEntry);
+        }
+    }
+
+    function formatTime(s) {
+        return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+    }
 </script>
 </body>
 </html>
-```
-57.2s
-Model
-ThinkingThoughts
-Expand to view model thoughts
-
-chevron_right
