@@ -4,9 +4,9 @@ html
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم الذكية</title>
+    <title>لوحة التحكم الذكية (إدارة كاملة)</title>
     
-    <!-- استدعاء خط "Cairo" عشان العربي يبقى شكله حلو -->
+    <!-- الخطوط -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     
     <!-- مكتبات فايربيز -->
@@ -39,110 +39,60 @@ html
             padding: 40px;
             border-radius: 20px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
         }
 
-        h2, h3 {
-            color: #2c3e50;
-            text-align: center;
-            font-weight: 700;
-        }
+        h2, h3 { color: #2c3e50; text-align: center; font-weight: 700; }
 
-        /* تنسيق الأزرار */
+        /* الأزرار */
         .btn {
-            padding: 12px 25px;
+            padding: 10px 20px;
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: 700;
             font-family: 'Cairo', sans-serif;
             color: white;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin: 5px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            margin: 3px;
         }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 7px 14px rgba(0,0,0,0.15);
-        }
-
-        .btn:active {
-            transform: scale(0.98);
-        }
-
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        
         .btn-primary { background: linear-gradient(45deg, #4e54c8, #8f94fb); }
         .btn-danger { background: linear-gradient(45deg, #ee5253, #ff6b6b); }
         .btn-success { background: linear-gradient(45deg, #10ac84, #1dd1a1); }
         .btn-warning { background: linear-gradient(45deg, #ff9f43, #feca57); color: #333; }
         .btn-dark { background: #2d3436; }
+        .btn-info { background: #0984e3; }
 
-        /* حقول الإدخال */
         input, select {
-            padding: 15px;
+            padding: 12px;
             border: 2px solid #e0e0e0;
-            border-radius: 12px;
+            border-radius: 10px;
             width: 100%;
             box-sizing: border-box;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             font-family: 'Cairo', sans-serif;
-            font-size: 1rem;
-            transition: border-color 0.3s;
         }
+        input:focus { outline: none; border-color: var(--primary-color); }
+        input:disabled { background-color: #eee; cursor: not-allowed; }
 
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-
-        /* الجداول */
         table {
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
-            margin-top: 25px;
+            margin-top: 20px;
             background: white;
             border-radius: 15px;
             overflow: hidden;
             box-shadow: 0 0 20px rgba(0,0,0,0.05);
         }
-
-        th {
-            background: #2d3436;
-            color: white;
-            padding: 18px;
-            font-size: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        td {
-            padding: 15px;
-            text-align: center;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 0.95rem;
-        }
-
-        tr:last-child td { border-bottom: none; }
+        th { background: #2d3436; color: white; padding: 15px; }
+        td { padding: 12px; text-align: center; border-bottom: 1px solid #f0f0f0; }
         tr:hover { background-color: #f8f9fa; }
 
-        /* التبويبات */
-        .nav-tabs {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 20px;
-        }
-
+        .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
         .hidden { display: none !important; }
 
-        /* شاشة التحميل */
         #loading {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255,255,255,0.95);
@@ -151,39 +101,19 @@ html
         }
         .loader {
             border: 5px solid #f3f3f3; border-top: 5px solid var(--primary-color);
-            border-radius: 50%; width: 60px; height: 60px;
+            border-radius: 50%; width: 50px; height: 50px;
             animation: spin 1s linear infinite; margin-bottom: 20px;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* حالة التجاوز */
-        .status-badge {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: bold;
-        }
+        .status-badge { padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: bold; }
         .bg-red { background-color: #ff7675; color: white; }
         .bg-green { background-color: #55efc4; color: #2d3436; }
-        .bg-orange { background-color: #ffeaa7; color: #2d3436; }
-
-        .timer-display {
-            font-size: 4rem;
-            font-weight: 800;
-            color: var(--primary-color);
-            margin: 20px 0;
-            text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
-        }
         
-        /* الهيدر الخاص بالأدمن */
-        .admin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
-        }
+        .timer-display { font-size: 3.5rem; font-weight: 800; color: var(--primary-color); margin: 15px 0; }
+        
+        /* زرار التعديل */
+        .action-btns { display: flex; justify-content: center; gap: 5px; }
     </style>
 </head>
 <body>
@@ -191,100 +121,116 @@ html
 <!-- شاشة التحميل -->
 <div id="loading">
     <div class="loader"></div>
-    <h3 style="color: var(--primary-color);">جاري الاتصال بالنظام...</h3>
+    <h3 style="color: var(--primary-color);">جاري تحميل النظام...</h3>
 </div>
 
 <div class="container hidden" id="mainContainer">
     <!-- تسجيل الدخول -->
     <div id="loginSection">
         <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: var(--primary-color); font-size: 2.5rem;">👋 أهلاً بك</h1>
-            <p style="color: #636e72;">سجل الدخول للمتابعة</p>
+            <h1 style="color: var(--primary-color);">👋 أهلاً بك</h1>
+            <p>سجل الدخول للمتابعة</p>
         </div>
         <div style="max-width: 400px; margin: auto;">
             <input type="text" id="loginUser" placeholder="اسم المستخدم">
             <input type="password" id="loginPass" placeholder="كلمة المرور">
-            <button onclick="attemptLogin()" class="btn btn-primary" style="width:100%; margin-top: 10px;">تسجيل الدخول</button>
-            <p style="text-align: center; margin-top: 20px; color: #b2bec3; font-size: 0.9em;">بيانات المدير: admin / 123</p>
+            <button onclick="attemptLogin()" class="btn btn-primary" style="width:100%; margin-top: 10px;">دخول</button>
+            <p style="text-align: center; margin-top: 20px; color: #aaa; font-size: 0.9em;">Admin: admin / 123</p>
         </div>
     </div>
 
     <!-- لوحة الأدمن -->
     <div id="adminSection" class="hidden">
-        <div class="admin-header">
-            <div>
-                <h2 style="margin:0; text-align: right;">لوحة القيادة 🚀</h2>
-                <span style="color: #636e72; font-size: 0.9em;">مرحباً أيها المدير</span>
-            </div>
-            <button onclick="logout()" class="btn btn-dark">تسجيل خروج 🔒</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+            <h2>لوحة القيادة 🚀</h2>
+            <button onclick="logout()" class="btn btn-dark">خروج 🔒</button>
         </div>
 
         <div class="nav-tabs">
-            <button onclick="switchAdminTab('monitor')" class="btn btn-primary">📡 المراقبة الحية</button>
+            <button onclick="switchAdminTab('monitor')" class="btn btn-primary">📡 المراقبة</button>
             <button onclick="switchAdminTab('reports')" class="btn btn-warning">📊 التقارير</button>
-            <button onclick="switchAdminTab('users')" class="btn btn-success">👥 الموظفين</button>
+            <button onclick="switchAdminTab('users')" class="btn btn-success">⚙️ إدارة الموظفين</button>
         </div>
 
+        <!-- تبويب المراقبة -->
         <div id="tab-monitor">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
-                <h3 style="margin:0">حالة الموظفين الآن</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3>حالة الموظفين الآن</h3>
                 <button onclick="endDay()" class="btn btn-danger">🛑 إقفال اليوم</button>
             </div>
             <table id="monitorTable">
-                <thead><tr><th>الاسم</th><th>الحالة</th><th>الوقت المستهلك</th><th>المتبقي / التجاوز</th><th>إجراءات</th></tr></thead>
+                <thead><tr><th>الاسم</th><th>الحالة</th><th>الوقت</th><th>المتبقي</th><th>تحكم</th></tr></thead>
                 <tbody id="monitorBody"></tbody>
             </table>
         </div>
 
+        <!-- تبويب التقارير -->
         <div id="tab-reports" class="hidden">
             <h3>أرشيف السجلات</h3>
-            <select id="reportUserSelect" onchange="renderUserReport()"><option value="">-- اختر موظف لعرض تقريره --</option></select>
+            <select id="reportUserSelect" onchange="renderUserReport()"><option value="">-- اختر موظف --</option></select>
             <table id="reportTable">
-                <thead><tr><th>التاريخ</th><th>التفاصيل</th><th>الإجمالي</th><th>المسموح</th><th>النتيجة</th></tr></thead>
+                <thead><tr><th>التاريخ</th><th>التفاصيل</th><th>الإجمالي</th><th>المسموح</th><th>الحالة</th></tr></thead>
                 <tbody id="reportBody"></tbody>
             </table>
         </div>
 
+        <!-- تبويب إدارة الموظفين (المعدل) -->
         <div id="tab-users" class="hidden">
-            <h3 style="margin-bottom: 20px;">إضافة عضو جديد للفريق</h3>
-            <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; border: 1px dashed #ccc;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <input type="text" id="newRealName" placeholder="الاسم الحقيقي (مثلاً: أحمد محمد)">
+            <h3>إدارة بيانات الموظفين</h3>
+            
+            <!-- فورم الإضافة والتعديل -->
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 15px; border: 1px dashed #ccc; margin-bottom: 20px;">
+                <h4 style="margin-top:0; color: var(--primary-color);" id="formTitle">➕ إضافة موظف جديد</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <input type="text" id="newRealName" placeholder="الاسم الحقيقي">
                     <input type="text" id="newUsername" placeholder="User Name (للدخول)">
                     <input type="password" id="newPassword" placeholder="كلمة المرور">
                     <input type="number" id="newAllowance" placeholder="مدة البريك (دقيقة)" value="45">
                 </div>
-                <button onclick="addUser()" class="btn btn-success" style="width: 100%; margin-top: 15px;">إضافة الموظف +</button>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button onclick="saveUser()" id="saveUserBtn" class="btn btn-success" style="flex: 1;">حفظ البيانات</button>
+                    <button onclick="cancelEdit()" id="cancelEditBtn" class="btn btn-dark hidden">إلغاء التعديل</button>
+                </div>
             </div>
+
+            <!-- جدول الموظفين للحذف والتعديل -->
+            <table id="usersManagementTable">
+                <thead>
+                    <tr>
+                        <th>الاسم</th>
+                        <th>User</th>
+                        <th>Password</th>
+                        <th>المدة</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="usersManagementBody">
+                    <!-- سيتم ملؤه بالجافاسكريبت -->
+                </tbody>
+            </table>
         </div>
     </div>
 
     <!-- شاشة الموظف -->
     <div id="employeeSection" class="hidden">
-        <div style="text-align: right; margin-bottom: 20px;">
-             <button onclick="logout()" class="btn btn-dark" style="font-size: 0.8rem;">خروج</button>
-        </div>
-        
+        <div style="text-align: right;"><button onclick="logout()" class="btn btn-dark btn-sm">خروج</button></div>
         <div style="text-align: center;">
-            <h2 id="welcomeMsg" style="margin-bottom: 5px;"></h2>
-            <p style="color: #636e72;">أتمنى لك يوماً سعيداً في العمل ❤️</p>
-            
-            <div style="background: #f1f2f6; padding: 40px; border-radius: 30px; margin: 30px auto; max-width: 500px; box-shadow: inset 0 0 20px rgba(0,0,0,0.05);">
+            <h2 id="welcomeMsg"></h2>
+            <div style="background: #f1f2f6; padding: 30px; border-radius: 30px; margin: 20px auto; max-width: 500px;">
                 <div class="timer-display" id="userTimer">00:00</div>
-                <h3 id="userStatusMsg" style="margin-top: 0;"></h3>
-                <div id="overtimeAlert" class="hidden status-badge bg-red" style="font-size: 1.2rem; padding: 10px;">⚠️ لقد تجاوزت الوقت المسموح!</div>
+                <h3 id="userStatusMsg"></h3>
+                <div id="overtimeAlert" class="hidden status-badge bg-red" style="font-size: 1.2rem; padding: 10px;">تجاوزت الوقت!</div>
             </div>
-
             <div style="max-width: 500px; margin: auto;">
-                <input type="text" id="breakReason" placeholder="اكتب سبب البريك هنا (صلاة، غداء..)" style="text-align: center;">
-                <button onclick="toggleBreak()" id="btnToggleBreak" class="btn btn-success" style="width:100%; padding: 15px; font-size: 1.2rem;">☕ بدء البريك</button>
+                <input type="text" id="breakReason" placeholder="سبب البريك..." style="text-align: center;">
+                <button onclick="toggleBreak()" id="btnToggleBreak" class="btn btn-success" style="width:100%; padding: 15px; font-size: 1.2rem;">بدء</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // --- إعدادات فايربيز (الرابط الصحيح) ---
+    // 🔴🔴 ضع رابط قاعدة البيانات الخاص بك هنا 🔴🔴
     const firebaseConfig = {
         apiKey: "AIzaSyC2J8fVx7qAz_g33gUNQxXMEJHsWeFrjuk",
         authDomain: "break-3ccd9.firebaseapp.com",
@@ -295,23 +241,20 @@ html
         databaseURL: "https://break-3ccd9-default-rtdb.firebaseio.com/"
     };
 
-    // تهيئة التطبيق
     let db;
     try {
         firebase.initializeApp(firebaseConfig);
         db = firebase.database();
-    } catch (e) {
-        console.error("Firebase Error:", e);
-    }
+    } catch (e) { console.error(e); }
 
     let allUsersData = {};
     let currentUser = null;
     let timerInterval = null;
     let isDataLoaded = false;
+    let isEditing = false; // متغير عشان نعرف احنا بنعدل ولا بنضيف
 
     // --- الاتصال بالسيرفر ---
-    const usersRef = db.ref('users');
-    usersRef.on('value', (snapshot) => {
+    db.ref('users').on('value', (snapshot) => {
         const data = snapshot.val();
         allUsersData = data || {};
         
@@ -324,6 +267,7 @@ html
 
         if(!document.getElementById('adminSection').classList.contains('hidden')) {
             renderMonitorTable();
+            renderUserManagementTable(); // تحديث جدول الإدارة
             updateReportSelect();
         }
         
@@ -333,54 +277,25 @@ html
         }
     });
 
-    // --- المنطق ---
+    // --- المنطق العام ---
     function checkSavedSession() {
-        const saved = localStorage.getItem('break_sys_ui');
-        if(saved === 'admin') {
-            showAdmin();
-        } else if(saved && allUsersData[saved]) {
-            currentUser = allUsersData[saved];
-            showEmployee();
-        } else {
-            showSection('loginSection');
-        }
+        const saved = localStorage.getItem('break_sys_crud');
+        if(saved === 'admin') showAdmin();
+        else if(saved && allUsersData[saved]) { currentUser = allUsersData[saved]; showEmployee(); }
+        else showSection('loginSection');
     }
 
     function attemptLogin() {
         const u = document.getElementById('loginUser').value.trim();
         const p = document.getElementById('loginPass').value.trim();
-
-        if(u === 'admin' && p === '123') {
-            localStorage.setItem('break_sys_ui', 'admin');
-            showAdmin();
-        } else if(allUsersData[u] && allUsersData[u].password === p) {
-            localStorage.setItem('break_sys_ui', u);
-            currentUser = allUsersData[u];
-            showEmployee();
-        } else {
-            alert('بيانات الدخول غير صحيحة ❌');
-        }
+        if(u === 'admin' && p === '123') { localStorage.setItem('break_sys_crud', 'admin'); showAdmin(); }
+        else if(allUsersData[u] && allUsersData[u].password === p) { localStorage.setItem('break_sys_crud', u); currentUser = allUsersData[u]; showEmployee(); }
+        else alert('بيانات خطأ');
     }
 
-    function showAdmin() {
-        showSection('adminSection');
-        switchAdminTab('monitor');
-        startTimer();
-    }
-
-    function showEmployee() {
-        showSection('employeeSection');
-        initUserDash();
-    }
-
-    function logout() {
-        localStorage.removeItem('break_sys_ui');
-        currentUser = null;
-        if(timerInterval) clearInterval(timerInterval);
-        showSection('loginSection');
-        document.getElementById('loginUser').value = '';
-        document.getElementById('loginPass').value = '';
-    }
+    function showAdmin() { showSection('adminSection'); switchAdminTab('monitor'); startTimer(); }
+    function showEmployee() { showSection('employeeSection'); initUserDash(); }
+    function logout() { localStorage.removeItem('break_sys_crud'); currentUser=null; clearInterval(timerInterval); showSection('loginSection'); }
 
     function showSection(id) {
         ['loginSection','adminSection','employeeSection'].forEach(s => document.getElementById(s).classList.add('hidden'));
@@ -400,99 +315,154 @@ html
         }, 1000);
     }
 
-    // --- Admin Logic ---
-    function addUser() {
+    // --- إدارة الموظفين (إضافة / تعديل / حذف) ---
+    
+    // 1. عرض جدول الإدارة
+    function renderUserManagementTable() {
+        const tbody = document.getElementById('usersManagementBody');
+        tbody.innerHTML = '';
+        
+        Object.values(allUsersData).forEach(u => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${u.realName}</td>
+                    <td style="font-weight:bold; color:var(--primary-color)">${u.username}</td>
+                    <td style="color:#777;">${u.password}</td>
+                    <td>${u.allowance} دقيقة</td>
+                    <td>
+                        <div class="action-btns">
+                            <button onclick="prepareEdit('${u.username}')" class="btn btn-info" style="padding:5px 10px; font-size:0.8rem;">✏️ تعديل</button>
+                            <button onclick="deleteUser('${u.username}')" class="btn btn-danger" style="padding:5px 10px; font-size:0.8rem;">🗑️ حذف</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    // 2. دالة الحفظ (تشتغل إضافة أو تعديل حسب الحالة)
+    function saveUser() {
         const u = document.getElementById('newUsername').value.trim();
         const p = document.getElementById('newPassword').value;
         const n = document.getElementById('newRealName').value;
         const a = parseInt(document.getElementById('newAllowance').value);
 
-        if(!u || !p) return alert("الرجاء إكمال البيانات");
-        if(allUsersData[u]) return alert("المستخدم موجود مسبقاً");
+        if(!u || !p || !n) return alert("البيانات ناقصة");
 
-        db.ref('users/' + u).set({
-            username: u, realName: n, password: p, allowance: a,
-            usedSeconds: 0, isOnBreak: false, lastReason: "-"
-        }).then(() => {
-            alert("تمت إضافة الموظف بنجاح ✅");
-            document.getElementById('newRealName').value = '';
-            document.getElementById('newUsername').value = '';
-            document.getElementById('newPassword').value = '';
-        });
+        if(isEditing) {
+            // كود التعديل
+            db.ref('users/' + u).update({
+                realName: n,
+                password: p,
+                allowance: a
+            }).then(() => {
+                alert("تم تحديث البيانات بنجاح ✅");
+                cancelEdit();
+            });
+        } else {
+            // كود الإضافة الجديدة
+            if(allUsersData[u]) return alert("اسم المستخدم موجود بالفعل!");
+            db.ref('users/' + u).set({
+                username: u, realName: n, password: p, allowance: a,
+                usedSeconds: 0, isOnBreak: false, lastReason: "-"
+            }).then(() => {
+                alert("تم إضافة الموظف ✅");
+                cancelEdit(); // لتفريغ الحقول
+            });
+        }
     }
 
+    // 3. تجهيز الفورم للتعديل
+    window.prepareEdit = (username) => {
+        const user = allUsersData[username];
+        if(!user) return;
+
+        isEditing = true;
+        document.getElementById('formTitle').innerText = "✏️ تعديل بيانات الموظف: " + user.realName;
+        document.getElementById('saveUserBtn').innerText = "حفظ التعديلات";
+        document.getElementById('saveUserBtn').className = "btn btn-info";
+        document.getElementById('cancelEditBtn').classList.remove('hidden');
+
+        // ملء البيانات
+        document.getElementById('newRealName').value = user.realName;
+        document.getElementById('newUsername').value = user.username;
+        document.getElementById('newUsername').disabled = true; // ممنوع تغيير اليوزر نيم لأنه هو الـ Key
+        document.getElementById('newPassword').value = user.password;
+        document.getElementById('newAllowance').value = user.allowance;
+        
+        // الانتقال لأعلى الصفحة
+        document.getElementById('tab-users').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // 4. إلغاء التعديل
+    window.cancelEdit = () => {
+        isEditing = false;
+        document.getElementById('formTitle').innerText = "➕ إضافة موظف جديد";
+        document.getElementById('saveUserBtn').innerText = "حفظ البيانات";
+        document.getElementById('saveUserBtn').className = "btn btn-success";
+        document.getElementById('cancelEditBtn').classList.add('hidden');
+
+        document.getElementById('newRealName').value = '';
+        document.getElementById('newUsername').value = '';
+        document.getElementById('newUsername').disabled = false;
+        document.getElementById('newPassword').value = '';
+        document.getElementById('newAllowance').value = '45';
+    }
+
+    // 5. حذف موظف
+    window.deleteUser = (username) => {
+        if(confirm("تحذير: هل أنت متأكد من حذف الموظف (" + username + ") نهائياً؟ \n سيتم حذف كل سجلاته أيضاً.")) {
+            db.ref('users/' + username).remove()
+            .then(() => alert("تم الحذف بنجاح 🗑️"));
+        }
+    }
+
+    // --- باقي وظائف الأدمن (المراقبة والتقارير) ---
     function renderMonitorTable() {
         const tbody = document.getElementById('monitorBody');
         tbody.innerHTML = '';
-        if(!allUsersData) return;
-
         Object.values(allUsersData).forEach(u => {
             let total = u.usedSeconds || 0;
-            if(u.isOnBreak && u.lastStartTime) {
-                total += Math.floor((Date.now() - u.lastStartTime) / 1000);
-            }
-            const allowed = u.allowance * 60;
-            const diff = allowed - total;
-            
-            const status = u.isOnBreak 
-                ? `<span class="status-badge bg-orange">⛔ في بريك (${u.lastReason})</span>` 
-                : `<span class="status-badge bg-green">✅ متاح للعمل</span>`;
-                
-            const rem = diff >= 0 
-                ? `<span style="color:var(--success-color); font-weight:bold;">${formatTime(diff)}</span>` 
-                : `<span class="status-badge bg-red">تجاوز ${formatTime(Math.abs(diff))}</span>`;
-            
-            let btn = u.isOnBreak ? `<button onclick="forceStop('${u.username}')" class="btn btn-warning" style="padding:5px 10px; font-size:0.8rem;">إجبار الرجوع</button>` : '-';
-
-            tbody.innerHTML += `<tr>
-                <td style="font-weight:bold;">${u.realName}</td>
-                <td>${status}</td>
-                <td style="font-family:monospace; font-size:1.1rem;">${formatTime(total)}</td>
-                <td>${rem}</td>
-                <td>${btn}</td>
-            </tr>`;
+            if(u.isOnBreak && u.lastStartTime) total += Math.floor((Date.now() - u.lastStartTime) / 1000);
+            const diff = (u.allowance * 60) - total;
+            const status = u.isOnBreak ? `<span class="status-badge bg-red">⛔ في بريك (${u.lastReason})</span>` : `<span class="status-badge bg-green">✅ متاح</span>`;
+            const rem = diff >= 0 ? `<span style="color:var(--success-color)">${formatTime(diff)}</span>` : `<span style="color:red">تجاوز ${formatTime(Math.abs(diff))}</span>`;
+            let btn = u.isOnBreak ? `<button onclick="forceStop('${u.username}')" class="btn btn-warning" style="font-size:0.8rem; padding:5px;">إنهاء</button>` : '-';
+            tbody.innerHTML += `<tr><td style="font-weight:bold">${u.realName}</td><td>${status}</td><td>${formatTime(total)}</td><td>${rem}</td><td>${btn}</td></tr>`;
         });
     }
 
     window.forceStop = (username) => {
-        if(!confirm("هل أنت متأكد من إنهاء البريك لهذا الموظف؟")) return;
+        if(!confirm("إنهاء البريك؟")) return;
         const u = allUsersData[username];
-        const duration = Math.floor((Date.now() - u.lastStartTime) / 1000);
-        const logEntry = { reason: u.lastReason + " (إداري)", duration: duration, time: new Date().toLocaleTimeString('ar-EG') };
-        
-        db.ref('users/'+username).update({
-            isOnBreak: false, usedSeconds: (u.usedSeconds||0) + duration, lastStartTime: null
-        });
-        db.ref('users/'+username+'/dailyLogs/'+Date.now()).set(logEntry);
+        const d = Math.floor((Date.now() - u.lastStartTime) / 1000);
+        db.ref('users/'+username).update({ isOnBreak: false, usedSeconds: (u.usedSeconds||0) + d, lastStartTime: null });
+        db.ref('users/'+username+'/dailyLogs/'+Date.now()).set({ reason: u.lastReason + " (Admin)", duration: d, time: new Date().toLocaleTimeString('ar-EG') });
     }
 
     window.endDay = () => {
-        if(!confirm("⚠️ تحذير: سيتم ترحيل البيانات للأرشيف وتصفير العدادات للجميع.")) return;
+        if(!confirm("إقفال اليوم وتصفير العدادات؟")) return;
         const today = new Date().toLocaleDateString('ar-EG');
         const updates = {};
-        
         Object.values(allUsersData).forEach(u => {
-            let current = u.usedSeconds || 0;
+            let cur = u.usedSeconds || 0;
             let logs = u.dailyLogs || {};
             if(u.isOnBreak) {
                 const d = Math.floor((Date.now() - u.lastStartTime) / 1000);
-                current += d;
-                logs['auto'] = { reason: "إغلاق تلقائي", duration: d, time: "نهاية اليوم" };
+                cur += d;
+                logs['auto'] = { reason: "Auto Close", duration: d, time: "End Day" };
             }
-            const histKey = Date.now();
-            updates['users/'+u.username+'/history/'+histKey] = {
-                date: today, totalUsed: current, allowance: u.allowance*60, details: logs
-            };
+            const k = Date.now();
+            updates['users/'+u.username+'/history/'+k] = { date: today, totalUsed: cur, allowance: u.allowance*60, details: logs };
             updates['users/'+u.username+'/usedSeconds'] = 0;
             updates['users/'+u.username+'/isOnBreak'] = false;
             updates['users/'+u.username+'/lastStartTime'] = null;
             updates['users/'+u.username+'/dailyLogs'] = null;
             updates['users/'+u.username+'/lastReason'] = "-";
         });
-        db.ref().update(updates).then(() => alert("تم إقفال اليوم بنجاح ✅"));
+        db.ref().update(updates).then(() => alert("تم الإقفال ✅"));
     }
 
-    // --- Reports ---
     window.updateReportSelect = () => {
         const sel = document.getElementById('reportUserSelect');
         if(sel.options.length > 1) return;
@@ -503,87 +473,61 @@ html
         const uName = document.getElementById('reportUserSelect').value;
         const tbody = document.getElementById('reportBody');
         tbody.innerHTML = '';
-        if(!uName || !allUsersData[uName].history) { tbody.innerHTML='<tr><td colspan="5">لا توجد سجلات سابقة</td></tr>'; return; }
-
+        if(!uName || !allUsersData[uName].history) { tbody.innerHTML='<tr><td colspan="5">لا يوجد سجلات</td></tr>'; return; }
         const hist = Object.values(allUsersData[uName].history).reverse();
         hist.forEach(h => {
             const diff = h.allowance - h.totalUsed;
-            let dets = '<ul style="text-align:right; margin:0; padding-right:15px;">';
-            if(h.details) Object.values(h.details).forEach(d => dets += `<li>${d.reason} <small>(${formatTime(d.duration)})</small></li>`);
-            dets += '</ul>';
-            
-            const result = diff >= 0 ? '<span class="status-badge bg-green">ملتزم</span>' : '<span class="status-badge bg-red">غير ملتزم</span>';
-
-            tbody.innerHTML += `<tr>
-                <td>${h.date}</td>
-                <td>${dets}</td>
-                <td>${formatTime(h.totalUsed)}</td>
-                <td>${formatTime(h.allowance)}</td>
-                <td>${result}</td>
-            </tr>`;
+            let dList = '<ul style="text-align:right; margin:0; padding-right:15px;">';
+            if(h.details) Object.values(h.details).forEach(d => dList += `<li>${d.reason} <small>(${formatTime(d.duration)})</small></li>`);
+            dList += '</ul>';
+            tbody.innerHTML += `<tr><td>${h.date}</td><td>${dList}</td><td>${formatTime(h.totalUsed)}</td><td>${formatTime(h.allowance)}</td><td>${diff>=0?'<span class="status-badge bg-green">تمام</span>':'<span class="status-badge bg-red">تجاوز</span>'}</td></tr>`;
         });
     }
 
-    // --- User ---
-    function initUserDash() {
-        document.getElementById('welcomeMsg').innerText = `أهلاً بك، ${currentUser.realName}`;
-        startTimer();
-    }
-
+    // --- User UI ---
+    function initUserDash() { document.getElementById('welcomeMsg').innerText = `أهلاً، ${currentUser.realName}`; startTimer(); }
     function updateUserUI() {
-        let total = currentUser.usedSeconds || 0;
-        if(currentUser.isOnBreak) total += Math.floor((Date.now() - currentUser.lastStartTime) / 1000);
-        
-        document.getElementById('userTimer').innerText = formatTime(total);
-        const diff = (currentUser.allowance * 60) - total;
-        
+        let t = currentUser.usedSeconds || 0;
+        if(currentUser.isOnBreak) t += Math.floor((Date.now() - currentUser.lastStartTime) / 1000);
+        document.getElementById('userTimer').innerText = formatTime(t);
+        const diff = (currentUser.allowance * 60) - t;
         const statusEl = document.getElementById('userStatusMsg');
         const alertEl = document.getElementById('overtimeAlert');
         const btn = document.getElementById('btnToggleBreak');
-        const inp = document.getElementById('breakReason');
-
+        
         if(diff >= 0) {
-            statusEl.innerText = `المتبقي لك: ${formatTime(diff)}`;
+            statusEl.innerText = `المتبقي: ${formatTime(diff)}`;
             statusEl.style.color = "var(--success-color)";
             alertEl.classList.add('hidden');
         } else {
-            statusEl.innerText = "لقد انتهى رصيدك لهذا اليوم";
+            statusEl.innerText = "انتهى الوقت";
             statusEl.style.color = "var(--accent-color)";
             alertEl.classList.remove('hidden');
         }
 
         if(currentUser.isOnBreak) {
-            btn.innerHTML = "⏹ إنهاء البريك";
-            btn.className = "btn btn-danger";
-            inp.disabled = true;
-            inp.value = currentUser.lastReason;
+            btn.innerHTML = "إنهاء البريك"; btn.className = "btn btn-danger";
+            document.getElementById('breakReason').disabled = true;
+            document.getElementById('breakReason').value = currentUser.lastReason;
         } else {
-            btn.innerHTML = "☕ بدء البريك";
-            btn.className = "btn btn-success";
-            inp.disabled = false;
+            btn.innerHTML = "بدء البريك"; btn.className = "btn btn-success";
+            document.getElementById('breakReason').disabled = false;
         }
     }
 
     window.toggleBreak = () => {
         const inp = document.getElementById('breakReason');
         if(!currentUser.isOnBreak) {
-            if(!inp.value.trim()) return alert("يجب كتابة سبب الخروج أولاً!");
-            db.ref('users/'+currentUser.username).update({
-                isOnBreak: true, lastStartTime: Date.now(), lastReason: inp.value
-            });
+            if(!inp.value.trim()) return alert("اكتب السبب");
+            db.ref('users/'+currentUser.username).update({ isOnBreak: true, lastStartTime: Date.now(), lastReason: inp.value });
         } else {
             const d = Math.floor((Date.now() - currentUser.lastStartTime) / 1000);
-            const logEntry = { reason: currentUser.lastReason, duration: d, time: new Date().toLocaleTimeString('ar-EG') };
-            db.ref('users/'+currentUser.username).update({
-                isOnBreak: false, lastStartTime: null, usedSeconds: (currentUser.usedSeconds||0) + d
-            });
-            db.ref('users/'+currentUser.username+'/dailyLogs/'+Date.now()).set(logEntry);
+            db.ref('users/'+currentUser.username).update({ isOnBreak: false, lastStartTime: null, usedSeconds: (currentUser.usedSeconds||0)+d });
+            db.ref('users/'+currentUser.username+'/dailyLogs/'+Date.now()).set({ reason: currentUser.lastReason, duration: d, time: new Date().toLocaleTimeString('ar-EG') });
         }
     }
 
-    function formatTime(s) {
-        return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
-    }
+    function formatTime(s) { return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`; }
 </script>
 </body>
 </html>
