@@ -187,10 +187,22 @@
     <h3 style="color: var(--primary-color);">جاري الاتصال بالنظام...</h3>
 </div>
 
-<!-- عنصر الصوت -->
+<!-- ============ الأصوات ============ -->
+<!-- صوت تنبيه الموظف عند انتهاء وقته -->
 <audio id="alarmSound" loop>
     <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
 </audio>
+
+<!-- صوت تنبيه بسيط للمدير (دخول بريك جديد) -->
+<audio id="notifySound">
+    <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mp3">
+</audio>
+
+<!-- صوت رنين مستمر للمدير (طلبات معلقة) -->
+<audio id="requestRing" loop>
+    <source src="https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3" type="audio/mp3">
+</audio>
+<!-- ================================= -->
 
 <div class="container hidden" id="mainContainer">
     <!-- تسجيل الدخول -->
@@ -216,14 +228,16 @@
             <div>
                 <h2>لوحة الإدارة 🚀</h2>
                 <span id="currentManagerDisplay" class="manager-info"></span>
+                <!-- زر لكتم الصوت مؤقتاً إذا كان مزعجاً -->
+                <button onclick="toggleAdminMute()" class="btn btn-sm btn-info" id="muteBtn" style="margin-right:10px">🔊 الصوت مفعل</button>
             </div>
             <button onclick="logout()" class="btn btn-dark">تسجيل خروج 🔒</button>
         </div>
 
         <div class="nav-tabs">
             <button onclick="switchAdminTab('monitor')" class="btn btn-primary">📡 المراقبة الحية</button>
-            <button onclick="switchAdminTab('requests')" class="btn btn-emergency">🚨 الطوارئ</button>
-            <button onclick="switchAdminTab('overtime')" class="btn btn-purple">🕒 طلبات الأوفر تايم</button>
+            <button onclick="switchAdminTab('requests')" class="btn btn-emergency">🚨 الطوارئ <span id="badgeEmergency" class="status-badge bg-red hidden">!</span></button>
+            <button onclick="switchAdminTab('overtime')" class="btn btn-purple">🕒 طلبات الأوفر تايم <span id="badgeOvertime" class="status-badge bg-red hidden">!</span></button>
             <button onclick="switchAdminTab('reports')" class="btn btn-warning">📊 التقارير التفصيلية</button>
             <button onclick="switchAdminTab('users')" class="btn btn-success">⚙️ إدارة الموظفين</button>
         </div>
@@ -416,6 +430,11 @@
     let timerInterval = null;
     let isDataLoaded = false;
     
+    // متغيرات لتتبع حالة الصوت
+    let previousBreakStates = {}; // لتتبع من كان في بريك سابقاً
+    let adminSoundMuted = false;  // زر كتم الصوت للمدير
+    let isFirstLoadSound = true; // لتجنب الأصوات عند تحميل الصفحة لأول مرة
+
     // إعداد المديرين بالبيانات الجديدة
     const MANAGERS_CONFIG = [
         { username: 'mahmoud', name: 'محمود', pass: '112233' },
@@ -436,11 +455,10 @@
                         state: "offline"
                     });
                 } else {
-                    // تحديث البيانات إذا كانت موجودة لضمان الاسم الصحيح والصلاحية
                     db.ref('users/' + m.username).update({
                         realName: m.name,
                         role: 'admin',
-                        password: m.pass // تحديث الباسورد إذا تغير
+                        password: m.pass 
                     });
                 }
             });
@@ -454,17 +472,84 @@
         }
     });
 
+    // ============================================
+    // المتتبع الرئيسي للبيانات (وهنا منطق الأصوات)
+    // ============================================
     db.ref('users').on('value', (snapshot) => {
         const data = snapshot.val();
         allUsersData = data || {};
         
         if (!isDataLoaded) {
             isDataLoaded = true;
-            initManagers(); // تأكد من إنشاء المديرين
+            initManagers(); 
             document.getElementById('loading').style.display = 'none';
             document.getElementById('mainContainer').classList.remove('hidden');
             checkSavedSession();
+            
+            // عند أول تحميل، نخزن الحالة عشان ما يرنش
+            Object.values(allUsersData).forEach(u => {
+                previousBreakStates[u.username] = u.isOnBreak;
+            });
+            isFirstLoadSound = false;
         }
+
+        // ============ منطق التنبيهات الصوتية للمديرين ============
+        if (currentUser && currentUser.role === 'admin') {
+            let hasPendingRequests = false;
+            let someoneStartedBreak = false;
+
+            Object.values(allUsersData).forEach(u => {
+                // 1. فحص الطلبات المعلقة (أوفر تايم أو خروج اضطراري)
+                if ((u.emergencyRequest && u.emergencyRequest.status === 'pending') || 
+                    (u.overtimeRequest && u.overtimeRequest.status === 'pending')) {
+                    hasPendingRequests = true;
+                }
+
+                // 2. فحص بدء البريك الجديد (صوت بسيط)
+                if (u.isOnBreak && !previousBreakStates[u.username] && !isFirstLoadSound) {
+                    someoneStartedBreak = true;
+                }
+                
+                // تحديث الحالة السابقة
+                previousBreakStates[u.username] = u.isOnBreak;
+            });
+
+            const ringAudio = document.getElementById('requestRing');
+            const notifyAudio = document.getElementById('notifySound');
+
+            if (!adminSoundMuted) {
+                // تشغيل صوت الرنين المستمر للطلبات المعلقة
+                if (hasPendingRequests) {
+                    if (ringAudio.paused) {
+                        ringAudio.currentTime = 0;
+                        ringAudio.play().catch(e => console.log("Audio permission needed"));
+                    }
+                } else {
+                    ringAudio.pause();
+                    ringAudio.currentTime = 0;
+                }
+
+                // تشغيل صوت التنبيه القصير عند بدء بريك
+                if (someoneStartedBreak) {
+                    notifyAudio.currentTime = 0;
+                    notifyAudio.play().catch(e => console.log("Audio permission needed"));
+                }
+            } else {
+                // إذا كان مكتوم، وقف كل الأصوات
+                ringAudio.pause();
+            }
+            
+            // تحديث الشارات الحمراء (Badges)
+            let pendingEm = Object.values(allUsersData).some(u => u.emergencyRequest && u.emergencyRequest.status === 'pending');
+            let pendingOt = Object.values(allUsersData).some(u => u.overtimeRequest && u.overtimeRequest.status === 'pending');
+            
+            if(pendingEm) document.getElementById('badgeEmergency').classList.remove('hidden');
+            else document.getElementById('badgeEmergency').classList.add('hidden');
+            
+            if(pendingOt) document.getElementById('badgeOvertime').classList.remove('hidden');
+            else document.getElementById('badgeOvertime').classList.add('hidden');
+        }
+        // ========================================================
 
         if(!document.getElementById('adminSection').classList.contains('hidden')) {
             renderMonitorTable();
@@ -482,13 +567,28 @@
         }
     });
 
+    // --- وظيفة كتم الصوت للمدير ---
+    function toggleAdminMute() {
+        adminSoundMuted = !adminSoundMuted;
+        const btn = document.getElementById('muteBtn');
+        const ring = document.getElementById('requestRing');
+        
+        if (adminSoundMuted) {
+            btn.innerText = "🔇 الصوت مكتوم";
+            btn.classList.replace('btn-info', 'btn-secondary');
+            ring.pause();
+        } else {
+            btn.innerText = "🔊 الصوت مفعل";
+            btn.classList.replace('btn-secondary', 'btn-info');
+        }
+    }
+
     // --- المصادقة ---
     function checkSavedSession() {
         const savedUser = localStorage.getItem('break_sys_user');
         
         if(savedUser && allUsersData[savedUser]) {
             currentUser = allUsersData[savedUser];
-            // التحقق هل هو أحد المديرين
             const isManager = MANAGERS_CONFIG.some(m => m.username === savedUser) || currentUser.role === 'admin';
             
             if (isManager) {
@@ -547,6 +647,8 @@
         clearInterval(timerInterval); 
         showSection('loginSection'); 
         stopAlarm();
+        // إيقاف أصوات الأدمن أيضاً
+        document.getElementById('requestRing').pause();
     }
 
     function showAdmin() { 
@@ -554,6 +656,11 @@
         document.getElementById('currentManagerDisplay').innerText = `👤 ${currentUser.realName}`;
         switchAdminTab('monitor'); 
         startTimer(); 
+        
+        // إعادة تهيئة تتبع الحالة لتجنب الرنين الفوري
+        Object.values(allUsersData).forEach(u => {
+            previousBreakStates[u.username] = u.isOnBreak;
+        });
     }
     function showEmployee() { showSection('employeeSection'); initUserDash(); }
     
@@ -602,7 +709,10 @@
         updates[`users/${username}/emergencyRequest/status`] = approved ? 'approved' : 'rejected';
         updates[`users/${username}/emergencyRequest/approvedBy`] = currentUser.realName; 
         
-        db.ref().update(updates).then(() => alert(approved ? "تم قبول الطلب" : "تم الرفض"));
+        db.ref().update(updates).then(() => {
+             // الصوت سيتوقف تلقائياً لأن الحالة لم تعد pending
+             // alert(approved ? "تم قبول الطلب" : "تم الرفض");
+        });
     }
 
     // --- إدارة طلبات الأوفر تايم (Admin) ---
@@ -640,16 +750,15 @@
             const currentBalance = allUsersData[username].approvedOvertimeBalance || 0;
             updates[`users/${username}/approvedOvertimeBalance`] = currentBalance + parseFloat(req.hours);
             
-            // تسجيل تفصيلي للأوفر تايم مع اسم المدير
             const historyKey = Date.now();
             updates[`users/${username}/overtimeHistory/${historyKey}`] = {
                 date: new Date().toLocaleDateString('ar-EG'),
                 hours: parseFloat(req.hours),
-                approvedBy: currentUser.realName // تخزين اسم المدير الحالي (محمود، أبو تميم، أو أحمد)
+                approvedBy: currentUser.realName 
             };
         }
         
-        db.ref().update(updates);
+        db.ref().update(updates); // سيتوقف الصوت تلقائياً
     };
 
     // --- إدارة الموظفين ---
@@ -818,13 +927,9 @@
         if(!uName) return alert("الرجاء اختيار موظف");
         const user = allUsersData[uName];
 
-        // 1. تقرير الأوفر تايم التفصيلي (Audit)
-        // يعرض: اسم الموظف | التاريخ | الساعات | من وافق عليه
         if(user.overtimeHistory) {
             let otCount = 0;
             let totalOtHours = 0;
-            
-            // ترتيب التواريخ من الأحدث للأقدم
             const sortedOt = Object.values(user.overtimeHistory).sort((a,b) => b.date.localeCompare(a.date));
 
             sortedOt.forEach(ot => {
@@ -848,7 +953,6 @@
             otBody.innerHTML = '<tr><td colspan="4">لا يوجد سجل أوفر تايم لهذا الموظف</td></tr>';
         }
 
-        // 2. التقرير اليومي العادي (بريكات)
         if(user.history) {
             Object.values(user.history).reverse().forEach(h => {
                 tbody.innerHTML += `
@@ -897,13 +1001,11 @@
     window.startMyBreak = (type) => {
         if(currentUser.isOnBreak) return alert("أنت في نشاط بالفعل");
 
-        // منطق الخروج الاضطراري
         if(type === 'emergency') {
             const req = currentUser.emergencyRequest;
             if(!req || req.status !== 'approved') return alert("يجب الحصول على موافقة المدير أولاً!");
         }
 
-        // منطق البريك العام (العدد)
         if(type === 'general') {
             const limit = globalSettings.maxGeneralBreaks || 100;
             const currentCount = Object.values(allUsersData).filter(u => u.isOnBreak && u.breakType === 'general').length;
@@ -949,7 +1051,6 @@
         const emStatusArea = document.getElementById('emergencyStatusArea');
         const otStatus = document.getElementById('overtimeStatus');
 
-        // تحديث حالة زر الاضطراري
         if(currentUser.emergencyRequest) {
             const st = currentUser.emergencyRequest.status;
             if(st === 'pending') {
@@ -965,7 +1066,6 @@
             emStatusArea.innerHTML = `<button onclick="requestEmergency()" class="btn btn-dark btn-sm" style="width:100%">طلب خروج</button>`;
         }
 
-        // تحديث حالة الأوفر تايم
         if(currentUser.overtimeRequest) {
             const st = currentUser.overtimeRequest.status;
             if(st === 'pending') otStatus.innerHTML = `<span style="color:orange">⏳ طلبك (${currentUser.overtimeRequest.hours}س) قيد المراجعة</span>`;
@@ -975,7 +1075,6 @@
             otStatus.innerHTML = '';
         }
 
-        // المؤقتات
         if(currentUser.isOnBreak) {
             document.getElementById('controlsArea').classList.add('hidden');
             document.getElementById('stopArea').classList.remove('hidden');
