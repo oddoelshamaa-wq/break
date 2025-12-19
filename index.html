@@ -71,9 +71,10 @@
     <h3>جاري تحميل النظام...</h3>
 </div>
 
+<!-- التنبيهات الصوتية -->
 <audio id="alarmSound" loop><source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg"></audio>
-<audio id="notifySound"><source src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" type="audio/mp3"></audio>
-<audio id="requestRing"><source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mp3"></audio>
+<audio id="notifySound"><source src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" type="audio/mp3"></audio> <!-- صوت خروج بسيط -->
+<audio id="requestRing" loop><source src="https://assets.mixkit.co/active_storage/sfx/1110/1110-preview.mp3" type="audio/mp3"></audio> <!-- صوت جرس هادئ ومستمر -->
 
 <div class="container hidden" id="mainContainer">
     
@@ -102,7 +103,7 @@
             <button onclick="switchAdminTab('emergency')" class="btn btn-danger btn-sm">🚨 الطوارئ <span id="emBadge" class="badge-count hidden">0</span></button>
             <button onclick="switchAdminTab('overtime')" class="btn btn-purple btn-sm">🕒 الإضافي <span id="otBadge" class="badge-count hidden">0</span></button>
             <button onclick="switchAdminTab('reports')" class="btn btn-warning btn-sm">📊 التقارير</button>
-            <button onclick="switchAdminTab('users')" class="btn btn-success btn-sm">⚙️ إدارة الموظفين</button>
+            <button onclick="switchAdminTab('users')" class="btn btn-success btn-sm">⚙️ الموظفين</button>
         </div>
 
         <div id="tab-monitor">
@@ -200,13 +201,27 @@
         const newData = snap.val() || {};
         
         if (currentUser && currentUser.role === 'admin' && isLoaded && soundActive) {
+            let hasAnyPending = false;
             Object.keys(newData).forEach(un => {
                 if (MANAGERS.includes(un)) return;
+                
+                // تنبيه خروج جديد
                 if (newData[un].isOnBreak && (!allUsersData[un] || !allUsersData[un].isOnBreak)) document.getElementById('notifySound').play().catch(e=>{});
-                const hasNewOt = newData[un].otRequest && newData[un].otRequest.status === 'قيد الانتظار' && (!allUsersData[un] || !allUsersData[un].otRequest || allUsersData[un].otRequest.status !== 'قيد الانتظار');
-                const hasNewEm = newData[un].emRequest && newData[un].emRequest.status === 'قيد الانتظار' && (!allUsersData[un] || !allUsersData[un].emRequest || allUsersData[un].emRequest.status !== 'قيد الانتظار');
-                if (hasNewOt || hasNewEm) document.getElementById('requestRing').play().catch(e=>{});
+                
+                // فحص وجود طلبات معلقة للصوت المستمر
+                const isOtPending = newData[un].otRequest && newData[un].otRequest.status === 'قيد الانتظار';
+                const isEmPending = newData[un].emRequest && newData[un].emRequest.status === 'قيد الانتظار';
+                if (isOtPending || isEmPending) hasAnyPending = true;
             });
+
+            // التحكم في صوت الجرس المستمر
+            const ring = document.getElementById('requestRing');
+            if (hasAnyPending) {
+                if (ring.paused) ring.play().catch(e=>{});
+            } else {
+                ring.pause();
+                ring.currentTime = 0;
+            }
         }
 
         allUsersData = newData;
@@ -236,28 +251,18 @@
         tbody.innerHTML = ''; let activeGen = 0;
         Object.values(allUsersData).forEach(u => {
             if (!u || MANAGERS.includes(u.username)) return;
-            
-            // حساب لايف للنشاط الحالي
-            let liveGeneral = u.usedSeconds || 0;
-            let livePrayer = u.prayerSeconds || 0;
-            let liveMeeting = u.meetingSeconds || 0;
-            
-            let elap = 0;
+            let liveGeneral = u.usedSeconds || 0; let livePrayer = u.prayerSeconds || 0; let liveMeeting = u.meetingSeconds || 0;
             if (u.isOnBreak && u.lastStartTime) {
-                elap = Math.floor((Date.now() - u.lastStartTime) / 1000);
+                let elap = Math.floor((Date.now() - u.lastStartTime) / 1000);
                 if (u.breakType === 'بريك عام') { liveGeneral += elap; activeGen++; }
                 else if (u.breakType === 'صلاة') livePrayer += elap;
                 else if (u.breakType === 'ميتنج') liveMeeting += elap;
             }
-
-            const rem = (u.allowance * 60) - liveGeneral;
-            const remTxt = rem >= 0 ? formatTime(rem) : `<span style="color:red; font-weight:bold;">-${formatTime(Math.abs(rem))}</span>`;
+            const rem = (u.allowance * 60) - liveGeneral; const remTxt = rem >= 0 ? formatTime(rem) : `<span style="color:red; font-weight:bold;">-${formatTime(Math.abs(rem))}</span>`;
             const online = `<span class="online-dot ${u.state === 'online' ? 'dot-green' : 'dot-grey'}"></span>`;
             const isWarning = (u.isOnBreak && u.breakType === 'بريك عام' && rem < 300 && rem > 0);
-            
             let ctrl = u.isOnBreak ? `<button onclick="adminStop('${u.username}')" class="btn btn-danger btn-sm" style="width:100%">🛑 إيقاف</button>` : 
                 `<div class="admin-table-ctrl"><div class="admin-row-top"><select id="sel_${u.username}" onchange="saveAdminSelect('${u.username}', this.value)"><option value="بريك عام" ${adminSelectBuffer[u.username]==='بريك عام'?'selected':''}>بريك</option><option value="صلاة" ${adminSelectBuffer[u.username]==='صلاة'?'selected':''}>صلاة</option><option value="ميتنج" ${adminSelectBuffer[u.username]==='ميتنج'?'selected':''}>ميتنج</option></select><button onclick="adminStart('${u.username}')" class="btn btn-success btn-sm">▶ بدء</button></div><input type="text" id="inp_${u.username}" placeholder="السبب..." oninput="saveAdminTyping('${u.username}', this.value)" value="${adminTypingBuffer[u.username] || ''}"></div>`;
-            
             tbody.innerHTML += `<tr class="${isWarning ? 'صف-تحذير' : ''}"><td>${u.realName} ${online}</td><td>${u.isOnBreak ? u.breakType : 'متاح'}</td><td>${remTxt}</td><td>${formatTime(livePrayer)}</td><td>${formatTime(liveMeeting)}</td><td>${ctrl}</td></tr>`;
         });
         if (focusedId) { const el = document.getElementById(focusedId); if(el) { el.focus(); if(el.tagName === 'INPUT') el.setSelectionRange(selStart, selStart); } }
@@ -303,7 +308,7 @@
         document.getElementById('monthTotalBreaks').innerText = Math.round(tOx/60) + " دقيقة"; document.getElementById('monthTotalPrayer').innerText = Math.round((u.prayerSeconds||0)/60) + " دقيقة"; document.getElementById('monthTotalOvertime').innerText = (u.totalApprovedOt || 0) + " ساعة";
     }
 
-    function endDay() { if(!confirm("إقفال اليوم للكل؟")) return; Object.values(allUsersData).forEach(u => { if(!u || MANAGERS.includes(u.username)) return; let g = u.usedSeconds || 0; if(u.isOnBreak && u.breakType === 'بريك عام') g += Math.floor((Date.now() - (u.lastStartTime||Date.now()))/1000); db.ref('users/'+u.username+'/history/'+Date.now()).set({ date: new Date().toLocaleDateString('ar-EG'), totalGeneral: g }); db.ref('users/'+u.username).update({ usedSeconds: 0, prayerSeconds: 0, meetingSeconds: 0, isOnBreak: false, lastStartTime: null, otRequest: null, emRequest: null }); }); alert("تم ✅"); }
+    function endDay() { if(!confirm("إقفال اليوم للكل؟")) return; Object.values(allUsersData).forEach(u => { if(!u || MANAGERS.includes(u.username)) return; let g = u.usedSeconds || 0; if(u.isOnBreak && u.breakType === 'بريك عام') g += Math.floor((Date.now() - (u.lastStartTime||Date.now()))/1000); db.ref('users/'+u.username+'/history/'+Date.now()).set({ date: new Date().toLocaleDateString('ar-EG'), totalGeneral: g }); db.ref('users/'+u.username).update({ usedSeconds: 0, prayerSeconds: 0, meetingSeconds: 0, isOnBreak: false, lastStartTime: null, otRequest: null, emRequest: null }); }); alert("تم الحفظ ✅"); }
 
     function startMyBreak(t) { if(currentUser.isOnBreak) return; const r = document.getElementById('breakReason').value.trim(); if(t==='بريك عام' && !r) return alert("اكتب السبب"); db.ref('users/'+currentUser.username).update({ isOnBreak: true, breakType: t, lastStartTime: Date.now(), lastReason: r || t }); if(t==='طوارئ') db.ref('users/'+currentUser.username+'/emRequest').remove(); }
     function stopMyBreak() { const u = currentUser, d = Math.floor((Date.now() - (u.lastStartTime || Date.now()))/1000); const dur = isNaN(d) ? 0 : d; db.ref('users/'+u.username+'/sessions').push({ date: new Date().toLocaleDateString('ar-EG'), type: u.breakType, reason: u.lastReason, duration: dur }); const updates = { isOnBreak: false, lastStartTime: null, lastReason: "" }; if(u.breakType==='بريك عام' || u.breakType==='طوارئ') updates.usedSeconds = (u.usedSeconds||0) + dur; else if(u.breakType==='صلاة') updates.prayerSeconds = (u.prayerSeconds||0) + dur; else if(u.breakType==='ميتنج') updates.meetingSeconds = (u.meetingSeconds||0) + dur; db.ref('users/'+u.username).update(updates); document.getElementById('breakReason').value = ""; }
@@ -313,7 +318,6 @@
         if (u.isOnBreak) {
             document.getElementById('controlsArea').classList.add('hidden'); document.getElementById('stopArea').classList.remove('hidden'); 
             msg.innerText = (u.breakType === 'صلاة') ? "تقبل الله" : "بريك سعيد";
-            
             const elap = Math.floor((Date.now() - (u.lastStartTime || Date.now()))/1000);
             if (u.breakType === 'بريك عام' || u.breakType === 'طوارئ') {
                 const rem = allowance - ((u.usedSeconds||0) + elap);
