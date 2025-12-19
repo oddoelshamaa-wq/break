@@ -163,13 +163,13 @@
         .card-emergency { border-color: var(--emergency-color); background: #fff0f0; }
 
         .summary-card {
-            background: white; border: 2px solid #2ecc71; padding: 10px; border-radius: 10px;
+            background: white; border: 2px solid #2ecc71; padding: 15px; border-radius: 10px;
             margin-bottom: 15px; display: flex; flex-wrap: wrap; justify-content: space-around; text-align: center;
             gap: 10px;
         }
         .summary-item { flex: 1 1 100px; }
         .summary-item h5 { margin: 0; color: #7f8c8d; font-size: 0.8rem; }
-        .summary-item p { margin: 2px 0 0; font-size: 1rem; font-weight: bold; color: #27ae60; }
+        .summary-item p { margin: 2px 0 0; font-size: 1.1rem; font-weight: bold; color: #27ae60; }
 
         .online-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; }
         .dot-green { background-color: #2ecc71; }
@@ -267,10 +267,11 @@
             </div>
             <button onclick="renderUserReport()" class="btn btn-primary" style="width:100%;">عرض التقرير</button>
 
+            <!-- ملخص الشهر (بالدقائق) -->
             <div class="summary-card hidden" id="monthlySummary">
-                <div class="summary-item"><h5>الأكسدة (شهر)</h5><p id="monthTotalBreaks">0</p></div>
-                <div class="summary-item"><h5>صلاة (شهر)</h5><p id="monthTotalPrayer">0</p></div>
-                <div class="summary-item"><h5>ميتنج (شهر)</h5><p id="monthTotalMeeting">0</p></div>
+                <div class="summary-item"><h5>الأكسدة (شهر)</h5><p id="monthTotalBreaks">0 دقيقة</p></div>
+                <div class="summary-item"><h5>صلاة (شهر)</h5><p id="monthTotalPrayer">0 دقيقة</p></div>
+                <div class="summary-item"><h5>ميتنج (شهر)</h5><p id="monthTotalMeeting">0 دقيقة</p></div>
             </div>
 
             <h4 style="font-size:1rem; margin-bottom:5px;">📝 سجل التحركات التفصيلي</h4>
@@ -278,6 +279,20 @@
                 <table>
                     <thead><tr><th>الوقت</th><th>النوع</th><th>السبب</th><th>المدة</th></tr></thead>
                     <tbody id="sessionsReportBody"></tbody>
+                </table>
+            </div>
+
+            <h4 style="font-size:1rem; margin-top:20px; color: #8e44ad;">🕒 سجل الأوفر تايم التفصيلي</h4>
+            <div class="table-responsive">
+                <table id="overtimeReportTable">
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>عدد الساعات</th>
+                            <th>الموافقة بواسطة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="overtimeReportBody"></tbody>
                 </table>
             </div>
 
@@ -361,7 +376,7 @@
                 <div style="margin-top: 20px; padding-top: 15px; border-top: 2px dashed #eee;">
                     <h4 style="font-size: 0.95rem; color: #27ae60;">📊 إجمالي الأكسدة الشخصي</h4>
                     <div class="summary-card" style="border-color: #2ecc71;">
-                        <div class="summary-item"><h5>إجمالي الأكسدة (شهر)</h5><p id="userMonthTotal" style="font-size:1.1rem;">0</p></div>
+                        <div class="summary-item"><h5>إجمالي الأكسدة (شهر)</h5><p id="userMonthTotal" style="font-size:1.1rem;">0 دقيقة</p></div>
                     </div>
                     <div class="table-responsive" style="max-height: 150px; background:#fff;">
                         <table style="min-width: unset;">
@@ -638,12 +653,35 @@
 
     window.renderUserReport = () => {
         const uName = document.getElementById('reportUserSelect').value; if(!uName) return alert("اختر موظف");
-        const user = allUsersData[uName], sBody = document.getElementById('sessionsReportBody'), hBody = document.getElementById('reportBody');
-        sBody.innerHTML = ''; hBody.innerHTML = ''; document.getElementById('monthlySummary').classList.remove('hidden');
-        if(user.sessions) { Object.values(user.sessions).reverse().forEach(s => { sBody.innerHTML += `<tr><td style="font-size:0.7rem;">${s.date} ${s.time || ''}</td><td>${s.type}</td><td style="font-size:0.7rem;">${s.reason || '-'}</td><td>${Math.round(s.durationSeconds/60)}د</td></tr>`; }); }
+        const user = allUsersData[uName], sBody = document.getElementById('sessionsReportBody'), hBody = document.getElementById('reportBody'), otBody = document.getElementById('overtimeReportBody');
+        
+        sBody.innerHTML = ''; hBody.innerHTML = ''; otBody.innerHTML = '';
+        document.getElementById('monthlySummary').classList.remove('hidden');
+        
+        if(user.sessions) { 
+            Object.values(user.sessions).reverse().forEach(s => { 
+                sBody.innerHTML += `<tr><td style="font-size:0.7rem;">${s.date} ${s.time || ''}</td><td>${s.type}</td><td style="font-size:0.7rem;">${s.reason || '-'}</td><td>${Math.round(s.durationSeconds/60)}د</td></tr>`; 
+            }); 
+        }
+        
+        if(user.overtimeHistory) {
+            Object.values(user.overtimeHistory).reverse().forEach(ot => {
+                otBody.innerHTML += `<tr><td>${ot.date}</td><td>${ot.hours} ساعة</td><td>✅ ${ot.approvedBy || 'مدير'}</td></tr>`;
+            });
+        } else { otBody.innerHTML = '<tr><td colspan="3">لا يوجد سجل أوفر تايم</td></tr>'; }
+
         let mb = 0, mp = 0, mm = 0, curM = new Date().toLocaleDateString('ar-EG').split('/')[1];
-        if(user.history) { Object.values(user.history).reverse().forEach(h => { hBody.innerHTML += `<tr><td>${h.date}</td><td>${formatTime(h.totalGeneral)}</td><td>${formatTime(h.totalPrayer)}</td><td>${formatTime(h.totalMeeting)}</td><td>${h.approvedOvertime}س</td></tr>`; if(h.date.includes('/' + curM + '/')) { mb += (h.totalGeneral || 0); mp += (h.totalPrayer || 0); mm += (h.totalMeeting || 0); } }); }
-        document.getElementById('monthTotalBreaks').innerText = Math.round(mb/60); document.getElementById('monthTotalPrayer').innerText = Math.round(mp/60); document.getElementById('monthTotalMeeting').innerText = Math.round(mm/60);
+        if(user.history) { 
+            Object.values(user.history).reverse().forEach(h => { 
+                hBody.innerHTML += `<tr><td>${h.date}</td><td>${formatTime(h.totalGeneral)}</td><td>${formatTime(h.totalPrayer)}</td><td>${formatTime(h.totalMeeting)}</td><td>${h.approvedOvertime}س</td></tr>`; 
+                if(h.date.includes('/' + curM + '/')) { 
+                    mb += (h.totalGeneral || 0); mp += (h.totalPrayer || 0); mm += (h.totalMeeting || 0); 
+                } 
+            }); 
+        }
+        document.getElementById('monthTotalBreaks').innerText = Math.round(mb/60) + " دقيقة"; 
+        document.getElementById('monthTotalPrayer').innerText = Math.round(mp/60) + " دقيقة"; 
+        document.getElementById('monthTotalMeeting').innerText = Math.round(mm/60) + " دقيقة";
     }
 
     function initUserDash() { document.getElementById('welcomeMsg').innerText = `أهلاً، ${currentUser.realName}`; startTimer(); }
@@ -680,10 +718,10 @@
             let mTotal = 0, curM = new Date().toLocaleDateString('ar-EG').split('/')[1]; 
             Object.values(currentUser.history).reverse().forEach(h => { 
                 const mins = Math.round((h.totalGeneral || 0) / 60); 
-                hBody.innerHTML += `<tr><td>${h.date}</td><td>${mins}د</td></tr>`; 
+                hBody.innerHTML += `<tr><td>${h.date}</td><td>${mins} دقيقة</td></tr>`; 
                 if(h.date.includes('/' + curM + '/')) { mTotal += (h.totalGeneral || 0); } 
             }); 
-            totalDisplay.innerText = Math.round(mTotal/60); 
+            totalDisplay.innerText = Math.round(mTotal/60) + " دقيقة"; 
         }
 
         if(currentUser.emergencyRequest) {
@@ -696,8 +734,6 @@
         if(currentUser.isOnBreak) {
             document.getElementById('controlsArea').classList.add('hidden'); document.getElementById('stopArea').classList.remove('hidden'); 
             const elap = Math.floor((Date.now() - currentUser.lastStartTime) / 1000);
-            
-            // إضافة "بريك سعيد" عند بدء أي نشاط
             statusMsg.innerText = "بريك سعيد";
 
             if(currentUser.breakType === 'meeting' || currentUser.breakType === 'prayer') { 
@@ -710,23 +746,23 @@
                     timerDisplay.style.color = "#2c3e50"; 
                     stopAlarm(); 
                 } else { 
-                    label.innerText = "الأكسدة"; 
+                    label.innerText = "أكسدة"; 
                     timerDisplay.innerText = "-" + formatTime(Math.abs(rem)); 
                     timerDisplay.style.color = "red"; 
-                    statusMsg.innerText = "أنت الآن في مرحلة الأكسدة!"; // تغيير الرسالة عند التجاوز
+                    statusMsg.innerText = "أنت الآن في مرحلة الأكسدة!";
                     playAlarm(); 
                 } 
             }
         } else {
             document.getElementById('controlsArea').classList.remove('hidden'); document.getElementById('stopArea').classList.add('hidden'); 
             stopAlarm(); 
-            statusMsg.innerText = ""; // مسح الرسالة عند التوقف
+            statusMsg.innerText = ""; 
             const rem = (currentUser.allowance * 60) - (currentUser.usedSeconds || 0);
             if (rem >= 0) {
                 label.innerText = "رصيد البريك المتبقي"; 
                 timerDisplay.innerText = formatTime(rem);
             } else {
-                label.innerText = "الأكسدة";
+                label.innerText = "أكسدة";
                 timerDisplay.innerText = "00:00";
                 statusMsg.innerText = "لديك تجاوز سابق (أكسدة)";
                 statusMsg.style.color = "red";
