@@ -178,7 +178,7 @@
         
         #overtimeReportTable th { background-color: #8e44ad; }
 
-        /* ستايل الملخصات الجديدة */
+        /* ستايل الملخصات */
         .summary-card {
             background: white; border: 2px solid #2ecc71; padding: 15px; border-radius: 10px;
             margin-bottom: 20px; display: flex; justify-content: space-around; text-align: center;
@@ -258,7 +258,7 @@
                     <tr>
                         <th>الاسم</th>
                         <th>الحالة</th>
-                        <th>بريك عام (متبقي)</th>
+                        <th>الأكسدة المتاحة (متبقي)</th>
                         <th>صلاة</th>
                         <th>ميتنج</th>
                         <th>تحكم</th>
@@ -303,15 +303,15 @@
                 <div><button onclick="renderUserReport()" class="btn btn-primary" style="width: 100%;">استخراج التقرير 🔍</button></div>
             </div>
 
-            <!-- ملخص الشهر الجديد -->
+            <!-- ملخص الشهر للمدير -->
             <div class="summary-card hidden" id="monthlySummary">
-                <div class="summary-item"><h5>إجمالي البريك (هذا الشهر)</h5><p id="monthTotalBreaks">0 دقيقة</p></div>
+                <div class="summary-item"><h5>إجمالي الأكسدة (هذا الشهر)</h5><p id="monthTotalBreaks">0 دقيقة</p></div>
                 <div class="summary-item"><h5>إجمالي الصلاة (هذا الشهر)</h5><p id="monthTotalPrayer">0 دقيقة</p></div>
                 <div class="summary-item"><h5>إجمالي الميتنج (هذا الشهر)</h5><p id="monthTotalMeeting">0 دقيقة</p></div>
             </div>
             
             <div style="margin-top:20px; border: 2px solid #27ae60; border-radius: 10px; padding: 10px; background: #f6fff9;">
-                <h4 style="color: #27ae60;">📝 تفاصيل التحركات اليومية (كل بريك والسبب المكتوب)</h4>
+                <h4 style="color: #27ae60;">📝 تفاصيل التحركات اليومية (كل أكسدة والسبب المكتوب)</h4>
                 <div style="max-height: 400px; overflow-y: auto;">
                     <table id="sessionsReportTable">
                         <thead>
@@ -344,9 +344,9 @@
             </div>
 
             <div style="margin-top:30px;">
-                <h4>🗓️ الملخص اليومي للحضور والبريكات</h4>
+                <h4>🗓️ الملخص اليومي للحضور والأكسدة</h4>
                 <table id="reportTable">
-                    <thead><tr><th>التاريخ</th><th>إجمالي بريك</th><th>صلاة</th><th>ميتنج</th><th>إجمالي أوفر تايم (لليوم)</th></tr></thead>
+                    <thead><tr><th>التاريخ</th><th>إجمالي أكسدة</th><th>صلاة</th><th>ميتنج</th><th>إجمالي أوفر تايم (لليوم)</th></tr></thead>
                     <tbody id="reportBody"></tbody>
                 </table>
             </div>
@@ -364,7 +364,7 @@
                     <input type="text" id="newRealName" placeholder="الاسم الحقيقي">
                     <input type="text" id="newUsername" placeholder="User Name (لا يمكن تكراره)">
                     <input type="text" id="newPassword" placeholder="كلمة المرور">
-                    <input type="number" id="newAllowance" placeholder="مدة البريك العام (دقيقة)" value="45">
+                    <input type="number" id="newAllowance" placeholder="مدة الأكسدة المتاحة (دقيقة)" value="45">
                 </div>
                 <button onclick="saveUser()" id="saveUserBtn" class="btn btn-success" style="width:100%; margin-top:10px;">حفظ الموظف</button>
             </div>
@@ -387,17 +387,17 @@
                 <div id="timerLabel" class="timer-label">جاهز للعمل</div>
                 <div class="timer-display" id="userTimer">00:00</div>
                 <h3 id="userStatusMsg"></h3>
-                <div id="overtimeAlert" class="hidden status-badge bg-red" style="font-size: 1.2rem; padding: 10px;">تجاوزت وقت البريك المسموح!</div>
+                <div id="overtimeAlert" class="hidden status-badge bg-red" style="font-size: 1.2rem; padding: 10px;">تجاوزت وقت الأكسدة المسموح!</div>
             </div>
 
             <div id="controlsArea">
                 <div style="max-width: 400px; margin: auto; margin-bottom: 15px;">
-                    <input type="text" id="breakReason" placeholder="أكتب سبب البريك هنا (مثلاً: راحة، غداء...)" style="text-align: center;">
+                    <input type="text" id="breakReason" placeholder="أكتب سبب الأكسدة هنا (مثلاً: راحة، غداء...)" style="text-align: center;">
                 </div>
 
                 <div class="employee-controls">
                     <div class="control-card card-general">
-                        <h4>🍔 بريك عام</h4>
+                        <h4>🍔 أكسدة عامة</h4>
                         <button onclick="startMyBreak('general')" class="btn btn-success" style="width:100%">بدء</button>
                     </div>
                     <div class="control-card card-prayer">
@@ -426,6 +426,20 @@
                         </div>
                     </div>
                     <div id="overtimeStatus" style="margin-top:10px; font-weight:bold;"></div>
+                </div>
+
+                <!-- قسم جديد للموظف لمتابعة أكسدته -->
+                <div style="margin-top: 30px; border-top: 2px dashed #ddd; padding-top: 20px;">
+                    <h4 style="color: #27ae60;">📊 ملخص أكسدتك الشخصي</h4>
+                    <div class="summary-card" style="margin-bottom: 10px; border-color: #2ecc71;">
+                        <div class="summary-item"><h5>إجمالي أكسدة الشهر</h5><p id="userMonthTotal">0 دقيقة</p></div>
+                    </div>
+                    <div style="max-height: 200px; overflow-y: auto; background: #fff; border-radius: 10px; border: 1px solid #eee;">
+                        <table style="font-size: 0.85rem; margin-top:0;">
+                            <thead><tr><th>التاريخ</th><th>الأكسدة (دقيقة)</th></tr></thead>
+                            <tbody id="userDailyHistoryBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -695,7 +709,7 @@
             const onlineIndicator = `<span class="online-dot ${u.state === 'online' ? 'dot-green' : 'dot-grey'}"></span>`;
             let statusBadge = '<span class="status-badge bg-green">متاح</span>';
             if (u.isOnBreak) {
-                if (u.breakType === 'general') statusBadge = `<span class="status-badge bg-red">⛔ بريك (${u.lastReason})</span>`;
+                if (u.breakType === 'general') statusBadge = `<span class="status-badge bg-red">⛔ أكسدة (${u.lastReason})</span>`;
                 else if (u.breakType === 'prayer') statusBadge = `<span class="status-badge bg-blue">🕌 يصلي</span>`;
                 else if (u.breakType === 'meeting') statusBadge = `<span class="status-badge bg-orange">🤝 ميتنج</span>`;
                 else if (u.breakType === 'emergency') statusBadge = `<span class="status-badge bg-dark-red">🚨 اضطراري</span>`;
@@ -704,7 +718,7 @@
             tbody.innerHTML += `<tr><td style="font-weight:bold">${u.realName} ${onlineIndicator}</td><td>${statusBadge}</td><td>${remaining >= 0 ? formatTime(remaining) : '<span style="color:red; font-weight:bold;">'+formatTime(Math.abs(remaining))+'</span>'}</td><td>${formatTime(u.prayerSeconds || 0)}</td><td>${formatTime(u.meetingSeconds || 0)}</td><td>${u.isOnBreak ? '<button onclick="forceStop(\''+u.username+'\')" class="btn btn-warning btn-sm">إنهاء</button>' : '-'}</td></tr>`;
         });
         const limit = globalSettings.maxGeneralBreaks || 100;
-        document.getElementById('activeBreakCount').innerHTML = `الموظفين في البريك العام: <span style="font-size:1.2em; ${activeGeneralBreaks >= limit ? 'color:red' : 'color:green'}">${activeGeneralBreaks} / ${limit}</span>`;
+        document.getElementById('activeBreakCount').innerHTML = `الموظفين في الأكسدة العامة: <span style="font-size:1.2em; ${activeGeneralBreaks >= limit ? 'color:red' : 'color:green'}">${activeGeneralBreaks} / ${limit}</span>`;
     }
 
     window.forceStop = (username) => {
@@ -712,7 +726,6 @@
         const u = allUsersData[username];
         const duration = Math.floor((Date.now() - u.lastStartTime) / 1000);
         
-        // تسجيل في السيشن التفصيلي للمدير
         const sessionLog = {
             timestamp: Date.now(),
             date: new Date().toLocaleDateString('ar-EG'),
@@ -756,7 +769,6 @@
         }
     }
 
-    // --- الوظيفة الجديدة لتقديم تقرير تفصيلي وإحصائيات شهرية ---
     window.renderUserReport = () => {
         const uName = document.getElementById('reportUserSelect').value;
         const sBody = document.getElementById('sessionsReportBody');
@@ -768,22 +780,18 @@
         sBody.innerHTML = ''; hBody.innerHTML = ''; otBody.innerHTML = '';
         document.getElementById('monthlySummary').classList.remove('hidden');
 
-        // 1. عرض تفاصيل كل بريك (التفاصيل اليومية)
         if(user.sessions) {
             Object.values(user.sessions).reverse().forEach(s => {
                 sBody.innerHTML += `<tr><td>${s.date} ${s.time || ''}</td><td>${s.type}</td><td>${s.reason || '-'}</td><td>${Math.round(s.durationSeconds/60)} دقيقة</td></tr>`;
             });
         } else { sBody.innerHTML = '<tr><td colspan="4">لا توجد تفاصيل لهذا الموظف</td></tr>'; }
 
-        // 2. الملخص اليومي + حساب الشهر
         let monthBreaks = 0, monthPrayer = 0, monthMeeting = 0;
-        const currentMonthStr = new Date().toLocaleDateString('ar-EG').split('/')[1]; // الشهر الحالي
+        const currentMonthStr = new Date().toLocaleDateString('ar-EG').split('/')[1]; 
 
         if(user.history) {
             Object.values(user.history).reverse().forEach(h => {
                 hBody.innerHTML += `<tr><td>${h.date}</td><td>${formatTime(h.totalGeneral)}</td><td>${formatTime(h.totalPrayer)}</td><td>${formatTime(h.totalMeeting)}</td><td>${h.approvedOvertime} س</td></tr>`;
-                
-                // تجميع الشهر (إذا كان نفس الشهر)
                 if(h.date.includes('/' + currentMonthStr + '/')) {
                     monthBreaks += (h.totalGeneral || 0); monthPrayer += (h.totalPrayer || 0); monthMeeting += (h.totalMeeting || 0);
                 }
@@ -793,7 +801,6 @@
         document.getElementById('monthTotalPrayer').innerText = Math.round(monthPrayer/60) + " دقيقة";
         document.getElementById('monthTotalMeeting').innerText = Math.round(monthMeeting/60) + " دقيقة";
 
-        // 3. الأوفر تايم
         if(user.overtimeHistory) {
             Object.values(user.overtimeHistory).reverse().forEach(ot => {
                 otBody.innerHTML += `<tr><td>${user.realName}</td><td>${ot.date}</td><td>${ot.hours} ساعة</td><td>✅ ${ot.approvedBy || 'مدير'}</td></tr>`;
@@ -802,6 +809,7 @@
     }
 
     function initUserDash() { document.getElementById('welcomeMsg').innerText = `أهلاً، ${currentUser.realName}`; startTimer(); }
+    
     window.requestEmergency = () => {
         const reason = document.getElementById('breakReason').value.trim();
         if(!reason) return alert("اكتب السبب أولاً!");
@@ -828,7 +836,6 @@
         if(!currentUser.isOnBreak) return;
         const duration = Math.floor((Date.now() - currentUser.lastStartTime) / 1000);
         
-        // --- تسجيل تفصيلي لكل حركة (التطوير المطلوب) ---
         const sessionLog = {
             timestamp: Date.now(),
             date: new Date().toLocaleDateString('ar-EG'),
@@ -853,6 +860,21 @@
         const timerDisplay = document.getElementById('userTimer'); const label = document.getElementById('timerLabel'); const statusMsg = document.getElementById('userStatusMsg');
         const emStatusArea = document.getElementById('emergencyStatusArea'); const otStatus = document.getElementById('overtimeStatus');
 
+        // تحديث سجل الموظف الشخصي
+        const hBody = document.getElementById('userDailyHistoryBody');
+        const totalDisplay = document.getElementById('userMonthTotal');
+        if(currentUser.history && hBody) {
+            hBody.innerHTML = '';
+            let mTotal = 0;
+            const currentMonthStr = new Date().toLocaleDateString('ar-EG').split('/')[1];
+            Object.values(currentUser.history).reverse().forEach(h => {
+                const mins = Math.round((h.totalGeneral || 0) / 60);
+                hBody.innerHTML += `<tr><td>${h.date}</td><td>${mins} دقيقة</td></tr>`;
+                if(h.date.includes('/' + currentMonthStr + '/')) { mTotal += (h.totalGeneral || 0); }
+            });
+            totalDisplay.innerText = Math.round(mTotal/60) + " دقيقة";
+        }
+
         if(currentUser.emergencyRequest) {
             const st = currentUser.emergencyRequest.status;
             if(st === 'pending') emStatusArea.innerHTML = `<span class="status-badge bg-orange">⏳ الانتظار</span>`;
@@ -874,7 +896,7 @@
         } else {
             document.getElementById('controlsArea').classList.remove('hidden'); document.getElementById('stopArea').classList.add('hidden'); stopAlarm();
             const remaining = (currentUser.allowance * 60) - (currentUser.usedSeconds || 0);
-            label.innerText = "رصيد البريك المتبقي"; timerDisplay.innerText = remaining >= 0 ? formatTime(remaining) : "00:00"; statusMsg.innerText = remaining < 0 ? "لديك تجاوز" : "";
+            label.innerText = "رصيد الأكسدة المتبقي"; timerDisplay.innerText = remaining >= 0 ? formatTime(remaining) : "00:00"; statusMsg.innerText = remaining < 0 ? "لديك تجاوز" : "";
         }
     }
 
