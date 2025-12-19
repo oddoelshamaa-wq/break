@@ -268,7 +268,7 @@
             <button onclick="renderUserReport()" class="btn btn-primary" style="width:100%;">عرض التقرير</button>
 
             <div class="summary-card hidden" id="monthlySummary">
-                <div class="summary-item"><h5>بريك وأكسدة (شهر)</h5><p id="monthTotalBreaks">0</p></div>
+                <div class="summary-item"><h5>الأكسدة (شهر)</h5><p id="monthTotalBreaks">0</p></div>
                 <div class="summary-item"><h5>صلاة (شهر)</h5><p id="monthTotalPrayer">0</p></div>
                 <div class="summary-item"><h5>ميتنج (شهر)</h5><p id="monthTotalMeeting">0</p></div>
             </div>
@@ -320,7 +320,7 @@
             <div style="background: #f1f2f6; padding: 15px; border-radius: 20px; margin-bottom: 20px;">
                 <div id="timerLabel" class="timer-label">رصيد البريك المتبقي</div>
                 <div class="timer-display" id="userTimer">00:00</div>
-                <h3 id="userStatusMsg" style="margin:5px 0; font-size:1.1rem;"></h3>
+                <h3 id="userStatusMsg" style="margin:5px 0; font-size:1.2rem; color:var(--success-color); font-weight:bold;"></h3>
                 <div id="overtimeAlert" class="hidden status-badge bg-red" style="padding:10px;">تجاوزت وقت البريك!</div>
             </div>
 
@@ -359,9 +359,9 @@
 
                 <!-- سجل الموظف الشخصي -->
                 <div style="margin-top: 20px; padding-top: 15px; border-top: 2px dashed #eee;">
-                    <h4 style="font-size: 0.95rem; color: #27ae60;">📊 ملخص البريك والأكسدة الشخصي</h4>
+                    <h4 style="font-size: 0.95rem; color: #27ae60;">📊 إجمالي الأكسدة الشخصي</h4>
                     <div class="summary-card" style="border-color: #2ecc71;">
-                        <div class="summary-item"><h5>إجمالي الشهر</h5><p id="userMonthTotal" style="font-size:1.1rem;">0</p></div>
+                        <div class="summary-item"><h5>إجمالي الأكسدة (شهر)</h5><p id="userMonthTotal" style="font-size:1.1rem;">0</p></div>
                     </div>
                     <div class="table-responsive" style="max-height: 150px; background:#fff;">
                         <table style="min-width: unset;">
@@ -697,6 +697,9 @@
             document.getElementById('controlsArea').classList.add('hidden'); document.getElementById('stopArea').classList.remove('hidden'); 
             const elap = Math.floor((Date.now() - currentUser.lastStartTime) / 1000);
             
+            // إضافة "بريك سعيد" عند بدء أي نشاط
+            statusMsg.innerText = "بريك سعيد";
+
             if(currentUser.breakType === 'meeting' || currentUser.breakType === 'prayer') { 
                 label.innerText = currentUser.lastReason; timerDisplay.innerText = formatTime(elap); 
             } else { 
@@ -707,23 +710,26 @@
                     timerDisplay.style.color = "#2c3e50"; 
                     stopAlarm(); 
                 } else { 
-                    label.innerText = "أكسدة"; 
+                    label.innerText = "الأكسدة"; 
                     timerDisplay.innerText = "-" + formatTime(Math.abs(rem)); 
                     timerDisplay.style.color = "red"; 
+                    statusMsg.innerText = "أنت الآن في مرحلة الأكسدة!"; // تغيير الرسالة عند التجاوز
                     playAlarm(); 
                 } 
             }
         } else {
             document.getElementById('controlsArea').classList.remove('hidden'); document.getElementById('stopArea').classList.add('hidden'); 
             stopAlarm(); 
+            statusMsg.innerText = ""; // مسح الرسالة عند التوقف
             const rem = (currentUser.allowance * 60) - (currentUser.usedSeconds || 0);
             if (rem >= 0) {
                 label.innerText = "رصيد البريك المتبقي"; 
                 timerDisplay.innerText = formatTime(rem);
             } else {
-                label.innerText = "أكسدة";
+                label.innerText = "الأكسدة";
                 timerDisplay.innerText = "00:00";
-                statusMsg.innerText = "لديك تجاوز سابق";
+                statusMsg.innerText = "لديك تجاوز سابق (أكسدة)";
+                statusMsg.style.color = "red";
             }
             timerDisplay.style.color = "#2c3e50"; 
         }
