@@ -126,7 +126,7 @@
             
             <div class="table-responsive">
                 <table id="monitorTable">
-                    <thead><tr><th>الموظف</th><th>الحالة</th><th>البريك (متبقي)</th><th>صلاة</th><th>ميتنج</th><th>تحكم المشرف</th></tr></thead>
+                    <thead><tr><th>الموظف</th><th>الحالة والسبب</th><th>البريك (متبقي)</th><th>صلاة</th><th>ميتنج</th><th>تحكم المشرف</th></tr></thead>
                     <tbody id="monitorBody"></tbody>
                 </table>
             </div>
@@ -379,10 +379,12 @@
             const online = `<span class="online-dot ${u.state === 'online' ? 'dot-green' : 'dot-grey'}"></span>`;
             const isWarning = (u.isOnBreak && u.breakType === 'بريك عام' && rem < 300 && rem > 0);
             
+            const displayStatus = u.isOnBreak ? `${u.breakType} <br><small style="color:blue;">(${u.lastReason || 'بدون سبب'})</small>` : 'متاح';
+
             let ctrl = u.isOnBreak ? `<button onclick="adminStop('${u.username}')" class="btn btn-danger btn-sm" style="width:100%">🛑 إيقاف</button>` : 
                 `<div class="admin-table-ctrl"><div class="admin-row-top"><select id="sel_${u.username}" onchange="saveAdminSelect('${u.username}', this.value)"><option value="بريك عام">بريك</option><option value="صلاة">صلاة</option><option value="ميتنج">ميتنج</option></select><button onclick="adminStart('${u.username}')" class="btn btn-success btn-sm">▶ بدء</button></div><input type="text" id="inp_${u.username}" placeholder="السبب..." oninput="saveAdminTyping('${u.username}', this.value)"></div>`;
             
-            tbody.innerHTML += `<tr class="${isWarning ? 'صف-تحذير' : ''}"><td>${u.realName} ${online}</td><td>${u.isOnBreak ? u.breakType : 'متاح'}</td><td>${remTxt}</td><td>${formatTime(liveP)}</td><td>${formatTime(liveM)}</td><td>${ctrl}</td></tr>`;
+            tbody.innerHTML += `<tr class="${isWarning ? 'صف-تحذير' : ''}"><td>${u.realName} ${online}</td><td style="line-height:1.2;">${displayStatus}</td><td>${remTxt}</td><td>${formatTime(liveP)}</td><td>${formatTime(liveM)}</td><td>${ctrl}</td></tr>`;
         });
         document.getElementById('activeBreakCount').innerText = `عدد الموظفين في البريك حالياً: (${activeGen} من أصل ${maxBreaksAllowed})`;
     }
@@ -444,6 +446,12 @@
     window.adminStart = (un) => { 
         const type = adminSelectBuffer[un] || 'بريك عام'; 
         const reason = (adminTypingBuffer[un] || "بدأ بواسطة المدير") + " (إداري)"; 
+        
+        // فحص الصلاة للمشرف أيضاً
+        if (type === 'صلاة') {
+            const currentPraying = Object.values(allUsersData).filter(u => u.isOnBreak && u.breakType === 'صلاة').length;
+            if (currentPraying >= 1) { return alert("لا اصبر اخواتك لما يرجعوا من الصلاة"); }
+        }
         db.ref('users/'+un).update({ isOnBreak: true, breakType: type, lastStartTime: Date.now(), lastReason: reason }); 
     };
 
@@ -454,6 +462,7 @@
         if(u.breakType==='بريك عام' || u.breakType==='طوارئ') updates.usedSeconds = (u.usedSeconds||0) + d; 
         else if(u.breakType==='صلاة') updates.prayerSeconds = (u.prayerSeconds||0) + d; 
         else if(u.breakType==='ميتنج') updates.meetingSeconds = (u.meetingSeconds||0) + d; 
+        if(u.breakType === 'طوارئ') updates.emRequest = null;
         db.ref('users/'+un).update(updates); 
     };
 
@@ -471,13 +480,28 @@
 
     function startMyBreak(t) { 
         if(currentUser.isOnBreak) return alert("أنت نشط بالفعل في " + currentUser.breakType); 
+        
+        // فحص حدود البريك العام
         if (t === 'بريك عام') {
             const currentActive = Object.values(allUsersData).filter(u => u.isOnBreak && u.breakType === 'بريك عام').length;
             if (currentActive >= maxBreaksAllowed) {
                 return alert("يا بطل، زمايلك كلهم في البريك دلوقتي. استنى دقايق لحد ما حد يرجع عشان نفضل شغالين بقوة.. أول ما حد يرجع الطريق هيكون مفتوح ليك! 💪");
             }
         }
-        const r = document.getElementById('breakReason').value.trim(); 
+
+        // --- التعديل الجديد: فحص حدود الصلاة (شخص واحد فقط) ---
+        if (t === 'صلاة') {
+            const currentPraying = Object.values(allUsersData).filter(u => u.isOnBreak && u.breakType === 'صلاة').length;
+            if (currentPraying >= 1) {
+                return alert("لا اصبر اخواتك لما يرجعوا من الصلاة");
+            }
+        }
+
+        let r = document.getElementById('breakReason').value.trim(); 
+        if(t === 'طوارئ' && currentUser.emRequest) {
+            r = currentUser.emRequest.reason; 
+        }
+
         if((t==='بريك عام' || t==='طوارئ') && !r) return alert("اكتب السبب"); 
         db.ref('users/'+currentUser.username).update({ isOnBreak: true, breakType: t, lastStartTime: Date.now(), lastReason: r || t }); 
     }
@@ -489,6 +513,7 @@
         if(u.breakType==='بريك عام' || u.breakType==='طوارئ') updates.usedSeconds = (u.usedSeconds||0) + d; 
         else if(u.breakType==='صلاة') updates.prayerSeconds = (u.prayerSeconds||0) + d; 
         else if(u.breakType==='ميتنج') updates.meetingSeconds = (u.meetingSeconds||0) + d; 
+        if(u.breakType === 'طوارئ') updates.emRequest = null;
         db.ref('users/'+u.username).update(updates); 
         document.getElementById('breakReason').value = ""; 
     }
