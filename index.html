@@ -108,7 +108,7 @@
             border-spacing: 0;
             background: white;
             font-size: 0.85rem;
-            min-width: 500px;
+            min-width: 600px;
         }
         th { background: #2c3e50; color: white; padding: 12px 8px; }
         td { padding: 10px 8px; text-align: center; border-bottom: 1px solid #f0f0f0; }
@@ -163,7 +163,7 @@
         .card-emergency { border-color: var(--emergency-color); background: #fff0f0; }
 
         .summary-card {
-            background: white; border: 2px solid #2ecc71; padding: 15px; border-radius: 10px;
+            background: white; border: 2px solid #2ecc71; padding: 10px; border-radius: 10px;
             margin-bottom: 15px; display: flex; flex-wrap: wrap; justify-content: space-around; text-align: center;
             gap: 10px;
         }
@@ -174,6 +174,9 @@
         .online-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; }
         .dot-green { background-color: #2ecc71; }
         .dot-grey { background-color: #95a5a6; }
+
+        .activity-text { font-size: 0.75rem; color: #555; text-align: right; line-height: 1.4; display: block; }
+        .day-badge { background: #eee; padding: 2px 8px; border-radius: 5px; font-weight: bold; color: #333; }
     </style>
 </head>
 <body>
@@ -267,39 +270,32 @@
             </div>
             <button onclick="renderUserReport()" class="btn btn-primary" style="width:100%;">عرض التقرير</button>
 
-            <!-- ملخص الشهر (صافي الأكسدة) -->
             <div class="summary-card hidden" id="monthlySummary">
-                <div class="summary-item"><h5>الأكسدة (شهر)</h5><p id="monthTotalBreaks">0 دقيقة</p></div>
+                <div class="summary-item"><h5>الأكسدة الصافية (شهر)</h5><p id="monthTotalBreaks">0 دقيقة</p></div>
                 <div class="summary-item"><h5>صلاة (شهر)</h5><p id="monthTotalPrayer">0 دقيقة</p></div>
                 <div class="summary-item"><h5>ميتنج (شهر)</h5><p id="monthTotalMeeting">0 دقيقة</p></div>
             </div>
 
-            <h4 style="font-size:1rem; margin-bottom:5px;">📝 سجل التحركات التفصيلي</h4>
-            <div class="table-responsive" style="max-height:300px;">
+            <h4 style="font-size:1rem; margin-bottom:5px;">📋 سجل التحركات اليومي (مجمع)</h4>
+            <div class="table-responsive" style="max-height:400px;">
                 <table>
-                    <thead><tr><th>الوقت</th><th>النوع</th><th>السبب</th><th>المدة</th></tr></thead>
+                    <thead><tr><th style="width:120px">اليوم</th><th>ماذا حدث؟ (التحركات)</th><th style="width:100px">المدة الكلية</th></tr></thead>
                     <tbody id="sessionsReportBody"></tbody>
                 </table>
             </div>
 
-            <h4 style="font-size:1rem; margin-top:20px; color: #8e44ad;">🕒 سجل الأوفر تايم التفصيلي</h4>
+            <h4 style="font-size:1rem; margin-top:20px; color: #8e44ad;">🕒 سجل الأوفر تايم</h4>
             <div class="table-responsive">
                 <table id="overtimeReportTable">
-                    <thead>
-                        <tr>
-                            <th>التاريخ</th>
-                            <th>عدد الساعات</th>
-                            <th>الموافقة بواسطة</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>التاريخ</th><th>عدد الساعات</th><th>الموافقة بواسطة</th></tr></thead>
                     <tbody id="overtimeReportBody"></tbody>
                 </table>
             </div>
 
-            <h4 style="font-size:1rem; margin-top:15px; margin-bottom:5px;">📊 ملخص الأيام</h4>
+            <h4 style="font-size:1rem; margin-top:15px; margin-bottom:5px;">📊 ملخص الأيام المقفلة</h4>
             <div class="table-responsive">
                 <table>
-                    <thead><tr><th>التاريخ</th><th>البريك</th><th>صلاة</th><th>ميتنج</th><th>إضافي</th></tr></thead>
+                    <thead><tr><th>التاريخ</th><th>البريك الكلي</th><th>صلاة</th><th>ميتنج</th><th>إضافي</th></tr></thead>
                     <tbody id="reportBody"></tbody>
                 </table>
             </div>
@@ -372,11 +368,11 @@
                     <div id="overtimeStatus" style="font-size:0.8rem; margin-top:5px;"></div>
                 </div>
 
-                <!-- سجل الموظف الشخصي (صافي الأكسدة) -->
+                <!-- سجل صافي الأكسدة لايف -->
                 <div style="margin-top: 20px; padding-top: 15px; border-top: 2px dashed #eee;">
-                    <h4 style="font-size: 0.95rem; color: #27ae60;">📊 صافي الأكسدة الشخصي</h4>
+                    <h4 style="font-size: 0.95rem; color: #27ae60;">📊 صافي الأكسدة الشخصي (شهر)</h4>
                     <div class="summary-card" style="border-color: #2ecc71;">
-                        <div class="summary-item"><h5>إجمالي الأكسدة (شهر)</h5><p id="userMonthTotal" style="font-size:1.1rem;">0 دقيقة</p></div>
+                        <div class="summary-item"><h5>إجمالي الأكسدة</h5><p id="userMonthTotal" style="font-size:1.1rem;">0 دقيقة</p></div>
                     </div>
                     <div class="table-responsive" style="max-height: 150px; background:#fff;">
                         <table style="min-width: unset;">
@@ -410,53 +406,29 @@
 
     let allUsersData = {};
     let globalSettings = { maxGeneralBreaks: 100 };
-    let currentUser = null; 
-    let timerInterval = null;
-    let isDataLoaded = false;
-    let editingUserKey = null; 
-    let previousBreakStates = {}; 
-    let adminSoundMuted = false;
-    let isFirstLoadSound = true;
+    let currentUser = null, timerInterval = null, isDataLoaded = false, editingUserKey = null, previousBreakStates = {}, adminSoundMuted = false, isFirstLoadSound = true;
 
-    const MANAGERS_CONFIG = [
-        { username: 'mahmoud', name: 'محمود', pass: '112233' },
-        { username: 'abutamim', name: 'أبو تميم', pass: '445566' },
-        { username: 'ahmed', name: 'أحمد يحيى', pass: '778899' }
-    ];
+    const MANAGERS_CONFIG = [{ username: 'mahmoud', name: 'محمود', pass: '112233' }, { username: 'abutamim', name: 'أبو تميم', pass: '445566' }, { username: 'ahmed', name: 'أحمد يحيى', pass: '778899' }];
 
     function initManagers() {
         MANAGERS_CONFIG.forEach(m => {
             db.ref('users/' + m.username).once('value', snap => {
-                if (!snap.exists()) {
-                    db.ref('users/' + m.username).set({ username: m.username, realName: m.name, password: m.pass, role: "admin", state: "offline" });
-                } else {
-                    db.ref('users/' + m.username).update({ realName: m.name, role: 'admin', password: m.pass });
-                }
+                if (!snap.exists()) db.ref('users/' + m.username).set({ username: m.username, realName: m.name, password: m.pass, role: "admin", state: "offline" });
+                else db.ref('users/' + m.username).update({ realName: m.name, role: 'admin', password: m.pass });
             });
         });
     }
 
-    db.ref('settings').on('value', snap => {
-        if(snap.val()) {
-            globalSettings = snap.val();
-            document.getElementById('maxBreaksInput').value = globalSettings.maxGeneralBreaks || '';
-        }
-    });
+    db.ref('settings').on('value', snap => { if(snap.val()) { globalSettings = snap.val(); document.getElementById('maxBreaksInput').value = globalSettings.maxGeneralBreaks || ''; } });
 
     db.ref('users').on('value', (snapshot) => {
-        const data = snapshot.val();
-        allUsersData = data || {};
-        
+        allUsersData = snapshot.val() || {};
         if (!isDataLoaded) {
-            isDataLoaded = true;
-            initManagers(); 
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('mainContainer').classList.remove('hidden');
-            checkSavedSession();
-            Object.values(allUsersData).forEach(u => { if(u && u.username) previousBreakStates[u.username] = u.isOnBreak; });
+            isDataLoaded = true; initManagers();
+            document.getElementById('loading').style.display = 'none'; document.getElementById('mainContainer').classList.remove('hidden');
+            checkSavedSession(); Object.values(allUsersData).forEach(u => { if(u && u.username) previousBreakStates[u.username] = u.isOnBreak; });
             isFirstLoadSound = false;
         }
-
         if (currentUser && currentUser.role === 'admin') {
             let hasPendingRequests = false, someoneStartedBreak = false;
             Object.values(allUsersData).forEach(u => {
@@ -465,93 +437,48 @@
                 if (u.isOnBreak && !previousBreakStates[u.username] && !isFirstLoadSound) someoneStartedBreak = true;
                 previousBreakStates[u.username] = u.isOnBreak;
             });
-
             if (!adminSoundMuted) {
                 if (hasPendingRequests) { if (document.getElementById('requestRing').paused) document.getElementById('requestRing').play().catch(e => {}); }
                 else { document.getElementById('requestRing').pause(); document.getElementById('requestRing').currentTime = 0; }
                 if (someoneStartedBreak) { document.getElementById('notifySound').currentTime = 0; document.getElementById('notifySound').play().catch(e => {}); }
             }
-            
-            let pendingEm = Object.values(allUsersData).some(u => u && u.emergencyRequest && u.emergencyRequest.status === 'pending');
-            let pendingOt = Object.values(allUsersData).some(u => u && u.overtimeRequest && u.overtimeRequest.status === 'pending');
+            let pendingEm = Object.values(allUsersData).some(u => u && u.emergencyRequest && u.emergencyRequest.status === 'pending'), pendingOt = Object.values(allUsersData).some(u => u && u.overtimeRequest && u.overtimeRequest.status === 'pending');
             if(pendingEm) document.getElementById('badgeEmergency').classList.remove('hidden'); else document.getElementById('badgeEmergency').classList.add('hidden');
             if(pendingOt) document.getElementById('badgeOvertime').classList.remove('hidden'); else document.getElementById('badgeOvertime').classList.add('hidden');
         }
-
-        if(!document.getElementById('adminSection').classList.contains('hidden')) {
-            renderMonitorTable(); renderUserManagementTable(); renderOvertimeRequests(); renderEmergencyRequests(); updateReportSelect();
-        }
-        
-        if(currentUser && allUsersData[currentUser.username]) {
-            const updated = allUsersData[currentUser.username];
-            updated.role = currentUser.role; currentUser = updated;
-            if(currentUser.role !== 'admin') updateUserUI();
-        }
+        if(!document.getElementById('adminSection').classList.contains('hidden')) { renderMonitorTable(); renderUserManagementTable(); renderOvertimeRequests(); renderEmergencyRequests(); updateReportSelect(); }
+        if(currentUser && allUsersData[currentUser.username]) { let updated = allUsersData[currentUser.username]; updated.role = currentUser.role; currentUser = updated; if(currentUser.role !== 'admin') updateUserUI(); }
     });
 
-    function toggleAdminMute() {
-        adminSoundMuted = !adminSoundMuted;
-        const btn = document.getElementById('muteBtn');
-        if (adminSoundMuted) { btn.innerText = "🔇 كتم"; btn.classList.replace('btn-info', 'btn-secondary'); document.getElementById('requestRing').pause(); } 
-        else { btn.innerText = "🔊 صوت"; btn.classList.replace('btn-secondary', 'btn-info'); }
-    }
+    function toggleAdminMute() { adminSoundMuted = !adminSoundMuted; const btn = document.getElementById('muteBtn'); if (adminSoundMuted) { btn.innerText = "🔇 كتم"; btn.classList.replace('btn-info', 'btn-secondary'); document.getElementById('requestRing').pause(); } else { btn.innerText = "🔊 صوت"; btn.classList.replace('btn-secondary', 'btn-info'); } }
 
     function checkSavedSession() {
         const savedUser = localStorage.getItem('break_sys_user');
-        if(savedUser && allUsersData[savedUser]) {
-            currentUser = allUsersData[savedUser];
-            const isManager = MANAGERS_CONFIG.some(m => m.username === savedUser) || currentUser.role === 'admin';
-            if (isManager) { currentUser.role = 'admin'; showAdmin(); } else { currentUser.role = 'employee'; setupPresence(savedUser); showEmployee(); }
-        } else { showSection('loginSection'); }
+        if(savedUser && allUsersData[savedUser]) { currentUser = allUsersData[savedUser]; if (MANAGERS_CONFIG.some(m => m.username === savedUser) || currentUser.role === 'admin') { currentUser.role = 'admin'; showAdmin(); } else { currentUser.role = 'employee'; setupPresence(savedUser); showEmployee(); } }
+        else showSection('loginSection');
     }
 
     function attemptLogin() {
-        const u = document.getElementById('loginUser').value.trim();
-        const p = document.getElementById('loginPass').value.trim();
-        if(allUsersData[u] && allUsersData[u].password === p) {
-            currentUser = allUsersData[u];
-            localStorage.setItem('break_sys_user', u);
-            if(currentUser.role === 'admin') showAdmin(); else { setupPresence(u); showEmployee(); }
-        } else { alert('خطأ في البيانات'); }
+        const u = document.getElementById('loginUser').value.trim(), p = document.getElementById('loginPass').value.trim();
+        if(allUsersData[u] && allUsersData[u].password === p) { currentUser = allUsersData[u]; localStorage.setItem('break_sys_user', u); if(currentUser.role === 'admin') showAdmin(); else { setupPresence(u); showEmployee(); } }
+        else alert('خطأ في البيانات');
     }
 
-    function setupPresence(username) {
-        const connectedRef = db.ref(".info/connected"), userStatusRef = db.ref("users/" + username + "/state");
-        connectedRef.on("value", (snap) => { if (snap.val() === false) return; userStatusRef.onDisconnect().set("offline").then(() => userStatusRef.set("online")); });
-    }
+    function setupPresence(username) { const connectedRef = db.ref(".info/connected"), userStatusRef = db.ref("users/" + username + "/state"); connectedRef.on("value", (snap) => { if (snap.val() === false) return; userStatusRef.onDisconnect().set("offline").then(() => userStatusRef.set("online")); }); }
 
-    function showSection(id) {
-        ['loginSection','adminSection','employeeSection'].forEach(s => document.getElementById(s).classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
-    }
+    function showSection(id) { ['loginSection','adminSection','employeeSection'].forEach(s => document.getElementById(s).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
 
-    function logout() { 
-        if(currentUser && currentUser.role !== 'admin') db.ref("users/" + currentUser.username + "/state").set("offline");
-        localStorage.removeItem('break_sys_user'); currentUser=null; clearInterval(timerInterval); showSection('loginSection'); stopAlarm(); document.getElementById('requestRing').pause();
-    }
+    function logout() { if(currentUser && currentUser.role !== 'admin') db.ref("users/" + currentUser.username + "/state").set("offline"); localStorage.removeItem('break_sys_user'); currentUser=null; clearInterval(timerInterval); showSection('loginSection'); stopAlarm(); document.getElementById('requestRing').pause(); }
 
     function showAdmin() { showSection('adminSection'); document.getElementById('currentManagerDisplay').innerText = `👤 ${currentUser.realName}`; switchAdminTab('monitor'); startTimer(); }
     function showEmployee() { showSection('employeeSection'); initUserDash(); }
-    function switchAdminTab(tab) {
-        ['tab-monitor','tab-reports','tab-users', 'tab-overtime', 'tab-requests'].forEach(t => document.getElementById(t).classList.add('hidden'));
-        document.getElementById('tab-'+tab).classList.remove('hidden');
-    }
+    function switchAdminTab(tab) { ['tab-monitor','tab-reports','tab-users', 'tab-overtime', 'tab-requests'].forEach(t => document.getElementById(t).classList.add('hidden')); document.getElementById('tab-'+tab).classList.remove('hidden'); }
 
-    function startTimer() {
-        if(timerInterval) clearInterval(timerInterval);
-        timerInterval = setInterval(() => {
-            if(!document.getElementById('adminSection').classList.contains('hidden')) renderMonitorTable();
-            if(!document.getElementById('employeeSection').classList.contains('hidden')) updateUserUI();
-        }, 1000);
-    }
+    function startTimer() { if(timerInterval) clearInterval(timerInterval); timerInterval = setInterval(() => { if(!document.getElementById('adminSection').classList.contains('hidden')) renderMonitorTable(); if(!document.getElementById('employeeSection').classList.contains('hidden')) updateUserUI(); }, 1000); }
 
     function renderEmergencyRequests() {
         const tbody = document.getElementById('emergencyRequestsBody'); tbody.innerHTML = '';
-        Object.values(allUsersData).forEach(u => {
-            if(u && u.emergencyRequest && u.emergencyRequest.status === 'pending') {
-                tbody.innerHTML += `<tr><td>${u.realName}</td><td style="color:red; font-weight:bold; font-size:0.75rem;">${u.emergencyRequest.reason}</td><td>${new Date(u.emergencyRequest.timestamp).toLocaleTimeString('ar-EG')}</td><td><button onclick="handleEmergency('${u.username}', true)" class="btn btn-success btn-sm">✔</button><button onclick="handleEmergency('${u.username}', false)" class="btn btn-danger btn-sm">✖</button></td></tr>`;
-            }
-        });
+        Object.values(allUsersData).forEach(u => { if(u && u.emergencyRequest && u.emergencyRequest.status === 'pending') tbody.innerHTML += `<tr><td>${u.realName}</td><td style="color:red; font-weight:bold; font-size:0.75rem;">${u.emergencyRequest.reason}</td><td>${new Date(u.emergencyRequest.timestamp).toLocaleTimeString('ar-EG')}</td><td><button onclick="handleEmergency('${u.username}', true)" class="btn btn-success btn-sm">✔</button><button onclick="handleEmergency('${u.username}', false)" class="btn btn-danger btn-sm">✖</button></td></tr>`; });
         if(tbody.innerHTML === '') tbody.innerHTML = '<tr><td colspan="4">لا يوجد طلبات</td></tr>';
     }
 
@@ -559,140 +486,85 @@
 
     function renderOvertimeRequests() {
         const tbody = document.getElementById('overtimeRequestsBody'); tbody.innerHTML = '';
-        Object.values(allUsersData).forEach(u => {
-            if(u && u.overtimeRequest && u.overtimeRequest.status === 'pending') {
-                tbody.innerHTML += `<tr><td>${u.realName}</td><td style="font-weight:bold; color:#8e44ad;">${u.overtimeRequest.hours}س</td><td>${new Date(u.overtimeRequest.timestamp).toLocaleTimeString('ar-EG')}</td><td><button onclick="handleOvertime('${u.username}', true)" class="btn btn-success btn-sm">✔</button><button onclick="handleOvertime('${u.username}', false)" class="btn btn-danger btn-sm">✖</button></td></tr>`;
-            }
-        });
+        Object.values(allUsersData).forEach(u => { if(u && u.overtimeRequest && u.overtimeRequest.status === 'pending') tbody.innerHTML += `<tr><td>${u.realName}</td><td style="font-weight:bold; color:#8e44ad;">${u.overtimeRequest.hours}س</td><td>${new Date(u.overtimeRequest.timestamp).toLocaleTimeString('ar-EG')}</td><td><button onclick="handleOvertime('${u.username}', true)" class="btn btn-success btn-sm">✔</button><button onclick="handleOvertime('${u.username}', false)" class="btn btn-danger btn-sm">✖</button></td></tr>`; });
         if(tbody.innerHTML === '') tbody.innerHTML = '<tr><td colspan="4">لا يوجد طلبات</td></tr>';
     }
 
     window.handleOvertime = (username, approved) => {
         const req = allUsersData[username].overtimeRequest, updates = {}; updates[`users/${username}/overtimeRequest/status`] = approved ? 'approved' : 'rejected'; updates[`users/${username}/overtimeRequest/handledBy`] = currentUser.realName;
-        if(approved) {
-            updates[`users/${username}/approvedOvertimeBalance`] = (allUsersData[username].approvedOvertimeBalance || 0) + parseFloat(req.hours);
-            updates[`users/${username}/overtimeHistory/${Date.now()}`] = { date: new Date().toLocaleDateString('ar-EG'), hours: parseFloat(req.hours), approvedBy: currentUser.realName };
-        }
+        if(approved) { updates[`users/${username}/approvedOvertimeBalance`] = (allUsersData[username].approvedOvertimeBalance || 0) + parseFloat(req.hours); updates[`users/${username}/overtimeHistory/${Date.now()}`] = { date: new Date().toLocaleDateString('ar-EG'), hours: parseFloat(req.hours), approvedBy: currentUser.realName }; }
         db.ref().update(updates);
     };
 
     function renderUserManagementTable() {
         const tbody = document.getElementById('usersManagementBody'); tbody.innerHTML = '';
-        Object.values(allUsersData).forEach(u => {
-            if (!u || !u.username || u.username === 'undefined' || u.role === 'admin') return;
-            tbody.innerHTML += `<tr><td>${u.realName}</td><td>${u.username}</td><td>${u.password}</td><td>${u.allowance}د</td><td><button onclick="editUser('${u.username}')" class="btn btn-primary btn-sm">✎</button><button onclick="deleteUser('${u.username}')" class="btn btn-danger btn-sm">🗑</button></td></tr>`;
-        });
+        Object.values(allUsersData).forEach(u => { if (!u || !u.username || u.username === 'undefined' || u.role === 'admin') return; tbody.innerHTML += `<tr><td>${u.realName}</td><td>${u.username}</td><td>${u.password}</td><td>${u.allowance}د</td><td><button onclick="editUser('${u.username}')" class="btn btn-primary btn-sm">✎</button><button onclick="deleteUser('${u.username}')" class="btn btn-danger btn-sm">🗑</button></td></tr>`; });
     }
 
-    window.editUser = (username) => {
-        const user = allUsersData[username];
-        document.getElementById('newRealName').value = user.realName; document.getElementById('newUsername').value = user.username;
-        document.getElementById('newUsername').readOnly = true; document.getElementById('newPassword').value = user.password; document.getElementById('newAllowance').value = user.allowance;
-        document.getElementById('saveUserBtn').innerText = "تعديل"; editingUserKey = username;
-    };
-
+    window.editUser = (username) => { const user = allUsersData[username]; document.getElementById('newRealName').value = user.realName; document.getElementById('newUsername').value = user.username; document.getElementById('newUsername').readOnly = true; document.getElementById('newPassword').value = user.password; document.getElementById('newAllowance').value = user.allowance; document.getElementById('saveUserBtn').innerText = "تعديل"; editingUserKey = username; };
     window.resetForm = () => { document.getElementById('newRealName').value = ''; document.getElementById('newUsername').value = ''; document.getElementById('newUsername').readOnly = false; document.getElementById('newPassword').value = ''; document.getElementById('newAllowance').value = '45'; document.getElementById('saveUserBtn').innerText = "حفظ الموظف"; editingUserKey = null; };
 
     function saveUser() {
         const u = document.getElementById('newUsername').value.trim(), p = document.getElementById('newPassword').value, n = document.getElementById('newRealName').value, a = parseInt(document.getElementById('newAllowance').value);
         if(!u || !p || !n) return alert("أكمل البيانات");
-        if (editingUserKey) { db.ref('users/' + editingUserKey).update({ realName: n, password: p, allowance: a }).then(() => { alert("تم ✅"); resetForm(); }); } 
-        else { db.ref('users/' + u).set({ username: u, realName: n, password: p, allowance: a, role: 'employee', state: 'offline' }).then(() => { alert("تم ✅"); resetForm(); }); }
+        if (editingUserKey) db.ref('users/' + editingUserKey).update({ realName: n, password: p, allowance: a }).then(() => { alert("تم ✅"); resetForm(); });
+        else db.ref('users/' + u).set({ username: u, realName: n, password: p, allowance: a, role: 'employee', state: 'offline' }).then(() => { alert("تم ✅"); resetForm(); });
     }
 
     window.deleteUser = (u) => { if(confirm("حذف؟")) db.ref('users/'+u).remove(); }
     window.saveSettings = () => { db.ref('settings').update({ maxGeneralBreaks: parseInt(document.getElementById('maxBreaksInput').value) }).then(()=>alert("حفظ")); }
 
     function renderMonitorTable() {
-        const tbody = document.getElementById('monitorBody'); tbody.innerHTML = ''; let activeGeneralBreaks = 0;
+        const tbody = document.getElementById('monitorBody'); tbody.innerHTML = ''; let activeGen = 0;
         Object.values(allUsersData).forEach(u => {
             if(!u || !u.username || u.role === 'admin') return;
-            let gen = u.usedSeconds || 0, currentDuration = 0;
-            if (u.isOnBreak && u.lastStartTime) {
-                currentDuration = Math.floor((Date.now() - u.lastStartTime) / 1000);
-                if (u.breakType === 'general' || u.breakType === 'emergency') { gen += currentDuration; if(u.breakType === 'general') activeGeneralBreaks++; }
-            }
-            const onlineIndicator = `<span class="online-dot ${u.state === 'online' ? 'dot-green' : 'dot-grey'}"></span>`;
-            let statusBadge = '<span class="status-badge bg-green">متاح</span>';
-            if (u.isOnBreak) {
-                if (u.breakType === 'general') statusBadge = `<span class="status-badge bg-red" style="font-size:0.7rem;">⛔ بريك (${u.lastReason})</span>`;
-                else if (u.breakType === 'prayer') statusBadge = `<span class="status-badge bg-blue" style="font-size:0.7rem;">🕌 صلاة</span>`;
-                else if (u.breakType === 'meeting') statusBadge = `<span class="status-badge bg-orange" style="font-size:0.7rem;">🤝 ميتنج</span>`;
-                else if (u.breakType === 'emergency') statusBadge = `<span class="status-badge bg-dark-red" style="font-size:0.7rem;">🚨 طوارئ</span>`;
-            }
-            const remaining = (u.allowance * 60) - gen;
-            tbody.innerHTML += `<tr><td style="font-weight:bold; font-size:0.75rem;">${u.realName} ${onlineIndicator}</td><td>${statusBadge}</td><td>${remaining >= 0 ? formatTime(remaining) : '<span style="color:red;">-'+formatTime(Math.abs(remaining))+'</span>'}</td><td>${formatTime(u.prayerSeconds || 0)}</td><td>${formatTime(u.meetingSeconds || 0)}</td><td>${u.isOnBreak ? '<button onclick="forceStop(\''+u.username+'\')" class="btn btn-warning btn-sm">🛑</button>' : '-'}</td></tr>`;
+            let gen = u.usedSeconds || 0, elap = 0; if (u.isOnBreak && u.lastStartTime) { elap = Math.floor((Date.now() - u.lastStartTime) / 1000); if (u.breakType === 'general' || u.breakType === 'emergency') { gen += elap; if(u.breakType === 'general') activeGen++; } }
+            const online = `<span class="online-dot ${u.state === 'online' ? 'dot-green' : 'dot-grey'}"></span>`;
+            let status = '<span class="status-badge bg-green">متاح</span>';
+            if (u.isOnBreak) { if (u.breakType === 'general') status = `<span class="status-badge bg-red" style="font-size:0.7rem;">⛔ بريك (${u.lastReason})</span>`; else if (u.breakType === 'prayer') status = `<span class="status-badge bg-blue" style="font-size:0.7rem;">🕌 صلاة</span>`; else if (u.breakType === 'meeting') status = `<span class="status-badge bg-orange" style="font-size:0.7rem;">🤝 ميتنج</span>`; else if (u.breakType === 'emergency') status = `<span class="status-badge bg-dark-red" style="font-size:0.7rem;">🚨 طوارئ</span>`; }
+            const rem = (u.allowance * 60) - gen;
+            tbody.innerHTML += `<tr><td style="font-weight:bold; font-size:0.75rem;">${u.realName} ${online}</td><td>${status}</td><td>${rem >= 0 ? formatTime(rem) : '<span style="color:red;">-'+formatTime(Math.abs(rem))+'</span>'}</td><td>${formatTime(u.prayerSeconds || 0)}</td><td>${formatTime(u.meetingSeconds || 0)}</td><td>${u.isOnBreak ? '<button onclick="forceStop(\''+u.username+'\')" class="btn btn-warning btn-sm">🛑</button>' : '-'}</td></tr>`;
         });
-        document.getElementById('activeBreakCount').innerHTML = `البريكات النشطة: <span style="${activeGeneralBreaks >= (globalSettings.maxGeneralBreaks || 100) ? 'color:red' : 'color:green'}">${activeGeneralBreaks} / ${globalSettings.maxGeneralBreaks || 100}</span>`;
+        document.getElementById('activeBreakCount').innerHTML = `البريكات النشطة: <span style="${activeGen >= (globalSettings.maxGeneralBreaks || 100) ? 'color:red' : 'color:green'}">${activeGen} / ${globalSettings.maxGeneralBreaks || 100}</span>`;
     }
 
-    window.forceStop = (username) => {
-        if(!confirm("إنهاء النشاط؟")) return;
-        const u = allUsersData[username], duration = Math.floor((Date.now() - u.lastStartTime) / 1000);
-        db.ref('users/' + username + '/sessions').push({ timestamp: Date.now(), date: new Date().toLocaleDateString('ar-EG'), time: new Date().toLocaleTimeString('ar-EG'), type: u.breakType, reason: u.lastReason + " (بواسطة المدير)", durationSeconds: duration });
-        const updates = { isOnBreak: false, lastStartTime: null };
-        if(u.breakType === 'general' || u.breakType === 'emergency') updates.usedSeconds = (u.usedSeconds||0) + duration;
-        else if(u.breakType === 'prayer') updates.prayerSeconds = (u.prayerSeconds||0) + duration;
-        else if(u.breakType === 'meeting') updates.meetingSeconds = (u.meetingSeconds||0) + duration;
-        db.ref('users/'+username).update(updates);
-    }
+    window.forceStop = (username) => { if(!confirm("إنهاء النشاط؟")) return; const u = allUsersData[username], d = Math.floor((Date.now() - u.lastStartTime) / 1000); db.ref('users/' + username + '/sessions').push({ timestamp: Date.now(), date: new Date().toLocaleDateString('ar-EG'), time: new Date().toLocaleTimeString('ar-EG'), type: u.breakType, reason: u.lastReason + " (بواسطة المدير)", durationSeconds: d }); const updates = { isOnBreak: false, lastStartTime: null }; if(u.breakType === 'general' || u.breakType === 'emergency') updates.usedSeconds = (u.usedSeconds||0) + d; else if(u.breakType === 'prayer') updates.prayerSeconds = (u.prayerSeconds||0) + d; else if(u.breakType === 'meeting') updates.meetingSeconds = (u.meetingSeconds||0) + d; db.ref('users/'+username).update(updates); }
 
-    window.endDay = () => {
-        if(!confirm("إقفال اليوم للكل؟")) return;
-        Object.values(allUsersData).forEach(u => {
-            if(!u || !u.username || u.role === 'admin') return;
-            let gen = u.usedSeconds || 0, pra = u.prayerSeconds || 0, met = u.meetingSeconds || 0;
-            if(u.isOnBreak) { const d = Math.floor((Date.now() - u.lastStartTime) / 1000); if(u.breakType === 'general' || u.breakType === 'emergency') gen += d; else if(u.breakType === 'prayer') pra += d; else if(u.breakType === 'meeting') met += d; }
-            db.ref('users/'+u.username+'/history/'+Date.now()).set({ date: new Date().toLocaleDateString('ar-EG'), totalGeneral: gen, totalPrayer: pra, totalMeeting: met, approvedOvertime: u.approvedOvertimeBalance || 0 });
-            db.ref('users/'+u.username).update({ usedSeconds: 0, prayerSeconds: 0, meetingSeconds: 0, isOnBreak: false, lastStartTime: null, emergencyRequest: null });
-        });
-        alert("تم ✅");
-    }
+    window.endDay = () => { if(!confirm("إقفال اليوم للكل؟")) return; Object.values(allUsersData).forEach(u => { if(!u || !u.username || u.role === 'admin') return; let gen = u.usedSeconds || 0, pra = u.prayerSeconds || 0, met = u.meetingSeconds || 0; if(u.isOnBreak) { const d = Math.floor((Date.now() - u.lastStartTime) / 1000); if(u.breakType === 'general' || u.breakType === 'emergency') gen += d; else if(u.breakType === 'prayer') pra += d; else if(u.breakType === 'meeting') met += d; } db.ref('users/'+u.username+'/history/'+Date.now()).set({ date: new Date().toLocaleDateString('ar-EG'), totalGeneral: gen, totalPrayer: pra, totalMeeting: met, approvedOvertime: u.approvedOvertimeBalance || 0 }); db.ref('users/'+u.username).update({ usedSeconds: 0, prayerSeconds: 0, meetingSeconds: 0, isOnBreak: false, lastStartTime: null, emergencyRequest: null }); }); alert("تم ✅"); }
 
     window.updateReportSelect = () => { const sel = document.getElementById('reportUserSelect'); if(sel.options.length <= 1) { Object.values(allUsersData).forEach(u => { if(u && u.username && u.role !== 'admin') sel.innerHTML += `<option value="${u.username}">${u.realName}</option>`; }); } }
 
     window.renderUserReport = () => {
         const uName = document.getElementById('reportUserSelect').value; if(!uName) return alert("اختر موظف");
         const user = allUsersData[uName], sBody = document.getElementById('sessionsReportBody'), hBody = document.getElementById('reportBody'), otBody = document.getElementById('overtimeReportBody');
+        sBody.innerHTML = ''; hBody.innerHTML = ''; otBody.innerHTML = ''; document.getElementById('monthlySummary').classList.remove('hidden');
         
-        sBody.innerHTML = ''; hBody.innerHTML = ''; otBody.innerHTML = '';
-        document.getElementById('monthlySummary').classList.remove('hidden');
-        
+        // --- تجميع الحركات يومياً ---
         if(user.sessions) { 
-            Object.values(user.sessions).reverse().forEach(s => { 
-                sBody.innerHTML += `<tr><td style="font-size:0.7rem;">${s.date} ${s.time || ''}</td><td>${s.type}</td><td style="font-size:0.7rem;">${s.reason || '-'}</td><td>${Math.round(s.durationSeconds/60)}د</td></tr>`; 
-            }); 
-        }
-        
-        if(user.overtimeHistory) {
-            Object.values(user.overtimeHistory).reverse().forEach(ot => {
-                otBody.innerHTML += `<tr><td>${ot.date}</td><td>${ot.hours} ساعة</td><td>✅ ${ot.approvedBy || 'مدير'}</td></tr>`;
+            const grouped = {};
+            Object.values(user.sessions).forEach(s => {
+                if(!grouped[s.date]) grouped[s.date] = { activities: [], dailyTotal: 0 };
+                const typeText = s.type === 'general' ? 'بريك' : (s.type === 'prayer' ? 'صلاة' : (s.type === 'meeting' ? 'ميتنج' : 'طارئ'));
+                grouped[s.date].activities.push(`<span class="activity-text">• ${typeText}: (${s.reason || '-'}) [${Math.round(s.durationSeconds/60)}د]</span>`);
+                grouped[s.date].dailyTotal += s.durationSeconds;
             });
-        }
+            Object.keys(grouped).reverse().forEach(date => {
+                sBody.innerHTML += `<tr><td><span class="day-badge">${date}</span></td><td>${grouped[date].activities.join('')}</td><td><b>${Math.round(grouped[date].dailyTotal/60)}د</b></td></tr>`;
+            });
+        } else sBody.innerHTML = '<tr><td colspan="3">لا يوجد تحركات</td></tr>';
+        
+        if(user.overtimeHistory) Object.values(user.overtimeHistory).reverse().forEach(ot => { otBody.innerHTML += `<tr><td>${ot.date}</td><td>${ot.hours}س</td><td>✅ ${ot.approvedBy || 'مدير'}</td></tr>`; });
+        else otBody.innerHTML = '<tr><td colspan="3">لا يوجد سجل</td></tr>';
 
-        let mb = 0, mp = 0, mm = 0, curM = new Date().toLocaleDateString('ar-EG').split('/')[1];
-        const allowanceSeconds = (user.allowance || 45) * 60;
-
-        if(user.history) { 
-            Object.values(user.history).reverse().forEach(h => { 
-                hBody.innerHTML += `<tr><td>${h.date}</td><td>${formatTime(h.totalGeneral)}</td><td>${formatTime(h.totalPrayer)}</td><td>${formatTime(h.totalMeeting)}</td><td>${h.approvedOvertime}س</td></tr>`; 
-                
-                if(h.date.includes('/' + curM + '/')) { 
-                    // حساب الأكسدة الصافي لليوم (الزيادة عن المسموح فقط)
-                    let dailyOxidation = Math.max(0, (h.totalGeneral || 0) - allowanceSeconds);
-                    mb += dailyOxidation;
-                    mp += (h.totalPrayer || 0); 
-                    mm += (h.totalMeeting || 0); 
-                } 
-            }); 
-        }
-        document.getElementById('monthTotalBreaks').innerText = Math.round(mb/60) + " دقيقة"; 
-        document.getElementById('monthTotalPrayer').innerText = Math.round(mp/60) + " دقيقة"; 
-        document.getElementById('monthTotalMeeting').innerText = Math.round(mm/60) + " دقيقة";
+        let tOx = 0, tPr = 0, tMe = 0, curM = new Date().toLocaleDateString('ar-EG').split('/')[1], allw = (user.allowance || 45) * 60;
+        const today = new Date().toLocaleDateString('ar-EG');
+        if(today.includes('/' + curM + '/')) { tOx += Math.max(0, (user.usedSeconds || 0) - allw); tPr += (user.prayerSeconds || 0); tMe += (user.meetingSeconds || 0); }
+        if(user.history) { Object.values(user.history).reverse().forEach(h => { hBody.innerHTML += `<tr><td>${h.date}</td><td>${formatTime(h.totalGeneral)}</td><td>${formatTime(h.totalPrayer)}</td><td>${formatTime(h.totalMeeting)}</td><td>${h.approvedOvertime}س</td></tr>`; if(h.date.includes('/' + curM + '/')) { tOx += Math.max(0, (h.totalGeneral || 0) - allw); tPr += (h.totalPrayer || 0); tMe += (h.totalMeeting || 0); } }); }
+        document.getElementById('monthTotalBreaks').innerText = Math.round(tOx/60) + " دقيقة"; document.getElementById('monthTotalPrayer').innerText = Math.round(tPr/60) + " دقيقة"; document.getElementById('monthTotalMeeting').innerText = Math.round(tMe/60) + " دقيقة";
     }
 
     function initUserDash() { document.getElementById('welcomeMsg').innerText = `أهلاً، ${currentUser.realName}`; startTimer(); }
-    window.requestEmergency = () => { const reason = document.getElementById('breakReason').value.trim(); if(!reason) return alert("اكتب السبب"); db.ref(`users/${currentUser.username}/emergencyRequest`).set({ reason: reason, status: 'pending', timestamp: Date.now() }).then(() => alert("تم ✅")); }
+    window.requestEmergency = () => { const r = document.getElementById('breakReason').value.trim(); if(!r) return alert("اكتب السبب"); db.ref(`users/${currentUser.username}/emergencyRequest`).set({ reason: r, status: 'pending', timestamp: Date.now() }).then(() => alert("تم ✅")); }
     window.requestOvertime = () => { const h = document.getElementById('otHours').value; if(!h || h <= 0) return alert("ادخل الساعات"); db.ref(`users/${currentUser.username}/overtimeRequest`).set({ hours: h, status: 'pending', timestamp: Date.now() }).then(() => alert("تم ✅")); }
 
     window.startMyBreak = (type) => {
@@ -709,78 +581,21 @@
         const d = Math.floor((Date.now() - currentUser.lastStartTime) / 1000);
         db.ref('users/' + currentUser.username + '/sessions').push({ timestamp: Date.now(), date: new Date().toLocaleDateString('ar-EG'), time: new Date().toLocaleTimeString('ar-EG'), type: currentUser.breakType, reason: currentUser.lastReason || "بدون سبب", durationSeconds: d });
         const updates = { isOnBreak: false, lastStartTime: null, breakType: null, lastReason: "" };
-        if(currentUser.breakType === 'general' || currentUser.breakType === 'emergency') updates.usedSeconds = (currentUser.usedSeconds || 0) + d;
-        else if(currentUser.breakType === 'prayer') updates.prayerSeconds = (currentUser.prayerSeconds || 0) + d;
-        else if(currentUser.breakType === 'meeting') updates.meetingSeconds = (currentUser.meetingSeconds || 0) + d;
-        if(currentUser.breakType === 'emergency') updates.emergencyRequest = null;
+        if(currentUser.breakType === 'general' || currentUser.breakType === 'emergency') updates.usedSeconds = (currentUser.usedSeconds || 0) + d; else if(currentUser.breakType === 'prayer') updates.prayerSeconds = (currentUser.prayerSeconds || 0) + d; else if(currentUser.breakType === 'meeting') updates.meetingSeconds = (currentUser.meetingSeconds || 0) + d; if(currentUser.breakType === 'emergency') updates.emergencyRequest = null;
         db.ref('users/' + currentUser.username).update(updates); document.getElementById('breakReason').value = "";
     }
 
     function updateUserUI() {
-        const timerDisplay = document.getElementById('userTimer'), label = document.getElementById('timerLabel'), statusMsg = document.getElementById('userStatusMsg');
-        const hBody = document.getElementById('userDailyHistoryBody'), totalDisplay = document.getElementById('userMonthTotal');
-        
-        const allowanceSeconds = (currentUser.allowance || 45) * 60;
-
-        if(currentUser.history && hBody) { 
-            hBody.innerHTML = ''; 
-            let mTotal = 0, curM = new Date().toLocaleDateString('ar-EG').split('/')[1]; 
-            Object.values(currentUser.history).reverse().forEach(h => { 
-                // حساب الأكسدة الصافي (الزيادة فقط)
-                let dailyOxidation = Math.max(0, (h.totalGeneral || 0) - allowanceSeconds);
-                let mins = Math.round(dailyOxidation / 60);
-                
-                hBody.innerHTML += `<tr><td>${h.date}</td><td>${mins} دقيقة</td></tr>`; 
-                if(h.date.includes('/' + curM + '/')) { mTotal += dailyOxidation; } 
-            }); 
-            totalDisplay.innerText = Math.round(mTotal/60) + " دقيقة"; 
-        }
-
-        if(currentUser.emergencyRequest) {
-            const st = currentUser.emergencyRequest.status;
-            if(st === 'pending') document.getElementById('emergencyStatusArea').innerHTML = `<span class="status-badge bg-orange">⏳ انتظار</span>`;
-            else if(st === 'approved') document.getElementById('emergencyStatusArea').innerHTML = `<button onclick="startMyBreak('emergency')" class="btn btn-emergency btn-sm" style="width:100%">ابدأ الآن</button>`;
-            else document.getElementById('emergencyStatusArea').innerHTML = `<span class="status-badge bg-red">✖ مرفوض</span> <button onclick="db.ref('users/'+currentUser.username+'/emergencyRequest').remove()">✖</button>`;
-        } else { document.getElementById('emergencyStatusArea').innerHTML = `<button onclick="requestEmergency()" class="btn btn-dark btn-sm" style="width:100%">طلب</button>`; }
-
+        const timer = document.getElementById('userTimer'), lbl = document.getElementById('timerLabel'), msg = document.getElementById('userStatusMsg');
+        const hBody = document.getElementById('userDailyHistoryBody'), tDisp = document.getElementById('userMonthTotal'), allw = (currentUser.allowance || 45) * 60;
+        if(hBody) { hBody.innerHTML = ''; let mT = 0, curM = new Date().toLocaleDateString('ar-EG').split('/')[1]; mT += Math.max(0, (currentUser.usedSeconds || 0) - allw); if(currentUser.history) { Object.values(currentUser.history).reverse().forEach(h => { let dailyOx = Math.max(0, (h.totalGeneral || 0) - allw); hBody.innerHTML += `<tr><td>${h.date}</td><td>${Math.round(dailyOx/60)}د</td></tr>`; if(h.date.includes('/' + curM + '/')) mT += dailyOx; }); } tDisp.innerText = Math.round(mT/60) + " دقيقة"; }
+        if(currentUser.emergencyRequest) { const st = currentUser.emergencyRequest.status; if(st === 'pending') document.getElementById('emergencyStatusArea').innerHTML = `<span class="status-badge bg-orange">⏳ انتظار</span>`; else if(st === 'approved') document.getElementById('emergencyStatusArea').innerHTML = `<button onclick="startMyBreak('emergency')" class="btn btn-emergency btn-sm" style="width:100%">ابدأ الآن</button>`; else document.getElementById('emergencyStatusArea').innerHTML = `<span class="status-badge bg-red">✖ مرفوض</span> <button onclick="db.ref('users/'+currentUser.username+'/emergencyRequest').remove()">✖</button>`; } else document.getElementById('emergencyStatusArea').innerHTML = `<button onclick="requestEmergency()" class="btn btn-dark btn-sm" style="width:100%">طلب</button>`;
         if(currentUser.isOnBreak) {
-            document.getElementById('controlsArea').classList.add('hidden'); document.getElementById('stopArea').classList.remove('hidden'); 
-            const elap = Math.floor((Date.now() - currentUser.lastStartTime) / 1000);
-            statusMsg.innerText = "بريك سعيد";
-
-            if(currentUser.breakType === 'meeting' || currentUser.breakType === 'prayer') { 
-                label.innerText = currentUser.lastReason; timerDisplay.innerText = formatTime(elap); 
-            } else { 
-                const rem = allowanceSeconds - ((currentUser.usedSeconds || 0) + elap); 
-                if(rem >= 0) { 
-                    label.innerText = "رصيد البريك المتبقي"; 
-                    timerDisplay.innerText = formatTime(rem); 
-                    timerDisplay.style.color = "#2c3e50"; 
-                    stopAlarm(); 
-                } else { 
-                    label.innerText = "أكسدة"; 
-                    timerDisplay.innerText = "-" + formatTime(Math.abs(rem)); 
-                    timerDisplay.style.color = "red"; 
-                    statusMsg.innerText = "أنت الآن في مرحلة الأكسدة!";
-                    playAlarm(); 
-                } 
-            }
-        } else {
-            document.getElementById('controlsArea').classList.remove('hidden'); document.getElementById('stopArea').classList.add('hidden'); 
-            stopAlarm(); 
-            statusMsg.innerText = ""; 
-            const rem = allowanceSeconds - (currentUser.usedSeconds || 0);
-            if (rem >= 0) {
-                label.innerText = "رصيد البريك المتبقي"; 
-                timerDisplay.innerText = formatTime(rem);
-            } else {
-                label.innerText = "أكسدة";
-                timerDisplay.innerText = "00:00";
-                statusMsg.innerText = "لديك تجاوز سابق (أكسدة)";
-                statusMsg.style.color = "red";
-            }
-            timerDisplay.style.color = "#2c3e50"; 
-        }
+            document.getElementById('controlsArea').classList.add('hidden'); document.getElementById('stopArea').classList.remove('hidden');
+            const elap = Math.floor((Date.now() - currentUser.lastStartTime) / 1000); msg.innerText = "بريك سعيد";
+            if(currentUser.breakType === 'meeting' || currentUser.breakType === 'prayer') { lbl.innerText = currentUser.lastReason; timer.innerText = formatTime(elap); }
+            else { const rem = allw - ((currentUser.usedSeconds || 0) + elap); if(rem >= 0) { lbl.innerText = "رصيد البريك المتبقي"; timer.innerText = formatTime(rem); timer.style.color = "#2c3e50"; stopAlarm(); } else { lbl.innerText = "أكسدة"; timer.innerText = "-" + formatTime(Math.abs(rem)); timer.style.color = "red"; msg.innerText = "أنت الآن في مرحلة الأكسدة!"; playAlarm(); } }
+        } else { document.getElementById('controlsArea').classList.remove('hidden'); document.getElementById('stopArea').classList.add('hidden'); stopAlarm(); msg.innerText = ""; const rem = allw - (currentUser.usedSeconds || 0); if (rem >= 0) { lbl.innerText = "رصيد البريك المتبقي"; timer.innerText = formatTime(rem); } else { lbl.innerText = "أكسدة"; timer.innerText = "00:00"; msg.innerText = "لديك تجاوز سابق (أكسدة)"; msg.style.color = "red"; } timer.style.color = "#2c3e50"; }
     }
 
     function playAlarm() { document.body.classList.add('alarm-mode'); document.getElementById('overtimeAlert').classList.remove('hidden'); if(document.getElementById('alarmSound').paused) document.getElementById('alarmSound').play(); }
