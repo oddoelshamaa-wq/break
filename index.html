@@ -35,7 +35,8 @@
         .btn-primary { background: #2980b9; } .btn-danger { background: #c0392b; } .btn-success { background: #27ae60; } .btn-warning { background: #f39c12; } .btn-info { background: #8e44ad; } .btn-dark { background: #2d3436; } .btn-purple { background: #8e44ad; }
         
         input, select { padding: 10px; border: 2px solid #e0e0e0; border-radius: 10px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-family: 'Cairo', sans-serif; font-size: 0.95rem; }
-        
+        input:focus { outline: none; border-color: var(--primary-color); background: #fff; }
+
         .table-responsive { width: 100%; overflow-x: auto; margin-top: 15px; border-radius: 10px; }
         table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; min-width: 850px; }
         th { background: #2c3e50; color: white; padding: 12px 8px; font-size: 0.85rem; }
@@ -57,10 +58,9 @@
         .admin-table-ctrl { display: flex; flex-direction: column; gap: 5px; max-width: 220px; margin: auto; padding: 5px; background: #fdfdfd; border-radius: 8px; border: 1px solid #eee; }
         .admin-row-top { display: flex; gap: 4px; }
         .admin-row-top select { margin: 0; height: 38px; flex: 1.5; font-size: 0.8rem; border: 2px solid #ddd; }
-        .admin-table-ctrl input { margin: 0; height: 35px; font-size: 0.8rem; border: 1px solid #ccc; background: #fff;}
-        .badge-count { background: red; color: white; padding: 2px 6px; border-radius: 50%; font-size: 0.7rem; position: absolute; margin-top: -10px; margin-right: 5px; }
         .activity-text { font-size: 0.75rem; color: #555; text-align: right; line-height: 1.5; display: block; padding: 2px 0; border-bottom: 1px dashed #eee; }
         .day-badge { background: #eee; padding: 2px 8px; border-radius: 5px; font-weight: bold; font-size: 0.75rem; }
+        .badge-count { background: red; color: white; padding: 2px 6px; border-radius: 50%; font-size: 0.7rem; position: absolute; margin-top: -10px; margin-right: 5px; }
     </style>
 </head>
 <body>
@@ -70,7 +70,7 @@
     <h3>جاري تحميل النظام...</h3>
 </div>
 
-<!-- التنبيهات الصوتية -->
+<!-- الأصوات -->
 <audio id="alarmSound" loop><source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg"></audio>
 <audio id="notifySound"><source src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" type="audio/mp3"></audio>
 <audio id="requestRing" loop><source src="https://assets.mixkit.co/active_storage/sfx/1110/1110-preview.mp3" type="audio/mp3"></audio>
@@ -99,37 +99,40 @@
 
         <div class="nav-tabs">
             <button onclick="switchAdminTab('monitor')" class="btn btn-primary btn-sm">📡 المراقبة الحية</button>
-            <button onclick="switchAdminTab('emergency')" class="btn btn-danger btn-sm">🚨 طلبات الطوارئ <span id="emBadge" class="badge-count hidden">0</span></button>
-            <button onclick="switchAdminTab('overtime')" class="btn btn-purple btn-sm">🕒 طلبات الإضافي <span id="otBadge" class="badge-count hidden">0</span></button>
+            <button onclick="switchAdminTab('emergency')" class="btn btn-danger btn-sm">🚨 الطوارئ <span id="emBadge" class="badge-count hidden">0</span></button>
+            <button onclick="switchAdminTab('overtime')" class="btn btn-purple btn-sm">🕒 الإضافي <span id="otBadge" class="badge-count hidden">0</span></button>
             <button onclick="switchAdminTab('reports')" class="btn btn-warning btn-sm">📊 التقارير</button>
             <button onclick="switchAdminTab('users')" class="btn btn-success btn-sm">⚙️ إدارة الموظفين</button>
         </div>
 
+        <!-- تبويب المراقبة -->
         <div id="tab-monitor">
             <button onclick="endDay()" class="btn btn-danger btn-sm" style="width:100%; margin-bottom:10px;">🛑 إقفال اليوم وحفظ السجلات النهائية</button>
             <div id="activeBreakCount" style="text-align:center; font-weight:bold; margin-bottom:10px; font-size:0.9rem;"></div>
             <div class="table-responsive">
                 <table id="monitorTable">
-                    <thead><tr><th>الموظف</th><th>الحالة</th><th>البريك المتبقي</th><th>صلاة</th><th>ميتنج</th><th>تحكم المشرف</th></tr></thead>
+                    <thead><tr><th>الموظف</th><th>الحالة</th><th>البريك (متبقي)</th><th>صلاة</th><th>ميتنج</th><th>تحكم المشرف</th></tr></thead>
                     <tbody id="monitorBody"></tbody>
                 </table>
             </div>
         </div>
 
+        <!-- طلبات الطوارئ -->
         <div id="tab-emergency" class="hidden">
             <h3>🚨 طلبات الخروج الاضطراري</h3>
             <div class="table-responsive"><table><thead><tr><th>الموظف</th><th>السبب</th><th>الوقت</th><th>القرار</th></tr></thead><tbody id="adminEmBody"></tbody></table></div>
         </div>
 
+        <!-- طلبات الأوفر تايم -->
         <div id="tab-overtime" class="hidden">
             <h3>🕒 طلبات العمل الإضافي الواردة</h3>
             <div class="table-responsive"><table><thead><tr><th>الموظف</th><th>الساعات</th><th>وقت الطلب</th><th>القرار</th></tr></thead><tbody id="adminOtBody"></tbody></table></div>
         </div>
 
+        <!-- التقارير -->
         <div id="tab-reports" class="hidden">
             <select id="reportUserSelect"><option value="">-- اختر موظف لعرض تقريره --</option></select>
             <button onclick="renderUserReport()" class="btn btn-primary" style="width:100%;">استخراج التقرير</button>
-            
             <div class="summary-card hidden" id="monthlySummary">
                 <div class="summary-item"><h5>صافي الأكسدة (شهر)</h5><p id="monthTotalBreaks">0 دقيقة</p></div>
                 <div class="summary-item"><h5>إجمالي الصلاة (شهر)</h5><p id="monthTotalPrayer">0 دقيقة</p></div>
@@ -137,29 +140,33 @@
                     <h5>إجمالي العمل الإضافي</h5><p id="monthTotalOvertime" style="color:#8e44ad">0 ساعة</p>
                 </div>
             </div>
-
             <h4 style="font-size:1rem; margin-bottom:10px;">📋 سجل التحركات اليومي المجمع</h4>
             <div class="table-responsive" style="max-height:300px; border:1px solid #ddd; margin-bottom:30px;"><table id="sessionsTable"><thead><tr><th>اليوم</th><th>سجل التحركات</th><th>إجمالي اليوم</th></tr></thead><tbody id="sessionsReportBody"></tbody></table></div>
-            
-            <!-- الصفحة المنفصلة للاضافي -->
-            <h4 style="font-size:1.1rem; margin-bottom:10px; color:#8e44ad; padding:10px; background:#f4ebff; border-radius:10px;">📄 تفاصيل العمل الإضافي المعتمد (من قام بالموافقة؟)</h4>
-            <div class="table-responsive" style="border:1px solid #8e44ad; border-radius:10px;">
-                <table>
-                    <thead>
-                        <tr style="background:#8e44ad; color:white;">
-                            <th>تاريخ الموافقة</th>
-                            <th>عدد الساعات</th>
-                            <th>بواسطة المشرف</th>
-                        </tr>
-                    </thead>
-                    <tbody id="approvedOtReportBody"></tbody>
-                </table>
-            </div>
+            <h4 style="font-size:1.1rem; margin-bottom:10px; color:#8e44ad;">📄 تفاصيل العمل الإضافي المعتمد</h4>
+            <div class="table-responsive" style="border:1px solid #8e44ad; border-radius:10px;"><table><thead><tr><th>تاريخ الموافقة</th><th>عدد الساعات</th><th>بواسطة المشرف</th></tr></thead><tbody id="approvedOtReportBody"></tbody></table></div>
         </div>
 
+        <!-- إدارة الموظفين المحدثة -->
         <div id="tab-users" class="hidden">
-            <div style="background:#f9f9f9; padding:15px; border-radius:10px;"><input type="text" id="newRealName" placeholder="الاسم الحقيقي"><input type="text" id="newUsername" placeholder="User Name"><input type="text" id="newPassword" placeholder="Pass"><input type="number" id="newAllowance" placeholder="دقائق البريك" value="45"><button onclick="saveUser()" class="btn btn-success" style="width:100%">إضافة موظف جديد</button></div>
-            <div class="table-responsive"><table><thead><tr><th>الاسم</th><th>User</th><th>Pass</th><th>أكشن</th></tr></thead><tbody id="usersManagementBody"></tbody></table></div>
+            <div style="background:#f9f9f9; padding:20px; border-radius:15px; border: 1px dashed #ccc; margin-bottom: 20px;">
+                <h4 style="margin-top:0;">📝 بيانات الموظف</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <input type="text" id="newRealName" placeholder="الاسم الحقيقي">
+                    <input type="text" id="newUsername" placeholder="اسم الدخول (Username)">
+                    <input type="text" id="newPassword" placeholder="كلمة المرور">
+                    <input type="number" id="newAllowance" placeholder="دقائق البريك المسموحة" value="45">
+                </div>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button onclick="saveUser()" id="saveUserBtn" class="btn btn-success" style="flex:2">إضافة موظف جديد</button>
+                    <button onclick="resetUserForm()" class="btn btn-dark" style="flex:1">إلغاء / جديد</button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>الاسم</th><th>Username</th><th>Pass</th><th>مدة البريك</th><th>إجراءات</th></tr></thead>
+                    <tbody id="usersManagementBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -181,14 +188,6 @@
                     <div class="control-card" style="border-color:#2980b9; border-width:2px;"><h4>🕌 صلاة</h4><button onclick="startMyBreak('صلاة')" class="btn btn-info" style="width:100%">بدء</button></div>
                     <div class="control-card" style="border-color:#f39c12; border-width:2px;"><h4>🤝 ميتنج</h4><button onclick="startMyBreak('ميتنج')" class="btn btn-warning" style="width:100%">بدء</button></div>
                     <div class="control-card" style="border-color:#c0392b; border-width:2px;"><h4>🚨 خروج اضطراري</h4><div id="emStatusArea"><button onclick="sendEmRequest()" class="btn btn-dark btn-sm" style="width:100%">طلب خروج</button></div></div>
-                </div>
-
-                <div style="margin-top: 20px; padding: 15px; background: #fcf6ff; border: 1px solid #e0d0f0; border-radius: 15px;">
-                    <h4 style="color:#8e44ad; margin-top:0;">💼 طلب عمل إضافي (Overtime)</h4>
-                    <div style="display:flex; gap:10px; justify-content: center;">
-                        <input type="number" id="otHoursInput" placeholder="ساعات" style="margin:0; width: 100px;"><button onclick="sendOtRequest()" class="btn btn-purple">إرسال</button>
-                    </div>
-                    <p id="otStatusDisplay" style="font-size: 0.8rem; margin-top:8px; font-weight:bold;"></p>
                 </div>
             </div>
 
@@ -212,13 +211,13 @@
     try { firebase.initializeApp(firebaseConfig); db = firebase.database(); } catch(e) { console.error(e); }
 
     let allUsersData = {}, currentUser = null, timerInterval = null, isLoaded = false, adminTypingBuffer = {}, adminSelectBuffer = {};
+    let editingUserKey = null; // لتخزين اسم المستخدم الذي يتم تعديله حالياً
     let soundActive = false;
 
     const MANAGERS = ['mahmoud', 'abutamim', 'ahmed', 'admin'];
 
     db.ref('users').on('value', (snap) => {
         const newData = snap.val() || {};
-        
         if (currentUser && currentUser.role === 'admin' && isLoaded && soundActive) {
             let hasAnyPending = false;
             Object.keys(newData).forEach(un => {
@@ -229,13 +228,11 @@
             const ring = document.getElementById('requestRing');
             if (hasAnyPending) { if (ring.paused) ring.play().catch(e=>{}); } else { ring.pause(); ring.currentTime = 0; }
         }
-
         allUsersData = newData;
         if (!isLoaded) { isLoaded = true; document.getElementById('loading').style.display = 'none'; document.getElementById('mainContainer').classList.remove('hidden'); checkSavedSession(); }
-        
         if (currentUser) {
-            if (currentUser.role === 'admin') { renderMonitorTable(); renderAdminEmRequests(); renderAdminOtRequests(); }
-            else { currentUser = allUsersData[currentUser.username] || currentUser; updateUserUI(); updateEmStatus(); updateOtStatus(); }
+            if (currentUser.role === 'admin') { renderMonitorTable(); renderAdminEmRequests(); renderAdminOtRequests(); renderUserManagementTable(); }
+            else { currentUser = allUsersData[currentUser.username] || currentUser; updateUserUI(); updateEmStatus(); }
         }
     });
 
@@ -249,6 +246,72 @@
     function switchAdminTab(t) { ['tab-monitor','tab-reports','tab-users','tab-overtime','tab-emergency'].forEach(id => document.getElementById(id).classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); if(t==='reports') updateReportSelect(); }
     function startGlobalTimer() { if(timerInterval) clearInterval(timerInterval); timerInterval = setInterval(() => { if(currentUser && currentUser.role === 'admin') renderMonitorTable(); else if(currentUser) updateUserUI(); }, 1000); }
 
+    // --- إدارة الموظفين المحدثة ---
+    function renderUserManagementTable() {
+        const tb = document.getElementById('usersManagementBody'); 
+        if(!tb) return;
+        tb.innerHTML = '';
+        Object.values(allUsersData).forEach(u => {
+            if(!u || MANAGERS.includes(u.username)) return;
+            tb.innerHTML += `
+                <tr>
+                    <td>${u.realName}</td>
+                    <td>${u.username}</td>
+                    <td>${u.password}</td>
+                    <td>${u.allowance} دقيقة</td>
+                    <td>
+                        <button onclick="editUser('${u.username}')" class="btn btn-warning btn-sm">✎ تعديل</button>
+                        <button onclick="deleteUser('${u.username}')" class="btn btn-danger btn-sm">🗑 حذف</button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    window.editUser = (un) => {
+        const u = allUsersData[un];
+        if(!u) return;
+        document.getElementById('newRealName').value = u.realName;
+        document.getElementById('newUsername').value = u.username;
+        document.getElementById('newUsername').readOnly = true; // منع تغيير اسم المستخدم لأنه المفتاح
+        document.getElementById('newPassword').value = u.password;
+        document.getElementById('newAllowance').value = u.allowance;
+        document.getElementById('saveUserBtn').innerText = "✅ تحديث بيانات الموظف";
+        document.getElementById('saveUserBtn').classList.replace('btn-success', 'btn-warning');
+        editingUserKey = un;
+    };
+
+    window.resetUserForm = () => {
+        document.getElementById('newRealName').value = '';
+        document.getElementById('newUsername').value = '';
+        document.getElementById('newUsername').readOnly = false;
+        document.getElementById('newPassword').value = '';
+        document.getElementById('newAllowance').value = '45';
+        document.getElementById('saveUserBtn').innerText = "إضافة موظف جديد";
+        document.getElementById('saveUserBtn').classList.replace('btn-warning', 'btn-success');
+        editingUserKey = null;
+    };
+
+    window.saveUser = () => {
+        const un = document.getElementById('newUsername').value.trim().toLowerCase();
+        const pass = document.getElementById('newPassword').value;
+        const name = document.getElementById('newRealName').value;
+        const allow = parseInt(document.getElementById('newAllowance').value);
+        if(!un || !pass || !name) return alert("أكمل كافة البيانات");
+
+        const data = { realName: name, password: pass, allowance: allow };
+        
+        if (editingUserKey) {
+            db.ref('users/' + editingUserKey).update(data).then(() => { alert("تم تحديث البيانات ✅"); resetUserForm(); });
+        } else {
+            if(allUsersData[un]) return alert("اسم المستخدم موجود بالفعل!");
+            const newData = { ...data, username: un, role: 'employee', usedSeconds: 0, prayerSeconds: 0, meetingSeconds: 0, isOnBreak: false, state: 'offline' };
+            db.ref('users/' + un).set(newData).then(() => { alert("تم إضافة الموظف بنجاح ✅"); resetUserForm(); });
+        }
+    };
+
+    window.deleteUser = (un) => { if(confirm("حذف الموظف نهائياً من السيستم؟")) db.ref('users/'+un).remove(); };
+
+    // --- بقية وظائف النظام ---
     window.saveAdminTyping = (u, val) => { adminTypingBuffer[u] = val; }
     window.saveAdminSelect = (u, val) => { adminSelectBuffer[u] = val; }
 
@@ -314,33 +377,31 @@
         document.getElementById('monthTotalBreaks').innerText = Math.round(tOx/60) + " دقيقة"; document.getElementById('monthTotalPrayer').innerText = Math.round((u.prayerSeconds||0)/60) + " دقيقة"; document.getElementById('monthTotalOvertime').innerText = (u.totalApprovedOt || 0) + " ساعة";
     }
 
-    function endDay() { if(!confirm("إقفال اليوم للكل؟")) return; Object.values(allUsersData).forEach(u => { if(!u || MANAGERS.includes(u.username)) return; let g = u.usedSeconds || 0; if(u.isOnBreak && u.breakType === 'بريك عام') g += Math.floor((Date.now() - (u.lastStartTime||Date.now()))/1000); db.ref('users/'+u.username+'/history/'+Date.now()).set({ date: new Date().toLocaleDateString('ar-EG'), totalGeneral: g }); db.ref('users/'+u.username).update({ usedSeconds: 0, prayerSeconds: 0, meetingSeconds: 0, isOnBreak: false, lastStartTime: null, otRequest: null, emRequest: null }); }); alert("تم ✅"); }
+    function endDay() { if(!confirm("إقفال اليوم للكل؟")) return; Object.values(allUsersData).forEach(u => { if(!u || MANAGERS.includes(u.username)) return; let g = u.usedSeconds || 0; if(u.isOnBreak && u.breakType === 'بريك عام') g += Math.floor((Date.now() - (u.lastStartTime||Date.now()))/1000); db.ref('users/'+u.username+'/history/'+Date.now()).set({ date: new Date().toLocaleDateString('ar-EG'), totalGeneral: g }); db.ref('users/'+u.username).update({ usedSeconds: 0, prayerSeconds: 0, meetingSeconds: 0, isOnBreak: false, lastStartTime: null, otRequest: null, emRequest: null }); }); alert("تم الحفظ ✅"); }
 
     function startMyBreak(t) { if(currentUser.isOnBreak) return; const r = document.getElementById('breakReason').value.trim(); if(t==='بريك عام' && !r) return alert("اكتب السبب"); db.ref('users/'+currentUser.username).update({ isOnBreak: true, breakType: t, lastStartTime: Date.now(), lastReason: r || t }); if(t==='طوارئ') db.ref('users/'+currentUser.username+'/emRequest').remove(); }
     function stopMyBreak() { const u = currentUser, d = Math.floor((Date.now() - (u.lastStartTime || Date.now()))/1000); const dur = isNaN(d) ? 0 : d; db.ref('users/'+u.username+'/sessions').push({ date: new Date().toLocaleDateString('ar-EG'), type: u.breakType, reason: u.lastReason, duration: dur }); const updates = { isOnBreak: false, lastStartTime: null, lastReason: "" }; if(u.breakType==='بريك عام' || u.breakType==='طوارئ') updates.usedSeconds = (u.usedSeconds||0) + dur; else if(u.breakType==='صلاة') updates.prayerSeconds = (u.prayerSeconds||0) + dur; else if(u.breakType==='ميتنج') updates.meetingSeconds = (u.meetingSeconds||0) + dur; db.ref('users/'+u.username).update(updates); document.getElementById('breakReason').value = ""; }
 
     function updateUserUI() {
-        const u = currentUser, timer = document.getElementById('userTimer'), lbl = document.getElementById('timerLabel'), msg = document.getElementById('userStatusMsg'), allowance = (u.allowance || 45) * 60;
-        if (u.isOnBreak) {
+        const timer = document.getElementById('userTimer'), lbl = document.getElementById('timerLabel'), msg = document.getElementById('userStatusMsg'), allowance = (u.allowance || 45) * 60;
+        if (currentUser.isOnBreak) {
             document.getElementById('controlsArea').classList.add('hidden'); document.getElementById('stopArea').classList.remove('hidden'); 
-            msg.innerText = (u.breakType === 'صلاة') ? "تقبل الله" : "بريك سعيد";
-            const elap = Math.floor((Date.now() - (u.lastStartTime || Date.now()))/1000);
-            if (u.breakType === 'بريك عام' || u.breakType === 'طوارئ') {
-                const rem = allowance - ((u.usedSeconds||0) + elap);
+            msg.innerText = (currentUser.breakType === 'صلاة') ? "تقبل الله" : "بريك سعيد";
+            const elap = Math.floor((Date.now() - (currentUser.lastStartTime||Date.now()))/1000);
+            if (currentUser.breakType === 'بريك عام' || currentUser.breakType === 'طوارئ') {
+                const rem = allowance - ((currentUser.usedSeconds||0) + elap);
                 if (rem >= 0) { lbl.innerText = "رصيد البريك المتبقي"; timer.innerText = formatTime(rem); timer.style.color = "#2c3e50"; stopAlarm(); }
                 else { lbl.innerText = "أكسدة"; timer.innerText = "-" + formatTime(Math.abs(rem)); timer.style.color = "red"; playAlarm(); }
-            } else { timer.innerText = formatTime(elap); lbl.innerText = "النشاط الحالي: " + u.breakType; }
+            } else { timer.innerText = formatTime(elap); lbl.innerText = "أنت الآن في: " + currentUser.breakType; }
         } else {
             document.getElementById('controlsArea').classList.remove('hidden'); document.getElementById('stopArea').classList.add('hidden'); msg.innerText = ""; stopAlarm();
-            const rem = allowance - (u.usedSeconds||0); if (rem >= 0) { lbl.innerText = "رصيد البريك المتبقي"; timer.innerText = formatTime(rem); } else { lbl.innerText = "أكسدة"; timer.innerText = "00:00"; msg.innerText = "لديك تجاوز سابق (أكسدة)"; msg.style.color="red"; } timer.style.color = "#2c3e50";
+            const rem = allowance - (currentUser.usedSeconds||0); if (rem >= 0) { lbl.innerText = "رصيد البريك المتبقي"; timer.innerText = formatTime(rem); } else { lbl.innerText = "أكسدة"; timer.innerText = "00:00"; msg.innerText = "لديك تجاوز سابق (أكسدة)"; msg.style.color="red"; } timer.style.color = "#2c3e50";
         }
     }
 
-    function saveUser() { const un = document.getElementById('newUsername').value.trim().toLowerCase(), pass = document.getElementById('newPassword').value, name = document.getElementById('newRealName').value, allow = parseInt(document.getElementById('newAllowance').value); if(!un || !pass) return alert("أكمل البيانات"); db.ref('users/'+un).set({ username: un, realName: name, password: pass, allowance: allow, role: 'employee', usedSeconds: 0, prayerSeconds: 0, meetingSeconds: 0, isOnBreak: false, state: 'offline' }).then(() => alert("تم ✅")); }
-    function renderUserManagementTable() { const tb = document.getElementById('usersManagementBody'); tb.innerHTML = ''; Object.values(allUsersData).forEach(u => { if(!u || MANAGERS.includes(u.username)) return; tb.innerHTML += `<tr><td>${u.realName}</td><td>${u.username}</td><td>${u.password}</td><td><button onclick="db.ref('users/${u.username}').remove()" class="btn btn-danger btn-sm">🗑</button></td></tr>`; }); }
     function formatTime(s) { if(isNaN(s)) return "00:00"; return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`; }
     function playAlarm() { document.body.classList.add('وضع-التنبيه'); document.getElementById('overtimeAlert').classList.remove('hidden'); if(document.getElementById('alarmSound').paused) document.getElementById('alarmSound').play(); }
-    function stopAlarm() { document.body.classList.remove('وضع-التنبيه'); document.getElementById('overtimeAlert').classList.add('hidden'); document.getElementById('alarmSound').pause(); document.getElementById('alarmSound').currentTime=0; }
+    function stopAlarm() { document.body.classList.remove('وضع-التنبيه'); if(document.getElementById('overtimeAlert')) document.getElementById('overtimeAlert').classList.add('hidden'); document.getElementById('alarmSound').pause(); document.getElementById('alarmSound').currentTime=0; }
     function updateReportSelect() { const sel = document.getElementById('reportUserSelect'); if(sel.options.length <= 1) Object.values(allUsersData).forEach(u => { if(u && !MANAGERS.includes(u.username)) sel.innerHTML += `<option value="${u.username}">${u.realName}</option>`; }); }
 </script>
 </body>
