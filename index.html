@@ -20,6 +20,7 @@
             --prayer-color: #2980b9;
             --emergency-color: #c0392b;
             --dark-text: #2d3436;
+            --vip-color: #f39c12;
         }
 
         body { font-family: 'Cairo', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); margin: 0; padding: 20px 10px; min-height: 100vh; color: var(--dark-text); }
@@ -32,7 +33,7 @@
         h2, h3 { color: #2c3e50; text-align: center; font-weight: 700; margin-bottom: 20px; }
         
         .btn { padding: 10px 15px; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; font-family: 'Cairo', sans-serif; color: white; transition: all 0.3s ease; margin: 3px; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
-        .btn-primary { background: #2980b9; } .btn-danger { background: #c0392b; } .btn-success { background: #27ae60; } .btn-warning { background: #f39c12; } .btn-info { background: #8e44ad; } .btn-dark { background: #2d3436; } .btn-purple { background: #8e44ad; }
+        .btn-primary { background: #2980b9; } .btn-danger { background: #c0392b; } .btn-success { background: #27ae60; } .btn-warning { background: #f39c12; } .btn-info { background: #8e44ad; } .btn-dark { background: #2d3436; } .btn-purple { background: #8e44ad; } .btn-vip { background: linear-gradient(45deg, #d4af37, #f1c40f); border: 1px solid #b8860b; color: #000; }
         
         input, select { padding: 10px; border: 2px solid #e0e0e0; border-radius: 10px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-family: 'Cairo', sans-serif; font-size: 0.95rem; }
         input:focus { outline: none; border-color: var(--primary-color); background: #fff; }
@@ -67,6 +68,8 @@
         .search-input { border: 2px solid #2980b9 !important; background: #fff url('https://cdn-icons-png.flaticon.com/512/149/149852.png') no-repeat 10px center; background-size: 20px; padding-right: 40px; }
         
         .limit-box { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 10px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 15px; }
+        
+        .vip-badge { background: #ffd700; color: #000; padding: 2px 8px; border-radius: 5px; font-weight: bold; font-size: 0.75rem; box-shadow: 0 0 5px #ffd700; }
     </style>
 </head>
 <body>
@@ -191,6 +194,11 @@
                     <input type="text" id="newPassword" placeholder="كلمة المرور">
                     <input type="number" id="newAllowance" placeholder="دقائق البريك المسموحة" value="45">
                 </div>
+                <div style="margin: 10px 0;">
+                    <label style="font-weight: bold; color: #d4af37; cursor: pointer; background: #fff; padding: 5px 10px; border-radius: 10px; border: 1px solid #d4af37;">
+                        <input type="checkbox" id="isVIPUser" style="width: auto; margin-left: 10px;"> ⭐ تفعيل وضع VIP للموظف (ميزة الاستراحة الخاصة)
+                    </label>
+                </div>
                 <div style="display:flex; gap:10px; margin-top:10px;">
                     <button onclick="saveUser()" id="saveUserBtn" class="btn btn-success" style="flex:2">إضافة موظف جديد</button>
                     <button onclick="resetUserForm()" class="btn btn-dark" style="flex:1">إلغاء / جديد</button>
@@ -198,7 +206,7 @@
             </div>
             <div class="table-responsive">
                 <table>
-                    <thead><tr><th>الاسم الحقيقي</th><th>Username</th><th>Password</th><th>المدة</th><th>إجراءات</th></tr></thead>
+                    <thead><tr><th>الاسم الحقيقي</th><th>Username</th><th>Password</th><th>المدة</th><th>الحالة</th><th>إجراءات</th></tr></thead>
                     <tbody id="usersManagementBody"></tbody>
                 </table>
             </div>
@@ -222,6 +230,14 @@
 
             <div id="controlsArea">
                 <input type="text" id="breakReason" placeholder="اكتب سبب البريك..." style="text-align: center;">
+                
+                <!-- قسم الـ VIP المخصص -->
+                <div id="vipControlArea" class="hidden" style="margin-bottom: 20px; padding: 15px; background: linear-gradient(45deg, #fff9e6, #fff); border: 2px solid #ffd700; border-radius: 15px; box-shadow: 0 4px 10px rgba(255, 215, 0, 0.2);">
+                    <h4 style="color:#b8860b; margin-top:0;">🌟 منطقة VIP المتميزة</h4>
+                    <button onclick="startMyBreak('استراحة VIP')" class="btn btn-vip" style="width:100%; font-size: 1.2rem; padding: 15px;">👑 بدء استراحة VIP خاصة</button>
+                    <p style="font-size: 0.75rem; color: #888; margin-top: 5px;">* هذه الاستراحة لا تُحسب من رصيدك اليومي وتعمل في أي وقت.</p>
+                </div>
+
                 <div class="employee-controls" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
                     <div class="control-card" style="border:2px solid #27ae60; padding:10px; border-radius:15px;"><h4>🍔 بريك عام</h4><button onclick="startMyBreak('بريك عام')" class="btn btn-success" style="width:100%">بدء</button></div>
                     <div class="control-card" style="border:2px solid #2980b9; padding:10px; border-radius:15px;"><h4>🕌 صلاة</h4><button onclick="startMyBreak('صلاة')" class="btn btn-info" style="width:100%">بدء</button></div>
@@ -316,7 +332,8 @@
         const tb = document.getElementById('usersManagementBody'); if(!tb) return; tb.innerHTML = '';
         Object.values(allUsersData).forEach(u => {
             if(!u || !u.username || MANAGERS.includes(u.username)) return;
-            tb.innerHTML += `<tr><td style="font-weight:bold;">${u.realName}</td><td>${u.username}</td><td>${u.password}</td><td>${u.allowance || 45} دقيقة</td><td><button onclick="editUser('${u.username}')" class="btn btn-warning btn-sm">✎ تعديل</button><button onclick="deleteUser('${u.username}')" class="btn btn-danger btn-sm">🗑 حذف</button></td></tr>`;
+            const vipBadge = u.isVIP ? '<span class="vip-badge">⭐ VIP</span>' : 'عادي';
+            tb.innerHTML += `<tr><td style="font-weight:bold;">${u.realName}</td><td>${u.username}</td><td>${u.password}</td><td>${u.allowance || 45} دقيقة</td><td>${vipBadge}</td><td><button onclick="editUser('${u.username}')" class="btn btn-warning btn-sm">✎ تعديل</button><button onclick="deleteUser('${u.username}')" class="btn btn-danger btn-sm">🗑 حذف</button></td></tr>`;
         });
     }
 
@@ -327,6 +344,7 @@
         document.getElementById('newUsername').readOnly = true;
         document.getElementById('newPassword').value = u.password;
         document.getElementById('newAllowance').value = u.allowance || 45;
+        document.getElementById('isVIPUser').checked = u.isVIP || false;
         document.getElementById('saveUserBtn').innerText = "✅ تحديث البيانات";
         document.getElementById('saveUserBtn').classList.replace('btn-success', 'btn-warning');
         document.getElementById('formTitle').innerText = "📝 تعديل بيانات: " + u.realName;
@@ -339,6 +357,7 @@
         document.getElementById('newUsername').readOnly = false;
         document.getElementById('newPassword').value = '';
         document.getElementById('newAllowance').value = '45';
+        document.getElementById('isVIPUser').checked = false;
         document.getElementById('saveUserBtn').innerText = "إضافة موظف جديد";
         document.getElementById('saveUserBtn').classList.replace('btn-warning', 'btn-success');
         document.getElementById('formTitle').innerText = "📝 إضافة موظف جديد";
@@ -346,13 +365,13 @@
     };
 
     window.saveUser = () => {
-        const un = document.getElementById('newUsername').value.trim().toLowerCase(), pass = document.getElementById('newPassword').value, name = document.getElementById('newRealName').value, allow = parseInt(document.getElementById('newAllowance').value);
+        const un = document.getElementById('newUsername').value.trim().toLowerCase(), pass = document.getElementById('newPassword').value, name = document.getElementById('newRealName').value, allow = parseInt(document.getElementById('newAllowance').value), isVIP = document.getElementById('isVIPUser').checked;
         if(!un || !pass || !name) return alert("أكمل كافة البيانات");
         if (editingUserKey) {
-            db.ref('users/' + editingUserKey).update({ realName: name, password: pass, allowance: allow }).then(() => { alert("تم التحديث ✅"); resetUserForm(); });
+            db.ref('users/' + editingUserKey).update({ realName: name, password: pass, allowance: allow, isVIP: isVIP }).then(() => { alert("تم التحديث ✅"); resetUserForm(); });
         } else {
             if(allUsersData[un]) return alert("Username موجود بالفعل!");
-            db.ref('users/' + un).set({ username: un, realName: name, password: pass, allowance: allow, role: 'employee', usedSeconds: 0, prayerSeconds: 0, meetingSeconds: 0, isOnBreak: false, state: 'offline' }).then(() => { alert("تمت الإضافة ✅"); resetUserForm(); });
+            db.ref('users/' + un).set({ username: un, realName: name, password: pass, allowance: allow, role: 'employee', usedSeconds: 0, prayerSeconds: 0, meetingSeconds: 0, isOnBreak: false, state: 'offline', isVIP: isVIP }).then(() => { alert("تمت الإضافة ✅"); resetUserForm(); });
         }
     };
 
@@ -382,7 +401,7 @@
             const displayStatus = u.isOnBreak ? `${u.breakType} <br><small style="color:blue;">(${u.lastReason || 'بدون سبب'})</small>` : 'متاح';
 
             let ctrl = u.isOnBreak ? `<button onclick="adminStop('${u.username}')" class="btn btn-danger btn-sm" style="width:100%">🛑 إيقاف</button>` : 
-                `<div class="admin-table-ctrl"><div class="admin-row-top"><select id="sel_${u.username}" onchange="saveAdminSelect('${u.username}', this.value)"><option value="بريك عام">بريك</option><option value="صلاة">صلاة</option><option value="ميتنج">ميتنج</option></select><button onclick="adminStart('${u.username}')" class="btn btn-success btn-sm">▶ بدء</button></div><input type="text" id="inp_${u.username}" placeholder="السبب..." oninput="saveAdminTyping('${u.username}', this.value)"></div>`;
+                `<div class="admin-table-ctrl"><div class="admin-row-top"><select id="sel_${u.username}" onchange="saveAdminSelect('${u.username}', this.value)"><option value="بريك عام">بريك</option><option value="صلاة">صلاة</option><option value="ميتنج">ميتنج</option><option value="استراحة VIP">VIP</option></select><button onclick="adminStart('${u.username}')" class="btn btn-success btn-sm">▶ بدء</button></div><input type="text" id="inp_${u.username}" placeholder="السبب..." oninput="saveAdminTyping('${u.username}', this.value)"></div>`;
             
             tbody.innerHTML += `<tr class="${isWarning ? 'صف-تحذير' : ''}"><td>${u.realName} ${online}</td><td style="line-height:1.2;">${displayStatus}</td><td>${remTxt}</td><td>${formatTime(liveP)}</td><td>${formatTime(liveM)}</td><td>${ctrl}</td></tr>`;
         });
@@ -447,7 +466,6 @@
         const type = adminSelectBuffer[un] || 'بريك عام'; 
         const reason = (adminTypingBuffer[un] || "بدأ بواسطة المدير") + " (إداري)"; 
         
-        // فحص الصلاة للمشرف أيضاً
         if (type === 'صلاة') {
             const currentPraying = Object.values(allUsersData).filter(u => u.isOnBreak && u.breakType === 'صلاة').length;
             if (currentPraying >= 1) { return alert("لا اصبر اخواتك لما يرجعوا من الصلاة"); }
@@ -481,7 +499,6 @@
     function startMyBreak(t) { 
         if(currentUser.isOnBreak) return alert("أنت نشط بالفعل في " + currentUser.breakType); 
         
-        // فحص حدود البريك العام
         if (t === 'بريك عام') {
             const currentActive = Object.values(allUsersData).filter(u => u.isOnBreak && u.breakType === 'بريك عام').length;
             if (currentActive >= maxBreaksAllowed) {
@@ -489,7 +506,6 @@
             }
         }
 
-        // --- التعديل الجديد: فحص حدود الصلاة (شخص واحد فقط) ---
         if (t === 'صلاة') {
             const currentPraying = Object.values(allUsersData).filter(u => u.isOnBreak && u.breakType === 'صلاة').length;
             if (currentPraying >= 1) {
@@ -513,6 +529,7 @@
         if(u.breakType==='بريك عام' || u.breakType==='طوارئ') updates.usedSeconds = (u.usedSeconds||0) + d; 
         else if(u.breakType==='صلاة') updates.prayerSeconds = (u.prayerSeconds||0) + d; 
         else if(u.breakType==='ميتنج') updates.meetingSeconds = (u.meetingSeconds||0) + d; 
+        // استراحة الـ VIP لا تُضيف أي ثواني لعدادات الأكسدة
         if(u.breakType === 'طوارئ') updates.emRequest = null;
         db.ref('users/'+u.username).update(updates); 
         document.getElementById('breakReason').value = ""; 
@@ -520,9 +537,14 @@
 
     function updateUserUI() {
         const u = currentUser, timer = document.getElementById('userTimer'), lbl = document.getElementById('timerLabel'), msg = document.getElementById('userStatusMsg'), allowance = (u.allowance || 45) * 60;
+        
+        // إظهار منطقة الـ VIP فقط إذا كان الموظف VIP
+        if(u.isVIP) document.getElementById('vipControlArea').classList.remove('hidden');
+        else document.getElementById('vipControlArea').classList.add('hidden');
+
         if (currentUser.isOnBreak) {
             document.getElementById('controlsArea').classList.add('hidden'); document.getElementById('stopArea').classList.remove('hidden'); 
-            msg.innerText = (currentUser.breakType === 'صلاة') ? "تقبل الله" : "أنت الآن في " + currentUser.breakType;
+            msg.innerText = (currentUser.breakType === 'صلاة') ? "تقبل الله" : (currentUser.breakType === 'استراحة VIP') ? "أنت في استراحة VIP الآن 👑" : "أنت الآن في " + currentUser.breakType;
             const elap = Math.floor((Date.now() - (currentUser.lastStartTime||Date.now())) / 1000);
             if (currentUser.breakType === 'بريك عام' || currentUser.breakType === 'طوارئ') {
                 const rem = allowance - ((u.usedSeconds||0) + elap);
