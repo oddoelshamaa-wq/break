@@ -267,7 +267,7 @@
             </div>
             <button onclick="renderUserReport()" class="btn btn-primary" style="width:100%;">عرض التقرير</button>
 
-            <!-- ملخص الشهر (بالدقائق) -->
+            <!-- ملخص الشهر (صافي الأكسدة) -->
             <div class="summary-card hidden" id="monthlySummary">
                 <div class="summary-item"><h5>الأكسدة (شهر)</h5><p id="monthTotalBreaks">0 دقيقة</p></div>
                 <div class="summary-item"><h5>صلاة (شهر)</h5><p id="monthTotalPrayer">0 دقيقة</p></div>
@@ -372,15 +372,15 @@
                     <div id="overtimeStatus" style="font-size:0.8rem; margin-top:5px;"></div>
                 </div>
 
-                <!-- سجل الموظف الشخصي -->
+                <!-- سجل الموظف الشخصي (صافي الأكسدة) -->
                 <div style="margin-top: 20px; padding-top: 15px; border-top: 2px dashed #eee;">
-                    <h4 style="font-size: 0.95rem; color: #27ae60;">📊 إجمالي الأكسدة الشخصي</h4>
+                    <h4 style="font-size: 0.95rem; color: #27ae60;">📊 صافي الأكسدة الشخصي</h4>
                     <div class="summary-card" style="border-color: #2ecc71;">
                         <div class="summary-item"><h5>إجمالي الأكسدة (شهر)</h5><p id="userMonthTotal" style="font-size:1.1rem;">0 دقيقة</p></div>
                     </div>
                     <div class="table-responsive" style="max-height: 150px; background:#fff;">
                         <table style="min-width: unset;">
-                            <thead><tr><th>التاريخ</th><th>المستنفذ (دقيقة)</th></tr></thead>
+                            <thead><tr><th>التاريخ</th><th>الأكسدة (دقيقة)</th></tr></thead>
                             <tbody id="userDailyHistoryBody"></tbody>
                         </table>
                     </div>
@@ -668,14 +668,21 @@
             Object.values(user.overtimeHistory).reverse().forEach(ot => {
                 otBody.innerHTML += `<tr><td>${ot.date}</td><td>${ot.hours} ساعة</td><td>✅ ${ot.approvedBy || 'مدير'}</td></tr>`;
             });
-        } else { otBody.innerHTML = '<tr><td colspan="3">لا يوجد سجل أوفر تايم</td></tr>'; }
+        }
 
         let mb = 0, mp = 0, mm = 0, curM = new Date().toLocaleDateString('ar-EG').split('/')[1];
+        const allowanceSeconds = (user.allowance || 45) * 60;
+
         if(user.history) { 
             Object.values(user.history).reverse().forEach(h => { 
                 hBody.innerHTML += `<tr><td>${h.date}</td><td>${formatTime(h.totalGeneral)}</td><td>${formatTime(h.totalPrayer)}</td><td>${formatTime(h.totalMeeting)}</td><td>${h.approvedOvertime}س</td></tr>`; 
+                
                 if(h.date.includes('/' + curM + '/')) { 
-                    mb += (h.totalGeneral || 0); mp += (h.totalPrayer || 0); mm += (h.totalMeeting || 0); 
+                    // حساب الأكسدة الصافي لليوم (الزيادة عن المسموح فقط)
+                    let dailyOxidation = Math.max(0, (h.totalGeneral || 0) - allowanceSeconds);
+                    mb += dailyOxidation;
+                    mp += (h.totalPrayer || 0); 
+                    mm += (h.totalMeeting || 0); 
                 } 
             }); 
         }
@@ -713,13 +720,18 @@
         const timerDisplay = document.getElementById('userTimer'), label = document.getElementById('timerLabel'), statusMsg = document.getElementById('userStatusMsg');
         const hBody = document.getElementById('userDailyHistoryBody'), totalDisplay = document.getElementById('userMonthTotal');
         
+        const allowanceSeconds = (currentUser.allowance || 45) * 60;
+
         if(currentUser.history && hBody) { 
             hBody.innerHTML = ''; 
             let mTotal = 0, curM = new Date().toLocaleDateString('ar-EG').split('/')[1]; 
             Object.values(currentUser.history).reverse().forEach(h => { 
-                const mins = Math.round((h.totalGeneral || 0) / 60); 
+                // حساب الأكسدة الصافي (الزيادة فقط)
+                let dailyOxidation = Math.max(0, (h.totalGeneral || 0) - allowanceSeconds);
+                let mins = Math.round(dailyOxidation / 60);
+                
                 hBody.innerHTML += `<tr><td>${h.date}</td><td>${mins} دقيقة</td></tr>`; 
-                if(h.date.includes('/' + curM + '/')) { mTotal += (h.totalGeneral || 0); } 
+                if(h.date.includes('/' + curM + '/')) { mTotal += dailyOxidation; } 
             }); 
             totalDisplay.innerText = Math.round(mTotal/60) + " دقيقة"; 
         }
@@ -739,7 +751,7 @@
             if(currentUser.breakType === 'meeting' || currentUser.breakType === 'prayer') { 
                 label.innerText = currentUser.lastReason; timerDisplay.innerText = formatTime(elap); 
             } else { 
-                const rem = (currentUser.allowance * 60) - ((currentUser.usedSeconds || 0) + elap); 
+                const rem = allowanceSeconds - ((currentUser.usedSeconds || 0) + elap); 
                 if(rem >= 0) { 
                     label.innerText = "رصيد البريك المتبقي"; 
                     timerDisplay.innerText = formatTime(rem); 
@@ -757,7 +769,7 @@
             document.getElementById('controlsArea').classList.remove('hidden'); document.getElementById('stopArea').classList.add('hidden'); 
             stopAlarm(); 
             statusMsg.innerText = ""; 
-            const rem = (currentUser.allowance * 60) - (currentUser.usedSeconds || 0);
+            const rem = allowanceSeconds - (currentUser.usedSeconds || 0);
             if (rem >= 0) {
                 label.innerText = "رصيد البريك المتبقي"; 
                 timerDisplay.innerText = formatTime(rem);
