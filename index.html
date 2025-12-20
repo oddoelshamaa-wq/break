@@ -67,7 +67,8 @@
         .filter-box { background: #f8f9fa; padding: 15px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 15px; }
         .search-input { border: 2px solid #2980b9 !important; background: #fff url('https://cdn-icons-png.flaticon.com/512/149/149852.png') no-repeat 10px center; background-size: 20px; padding-right: 40px; }
         
-        .limit-box { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 10px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 15px; }
+        .limit-box { background: #f8f9fa; border: 1px solid #eee; padding: 15px; border-radius: 15px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap; }
+        .limit-input-group { background: white; border: 1px solid #ddd; padding: 8px 15px; border-radius: 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
         
         .vip-badge { background: #ffd700; color: #000; padding: 2px 8px; border-radius: 5px; font-weight: bold; font-size: 0.75rem; box-shadow: 0 0 5px #ffd700; }
     </style>
@@ -116,16 +117,25 @@
         <!-- المراقبة -->
         <div id="tab-monitor">
             <div class="limit-box">
-                <strong>⚙️ الحد الأقصى للموظفين في البريك حالياً:</strong>
-                <input type="number" id="maxBreaksInput" style="width:70px; margin:0; text-align:center;" min="1" value="3">
-                <button onclick="updateMaxBreaks()" class="btn btn-dark btn-sm">حفظ التعديل</button>
+                <div class="limit-input-group">
+                    <strong>🍔 حد البريك:</strong>
+                    <input type="number" id="maxBreaksInput" style="width:60px; margin:0; text-align:center;" min="1" value="3">
+                </div>
+                <div class="limit-input-group">
+                    <strong>🕌 حد الصلاة:</strong>
+                    <input type="number" id="maxPrayersInput" style="width:60px; margin:0; text-align:center;" min="1" value="2">
+                </div>
+                <button onclick="updateLimits()" class="btn btn-dark btn-sm">حفظ التعديلات</button>
             </div>
 
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <input type="text" id="monitorSearch" placeholder="بحث عن موظف بالاسم..." class="search-input" oninput="renderMonitorTable()">
                 <button onclick="endDay()" class="btn btn-danger btn-sm" style="flex-shrink: 0;">🛑 إقفال اليوم</button>
             </div>
-            <div id="activeBreakCount" style="text-align:center; font-weight:bold; margin-bottom:10px; font-size:1rem; color:#2c3e50;"></div>
+            
+            <div id="statusCountersDisplay" style="text-align:center; font-weight:bold; margin-bottom:15px; font-size:1.1rem; color:#2c3e50; background: #f1f2f6; padding: 10px; border-radius: 10px;">
+                البريك: (0/3) | الصلاة: (0/2)
+            </div>
             
             <div class="table-responsive">
                 <table id="monitorTable">
@@ -272,13 +282,18 @@
     try { firebase.initializeApp(firebaseConfig); db = firebase.database(); } catch(e) { console.error(e); }
 
     let allUsersData = {}, currentUser = null, timerInterval = null, isLoaded = false, adminTypingBuffer = {}, adminSelectBuffer = {};
-    let editingUserKey = null, soundActive = false, maxBreaksAllowed = 3;
+    let editingUserKey = null, soundActive = false, maxBreaksAllowed = 3, maxPrayersAllowed = 2;
     const MANAGERS = ['mahmoud', 'abutamim', 'ahmed', 'admin'];
 
-    db.ref('settings/maxBreaks').on('value', (snap) => {
-        maxBreaksAllowed = snap.val() || 3;
-        const input = document.getElementById('maxBreaksInput');
-        if(input) input.value = maxBreaksAllowed;
+    // استماع للحدود من قاعدة البيانات
+    db.ref('settings/limits').on('value', (snap) => {
+        const limits = snap.val() || { breaks: 3, prayers: 2 };
+        maxBreaksAllowed = limits.breaks;
+        maxPrayersAllowed = limits.prayers;
+        const bInput = document.getElementById('maxBreaksInput');
+        const pInput = document.getElementById('maxPrayersInput');
+        if(bInput) bInput.value = maxBreaksAllowed;
+        if(pInput) pInput.value = maxPrayersAllowed;
     });
 
     db.ref('users').on('value', (snap) => {
@@ -301,16 +316,17 @@
         }
     });
 
-    function updateMaxBreaks() {
-        const val = parseInt(document.getElementById('maxBreaksInput').value);
-        if(isNaN(val) || val < 1) return alert("يرجى إدخال عدد صحيح");
-        db.ref('settings/maxBreaks').set(val).then(() => alert("تم تحديث الحد الأقصى بنجاح ✅"));
+    function updateLimits() {
+        const bVal = parseInt(document.getElementById('maxBreaksInput').value);
+        const pVal = parseInt(document.getElementById('maxPrayersInput').value);
+        if(isNaN(bVal) || bVal < 1 || isNaN(pVal) || pVal < 1) return alert("يرجى إدخال أرقام صحيحة");
+        db.ref('settings/limits').set({ breaks: bVal, prayers: pVal }).then(() => alert("تم تحديث الإعدادات بنجاح ✅"));
     }
 
     function checkBreakLimit() {
-        const currentActive = Object.values(allUsersData).filter(u => u.isOnBreak && u.breakType === 'بريك عام').length;
+        const currentActiveBreaks = Object.values(allUsersData).filter(u => u.isOnBreak && u.breakType === 'بريك عام').length;
         const alertBox = document.getElementById('breakLimitAlert');
-        if(currentActive >= maxBreaksAllowed) {
+        if(currentActiveBreaks >= maxBreaksAllowed) {
             alertBox.style.display = 'block';
             alertBox.innerText = "يا بطل، زمايلك كلهم في البريك دلوقتي. استنى دقايق لحد ما حد يرجع عشان نفضل شغالين بقوة.. أول ما حد يرجع الطريق هيكون مفتوح ليك! 💪";
         } else {
@@ -380,7 +396,9 @@
     function renderMonitorTable() {
         const tbody = document.getElementById('monitorBody');
         const searchTerm = document.getElementById('monitorSearch').value.toLowerCase();
-        tbody.innerHTML = ''; let activeGen = 0;
+        tbody.innerHTML = ''; 
+        let activeBreaks = 0;
+        let activePrayers = 0;
         
         Object.values(allUsersData).forEach(u => {
             if (!u || !u.username || MANAGERS.includes(u.username)) return;
@@ -389,10 +407,10 @@
             let liveG = u.usedSeconds || 0, liveP = u.prayerSeconds || 0, liveM = u.meetingSeconds || 0;
             if (u.isOnBreak && u.lastStartTime) {
                 let elap = Math.floor((Date.now() - u.lastStartTime) / 1000);
-                if (u.breakType === 'بريك عام') { liveG += elap; activeGen++; } 
-                else if (u.breakType === 'صلاة') liveP += elap; 
+                if (u.breakType === 'بريك عام') { liveG += elap; activeBreaks++; } 
+                else if (u.breakType === 'صلاة') { liveP += elap; activePrayers++; }
                 else if (u.breakType === 'ميتنج') liveM += elap;
-                else if (u.breakType === 'طوارئ') { liveG += elap; activeGen++; }
+                else if (u.breakType === 'طوارئ') { liveG += elap; activeBreaks++; }
             }
             const rem = (u.allowance * 60) - liveG, remTxt = rem >= 0 ? formatTime(rem) : `<span style="color:red; font-weight:bold;">-${formatTime(Math.abs(rem))}</span>`;
             const online = `<span class="online-dot ${u.state === 'online' ? 'dot-green' : 'dot-grey'}"></span>`;
@@ -405,7 +423,7 @@
             
             tbody.innerHTML += `<tr class="${isWarning ? 'صف-تحذير' : ''}"><td>${u.realName} ${online}</td><td style="line-height:1.2;">${displayStatus}</td><td>${remTxt}</td><td>${formatTime(liveP)}</td><td>${formatTime(liveM)}</td><td>${ctrl}</td></tr>`;
         });
-        document.getElementById('activeBreakCount').innerText = `عدد الموظفين في البريك حالياً: (${activeGen} من أصل ${maxBreaksAllowed})`;
+        document.getElementById('statusCountersDisplay').innerText = `البريك: (${activeBreaks}/${maxBreaksAllowed}) | الصلاة: (${activePrayers}/${maxPrayersAllowed})`;
     }
 
     function renderUserReport() {
@@ -466,9 +484,14 @@
         const type = adminSelectBuffer[un] || 'بريك عام'; 
         const reason = (adminTypingBuffer[un] || "بدأ بواسطة المدير") + " (إداري)"; 
         
+        if (type === 'بريك عام') {
+            const currentBreaks = Object.values(allUsersData).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
+            if (currentBreaks >= maxBreaksAllowed) return alert(`وصلت للحد الأقصى للبريك (${maxBreaksAllowed})`);
+        }
+
         if (type === 'صلاة') {
             const currentPraying = Object.values(allUsersData).filter(u => u.isOnBreak && u.breakType === 'صلاة').length;
-            if (currentPraying >= 1) { return alert("لا اصبر اخواتك لما يرجعوا من الصلاة"); }
+            if (currentPraying >= maxPrayersAllowed) { return alert(`وصلت للحد الأقصى للصلاة (${maxPrayersAllowed})`); }
         }
         db.ref('users/'+un).update({ isOnBreak: true, breakType: type, lastStartTime: Date.now(), lastReason: reason }); 
     };
@@ -500,16 +523,16 @@
         if(currentUser.isOnBreak) return alert("أنت نشط بالفعل في " + currentUser.breakType); 
         
         if (t === 'بريك عام') {
-            const currentActive = Object.values(allUsersData).filter(u => u.isOnBreak && u.breakType === 'بريك عام').length;
+            const currentActive = Object.values(allUsersData).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
             if (currentActive >= maxBreaksAllowed) {
-                return alert("يا بطل، زمايلك كلهم في البريك دلوقتي. استنى دقايق لحد ما حد يرجع عشان نفضل شغالين بقوة.. أول ما حد يرجع الطريق هيكون مفتوح ليك! 💪");
+                return alert("يا بطل، زمايلك كلهم في البريك دلوقتي. استنى دقايق لحد ما حد يرجع.. أول ما حد يرجع الطريق هيكون مفتوح ليك! 💪");
             }
         }
 
         if (t === 'صلاة') {
             const currentPraying = Object.values(allUsersData).filter(u => u.isOnBreak && u.breakType === 'صلاة').length;
-            if (currentPraying >= 1) {
-                return alert("لا اصبر اخواتك لما يرجعوا من الصلاة");
+            if (currentPraying >= maxPrayersAllowed) {
+                return alert(`يا بطل، فيه ${maxPrayersAllowed} زمايل ليك بيصلوا حالياً.. استناهم يرجعوا عشان نفضل شغالين بقوة! 🕌`);
             }
         }
 
@@ -529,7 +552,6 @@
         if(u.breakType==='بريك عام' || u.breakType==='طوارئ') updates.usedSeconds = (u.usedSeconds||0) + d; 
         else if(u.breakType==='صلاة') updates.prayerSeconds = (u.prayerSeconds||0) + d; 
         else if(u.breakType==='ميتنج') updates.meetingSeconds = (u.meetingSeconds||0) + d; 
-        // استراحة الـ VIP لا تُضيف أي ثواني لعدادات الأكسدة
         if(u.breakType === 'طوارئ') updates.emRequest = null;
         db.ref('users/'+u.username).update(updates); 
         document.getElementById('breakReason').value = ""; 
@@ -538,7 +560,6 @@
     function updateUserUI() {
         const u = currentUser, timer = document.getElementById('userTimer'), lbl = document.getElementById('timerLabel'), msg = document.getElementById('userStatusMsg'), allowance = (u.allowance || 45) * 60;
         
-        // إظهار منطقة الـ VIP فقط إذا كان الموظف VIP
         if(u.isVIP) document.getElementById('vipControlArea').classList.remove('hidden');
         else document.getElementById('vipControlArea').classList.add('hidden');
 
