@@ -176,6 +176,9 @@
                     </div>
                 </div>
                 <button onclick="renderUserReport()" class="btn btn-primary" style="width:100%; margin-top: 10px;">🔍 استخراج التقرير المفلتر</button>
+                
+                <!-- زر حذف جميع التقارير للمشرف محمود فقط -->
+                <button id="masterDeleteBtn" onclick="deleteAllReports()" class="btn btn-danger hidden" style="width:100%; margin-top: 10px; background:#d63031; font-size: 1rem;">⚠️ حذف أرشيف جميع الموظفين نهائياً (محمود فقط)</button>
             </div>
 
             <div class="summary-card hidden" id="monthlySummary">
@@ -323,6 +326,8 @@
                 renderAdminOtRequests(); 
                 renderUserManagementTable(); 
                 if(document.getElementById('tab-reports').classList.contains('hidden') === false) renderUserReport();
+                // إظهار زر المسح الشامل لمحمود فقط
+                if(currentUser.username === 'mahmoud') document.getElementById('masterDeleteBtn').classList.remove('hidden');
             }
             else { currentUser = allUsersData[currentUser.username] || currentUser; updateUserUI(); updateEmStatus(); updateOtStatus(); checkBreakLimit(); }
         }
@@ -446,7 +451,6 @@
         sBody.innerHTML = ''; otBody.innerHTML = ''; mSum.classList.remove('hidden');
         let totalOxSeconds = 0, totalPrayerSeconds = 0, totalOtHours = 0, allowanceSeconds = (u.allowance || 45) * 60;
         
-        // صلاحية الحذف لمحمود فقط
         const isMahmoud = currentUser.username === 'mahmoud';
         if(isMahmoud) document.getElementById('otActionHeader').classList.remove('hidden'); else document.getElementById('otActionHeader').classList.add('hidden');
 
@@ -497,7 +501,25 @@
         document.getElementById('monthTotalOvertime').innerText = totalOtHours + " ساعة";
     }
 
-    // وظائف الحذف لمحمود
+    // وظيفة المسح الشامل للأرشيف (محمود فقط)
+    window.deleteAllReports = () => {
+        if(currentUser.username !== 'mahmoud') return alert("هذه الصلاحية للمشرف محمود فقط!");
+        if(!confirm("⚠️ تحذير شديد: سيتم مسح جميع سجلات التحركات والعمل الإضافي لجميع الموظفين نهائياً. هل أنت متأكد؟")) return;
+        
+        const updates = {};
+        Object.keys(allUsersData).forEach(un => {
+            if(!MANAGERS.includes(un)) {
+                updates[`users/${un}/sessions`] = null;
+                updates[`users/${un}/overtimeHistory`] = null;
+                updates[`users/${un}/history`] = null;
+            }
+        });
+        db.ref().update(updates).then(() => {
+            alert("تم تصفير جميع تقارير الموظفين بنجاح ✅");
+            renderUserReport();
+        });
+    };
+
     window.deleteSessionRecord = (employeeUn, sessionKey) => {
         if(confirm("هل أنت متأكد من حذف هذا النشاط من السجل؟")) {
             db.ref(`users/${employeeUn}/sessions/${sessionKey}`).remove()
