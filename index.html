@@ -71,6 +71,7 @@
         .limit-input-group { background: white; border: 1px solid #ddd; padding: 8px 15px; border-radius: 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
         
         .vip-badge { background: #ffd700; color: #000; padding: 2px 8px; border-radius: 5px; font-weight: bold; font-size: 0.75rem; box-shadow: 0 0 5px #ffd700; }
+        .del-btn-report { background: #ff7675; color: white; border: none; border-radius: 5px; cursor: pointer; padding: 2px 5px; font-size: 0.7rem; margin-right: 5px; }
     </style>
 </head>
 <body>
@@ -191,7 +192,12 @@
                 </table>
             </div>
             <h4 style="font-size:1.1rem; margin-bottom:10px; color:#8e44ad;">📄 تفاصيل العمل الإضافي المعتمد</h4>
-            <div class="table-responsive" style="border:1px solid #8e44ad; border-radius:10px;"><table><thead><tr><th>تاريخ الموافقة</th><th>عدد الساعات</th><th>بواسطة المشرف</th></tr></thead><tbody id="approvedOtReportBody"></tbody></table></div>
+            <div class="table-responsive" style="border:1px solid #8e44ad; border-radius:10px;">
+                <table>
+                    <thead><tr><th>تاريخ الموافقة</th><th>عدد الساعات</th><th>بواسطة المشرف</th><th id="otActionHeader" class="hidden">إجراء</th></tr></thead>
+                    <tbody id="approvedOtReportBody"></tbody>
+                </table>
+            </div>
         </div>
 
         <!-- إدارة الموظفين -->
@@ -311,7 +317,13 @@
         allUsersData = newData;
         if (!isLoaded) { isLoaded = true; document.getElementById('loading').style.display = 'none'; document.getElementById('mainContainer').classList.remove('hidden'); checkSavedSession(); }
         if (currentUser) {
-            if (currentUser.role === 'admin') { renderMonitorTable(); renderAdminEmRequests(); renderAdminOtRequests(); renderUserManagementTable(); }
+            if (currentUser.role === 'admin') { 
+                renderMonitorTable(); 
+                renderAdminEmRequests(); 
+                renderAdminOtRequests(); 
+                renderUserManagementTable(); 
+                if(document.getElementById('tab-reports').classList.contains('hidden') === false) renderUserReport();
+            }
             else { currentUser = allUsersData[currentUser.username] || currentUser; updateUserUI(); updateEmStatus(); updateOtStatus(); checkBreakLimit(); }
         }
     });
@@ -427,22 +439,30 @@
     }
 
     function renderUserReport() {
-        const un = document.getElementById('reportUserSelect').value; if(!un) return alert("اختر موظف أولاً");
+        const un = document.getElementById('reportUserSelect').value; if(!un) return;
         const startDate = document.getElementById('filterStartDate').value, endDate = document.getElementById('filterEndDate').value;
         const u = allUsersData[un], sBody = document.getElementById('sessionsReportBody'), otBody = document.getElementById('approvedOtReportBody'), mSum = document.getElementById('monthlySummary');
         
         sBody.innerHTML = ''; otBody.innerHTML = ''; mSum.classList.remove('hidden');
         let totalOxSeconds = 0, totalPrayerSeconds = 0, totalOtHours = 0, allowanceSeconds = (u.allowance || 45) * 60;
         
+        // صلاحية الحذف لمحمود فقط
+        const isMahmoud = currentUser.username === 'mahmoud';
+        if(isMahmoud) document.getElementById('otActionHeader').classList.remove('hidden'); else document.getElementById('otActionHeader').classList.add('hidden');
+
         if (u.sessions) {
             const grouped = {};
-            Object.values(u.sessions).forEach(s => {
+            Object.keys(u.sessions).forEach(key => {
+                const s = u.sessions[key];
                 const sessionDate = parseArabicDate(s.date);
                 if (startDate && sessionDate < new Date(startDate)) return;
                 if (endDate && sessionDate > new Date(endDate)) return;
                 if(!grouped[s.date]) grouped[s.date] = { acts: [], total: 0, prayer: 0 };
                 const dur = parseInt(s.duration) || 0;
-                grouped[s.date].acts.push(`<span class="activity-text">• ${s.type}: ${s.reason} [${Math.round(dur/60)}د]</span>`);
+                
+                let delBtn = isMahmoud ? `<button class="del-btn-report" onclick="deleteSessionRecord('${un}', '${key}')">حذف</button>` : '';
+                grouped[s.date].acts.push(`<span class="activity-text">${delBtn} • ${s.type}: ${s.reason} [${Math.round(dur/60)}د]</span>`);
+                
                 if(s.type === 'بريك عام' || s.type === 'طوارئ') grouped[s.date].total += dur;
                 if(s.type === 'صلاة') grouped[s.date].prayer += dur;
             });
@@ -462,18 +482,35 @@
             });
         }
         if (u.overtimeHistory) {
-            Object.values(u.overtimeHistory).forEach(ot => {
+            Object.keys(u.overtimeHistory).forEach(key => {
+                const ot = u.overtimeHistory[key];
                 const otDate = parseArabicDate(ot.date);
                 if (startDate && otDate < new Date(startDate)) return;
                 if (endDate && otDate > new Date(endDate)) return;
                 totalOtHours += parseFloat(ot.hours);
-                otBody.innerHTML += `<tr><td>${ot.date}</td><td>${ot.hours} ساعة</td><td style="color:green; font-weight:bold;">✅ ${ot.approvedBy}</td></tr>`;
+                let delCol = isMahmoud ? `<td><button class="btn btn-danger btn-sm" onclick="deleteOtRecord('${un}', '${key}')">حذف</button></td>` : '';
+                otBody.innerHTML += `<tr><td>${ot.date}</td><td>${ot.hours} ساعة</td><td style="color:green; font-weight:bold;">✅ ${ot.approvedBy}</td>${delCol}</tr>`;
             });
         }
         document.getElementById('monthTotalBreaks').innerText = Math.round(totalOxSeconds/60) + " دقيقة";
         document.getElementById('monthTotalPrayer').innerText = Math.round(totalPrayerSeconds/60) + " دقيقة";
         document.getElementById('monthTotalOvertime').innerText = totalOtHours + " ساعة";
     }
+
+    // وظائف الحذف لمحمود
+    window.deleteSessionRecord = (employeeUn, sessionKey) => {
+        if(confirm("هل أنت متأكد من حذف هذا النشاط من السجل؟")) {
+            db.ref(`users/${employeeUn}/sessions/${sessionKey}`).remove()
+            .then(() => { alert("تم الحذف بنجاح"); renderUserReport(); });
+        }
+    };
+
+    window.deleteOtRecord = (employeeUn, otKey) => {
+        if(confirm("هل أنت متأكد من حذف سجل العمل الإضافي هذا؟")) {
+            db.ref(`users/${employeeUn}/overtimeHistory/${otKey}`).remove()
+            .then(() => { alert("تم الحذف بنجاح"); renderUserReport(); });
+        }
+    };
 
     function parseArabicDate(dateStr) { const parts = dateStr.split('/'); return new Date(parts[2], parts[1] - 1, parts[0]); }
 
