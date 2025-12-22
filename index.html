@@ -1,3 +1,4 @@
+html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -177,7 +178,6 @@
                 </div>
                 <button onclick="renderUserReport()" class="btn btn-primary" style="width:100%; margin-top: 10px;">🔍 استخراج التقرير المفلتر</button>
                 
-                <!-- زر حذف جميع التقارير للمشرف محمود فقط -->
                 <button id="masterDeleteBtn" onclick="deleteAllReports()" class="btn btn-danger hidden" style="width:100%; margin-top: 10px; background:#d63031; font-size: 1rem;">⚠️ حذف أرشيف جميع الموظفين نهائياً (محمود فقط)</button>
             </div>
 
@@ -326,7 +326,6 @@
                 renderAdminOtRequests(); 
                 renderUserManagementTable(); 
                 if(document.getElementById('tab-reports').classList.contains('hidden') === false) renderUserReport();
-                // إظهار زر المسح الشامل لمحمود فقط
                 if(currentUser.username === 'mahmoud') document.getElementById('masterDeleteBtn').classList.remove('hidden');
             }
             else { currentUser = allUsersData[currentUser.username] || currentUser; updateUserUI(); updateEmStatus(); updateOtStatus(); checkBreakLimit(); }
@@ -359,7 +358,19 @@
     function showAdmin() { document.getElementById('loginSection').classList.add('hidden'); document.getElementById('adminSection').classList.remove('hidden'); document.getElementById('currentManagerDisplay').innerText = `المشرف: ${currentUser.realName}`; switchAdminTab('monitor'); startGlobalTimer(); }
     function showEmployee() { document.getElementById('loginSection').classList.add('hidden'); document.getElementById('employeeSection').classList.remove('hidden'); document.getElementById('welcomeMsg').innerText = `أهلاً، ${currentUser.realName}`; startGlobalTimer(); }
     function switchAdminTab(t) { ['tab-monitor','tab-reports','tab-users','tab-overtime','tab-emergency'].forEach(id => document.getElementById(id).classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); if(t==='reports') updateReportSelect(); }
-    function startGlobalTimer() { if(timerInterval) clearInterval(timerInterval); timerInterval = setInterval(() => { if(currentUser && currentUser.role === 'admin') renderMonitorTable(); else if(currentUser) updateUserUI(); }, 1000); }
+    
+    // تم تعديل وظيفة التايمر لمنع التحديث الكامل للجدول الذي يغلق القوائم
+    function startGlobalTimer() { 
+        if(timerInterval) clearInterval(timerInterval); 
+        timerInterval = setInterval(() => { 
+            if(currentUser && currentUser.role === 'admin') {
+                // تحديث القيم فقط بدون إعادة رسم الجدول
+                updateMonitorValuesOnly();
+            } else if(currentUser) {
+                updateUserUI(); 
+            }
+        }, 1000); 
+    }
 
     function renderUserManagementTable() {
         const tb = document.getElementById('usersManagementBody'); if(!tb) return; tb.innerHTML = '';
@@ -410,6 +421,7 @@
 
     window.deleteUser = (un) => { if(confirm("حذف الموظف نهائياً؟")) db.ref('users/'+un).remove(); };
 
+    // دالة رسم الجدول الأساسية (تعمل فقط عند تغير البيانات في فايربيس)
     function renderMonitorTable() {
         const tbody = document.getElementById('monitorBody');
         const searchTerm = document.getElementById('monitorSearch').value.toLowerCase();
@@ -435,12 +447,64 @@
             
             const displayStatus = u.isOnBreak ? `${u.breakType} <br><small style="color:blue;">(${u.lastReason || 'بدون سبب'})</small>` : 'متاح';
 
+            // استرجاع القيم المحفوظة للمدخلات حتى لا تضيع
+            const savedSelect = adminSelectBuffer[u.username] || 'بريك عام';
+            const savedReason = adminTypingBuffer[u.username] || '';
+
+            // تم إضافة IDs للخلايا لتحديثها لاحقاً دون هدم الجدول
             let ctrl = u.isOnBreak ? `<button onclick="adminStop('${u.username}')" class="btn btn-danger btn-sm" style="width:100%">🛑 إيقاف</button>` : 
-                `<div class="admin-table-ctrl"><div class="admin-row-top"><select id="sel_${u.username}" onchange="saveAdminSelect('${u.username}', this.value)"><option value="بريك عام">بريك</option><option value="صلاة">صلاة</option><option value="ميتنج">ميتنج</option><option value="استراحة VIP">VIP</option></select><button onclick="adminStart('${u.username}')" class="btn btn-success btn-sm">▶ بدء</button></div><input type="text" id="inp_${u.username}" placeholder="السبب..." oninput="saveAdminTyping('${u.username}', this.value)"></div>`;
+                `<div class="admin-table-ctrl">
+                    <div class="admin-row-top">
+                        <select id="sel_${u.username}" onchange="saveAdminSelect('${u.username}', this.value)">
+                            <option value="بريك عام" ${savedSelect == 'بريك عام' ? 'selected' : ''}>بريك</option>
+                            <option value="صلاة" ${savedSelect == 'صلاة' ? 'selected' : ''}>صلاة</option>
+                            <option value="ميتنج" ${savedSelect == 'ميتنج' ? 'selected' : ''}>ميتنج</option>
+                            <option value="استراحة VIP" ${savedSelect == 'استراحة VIP' ? 'selected' : ''}>VIP</option>
+                        </select>
+                        <button onclick="adminStart('${u.username}')" class="btn btn-success btn-sm">▶ بدء</button>
+                    </div>
+                    <input type="text" id="inp_${u.username}" placeholder="السبب..." value="${savedReason}" oninput="saveAdminTyping('${u.username}', this.value)">
+                </div>`;
             
-            tbody.innerHTML += `<tr class="${isWarning ? 'صف-تحذير' : ''}"><td>${u.realName} ${online}</td><td style="line-height:1.2;">${displayStatus}</td><td>${remTxt}</td><td>${formatTime(liveP)}</td><td>${formatTime(liveM)}</td><td>${ctrl}</td></tr>`;
+            tbody.innerHTML += `
+            <tr class="${isWarning ? 'صف-تحذير' : ''}">
+                <td>${u.realName} ${online}</td>
+                <td style="line-height:1.2;">${displayStatus}</td>
+                <td><span id="rem_${u.username}">${remTxt}</span></td>
+                <td><span id="pray_${u.username}">${formatTime(liveP)}</span></td>
+                <td><span id="meet_${u.username}">${formatTime(liveM)}</span></td>
+                <td>${ctrl}</td>
+            </tr>`;
         });
         document.getElementById('statusCountersDisplay').innerText = `البريك: (${activeBreaks}/${maxBreaksAllowed}) | الصلاة: (${activePrayers}/${maxPrayersAllowed})`;
+    }
+
+    // دالة جديدة لتحديث الأرقام فقط دون هدم الجدول
+    function updateMonitorValuesOnly() {
+        Object.values(allUsersData).forEach(u => {
+            if (!u || !u.username || MANAGERS.includes(u.username)) return;
+
+            let liveG = u.usedSeconds || 0, liveP = u.prayerSeconds || 0, liveM = u.meetingSeconds || 0;
+            if (u.isOnBreak && u.lastStartTime) {
+                let elap = Math.floor((Date.now() - u.lastStartTime) / 1000);
+                if (u.breakType === 'بريك عام' || u.breakType === 'طوارئ') { liveG += elap; } 
+                else if (u.breakType === 'صلاة') { liveP += elap; }
+                else if (u.breakType === 'ميتنج') { liveM += elap; }
+            }
+            
+            const rem = (u.allowance * 60) - liveG;
+            const remTxt = rem >= 0 ? formatTime(rem) : `<span style="color:red; font-weight:bold;">-${formatTime(Math.abs(rem))}</span>`;
+
+            // تحديث العناصر مباشرة عبر الـ ID
+            const remEl = document.getElementById(`rem_${u.username}`);
+            if(remEl) remEl.innerHTML = remTxt;
+
+            const prayEl = document.getElementById(`pray_${u.username}`);
+            if(prayEl) prayEl.innerText = formatTime(liveP);
+
+            const meetEl = document.getElementById(`meet_${u.username}`);
+            if(meetEl) meetEl.innerText = formatTime(liveM);
+        });
     }
 
     function renderUserReport() {
@@ -540,8 +604,9 @@
     window.saveAdminSelect = (u, val) => { adminSelectBuffer[u] = val; }
     
     window.adminStart = (un) => { 
-        const type = adminSelectBuffer[un] || 'بريك عام'; 
-        const reason = (adminTypingBuffer[un] || "بدأ بواسطة المدير") + " (إداري)"; 
+        const type = document.getElementById('sel_' + un).value || 'بريك عام'; // أخذ القيمة مباشرة من العنصر
+        const reasonInput = document.getElementById('inp_' + un);
+        const reason = (reasonInput.value || "بدأ بواسطة المدير") + " (إداري)"; 
         
         if (type === 'بريك عام') {
             const currentBreaks = Object.values(allUsersData).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
@@ -553,6 +618,9 @@
             if (currentPraying >= maxPrayersAllowed) { return alert(`وصلت للحد الأقصى للصلاة (${maxPrayersAllowed})`); }
         }
         db.ref('users/'+un).update({ isOnBreak: true, breakType: type, lastStartTime: Date.now(), lastReason: reason }); 
+        
+        // تفريغ المخزن المؤقت بعد البدء
+        adminTypingBuffer[un] = '';
     };
 
     window.adminStop = (un) => { 
