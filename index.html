@@ -74,29 +74,24 @@
         .vip-badge { background: #ffd700; color: #000; padding: 2px 8px; border-radius: 5px; font-weight: bold; font-size: 0.75rem; box-shadow: 0 0 5px #ffd700; }
         .del-btn-report { background: #ff7675; color: white; border: none; border-radius: 5px; cursor: pointer; padding: 2px 5px; font-size: 0.7rem; margin-right: 5px; }
 
-        /* ستايل ساعة السيرفر */
+        /* ستايل ساعة السيرفر المدمجة */
         .server-clock-box {
             background: #2c3e50;
             color: #fff;
-            padding: 5px 15px;
-            border-radius: 50px;
+            padding: 8px 20px;
+            border-radius: 12px;
             font-size: 0.9rem;
-            font-weight: bold;
             display: inline-flex;
+            flex-direction: column;
             align-items: center;
-            gap: 8px;
             border: 2px solid #34495e;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
             margin-bottom: 10px;
+            min-width: 180px;
         }
-        .server-clock-dot {
-            height: 8px;
-            width: 8px;
-            background-color: #e74c3c;
-            border-radius: 50%;
-            animation: blink 1s infinite;
-        }
-        @keyframes blink { 50% { opacity: 0; } }
+        .clock-time { font-size: 1.2rem; font-weight: 800; color: #2ecc71; font-family: monospace; }
+        .clock-date { font-size: 0.75rem; color: #bdc3c7; font-weight: bold; }
+        .server-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; color: #e74c3c; }
     </style>
 </head>
 <body>
@@ -123,16 +118,16 @@
 
     <!-- لوحة الإدارة -->
     <div id="adminSection" class="hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
             <div>
                 <h2 style="margin:0; font-size:1.3rem;">لوحة الإدارة 🚀</h2>
-                <div class="server-clock-box">
-                    <span class="server-clock-dot"></span>
-                    <span>ساعة السيرفر: </span>
-                    <span id="adminServerClock">--:--:--</span>
-                </div><br>
-                <span id="currentManagerDisplay" style="font-size: 0.8rem; font-weight: bold;"></span>
-                <button onclick="enableSound()" class="btn btn-sm btn-info" id="soundBtn">🔊 تفعيل نظام التنبيهات</button>
+                <span id="currentManagerDisplay" style="font-size: 0.8rem; font-weight: bold; display:block; margin-top:5px;"></span>
+                <button onclick="enableSound()" class="btn btn-sm btn-info" id="soundBtn" style="margin-top:10px;">🔊 تفعيل التنبيهات</button>
+            </div>
+            <div class="server-clock-box">
+                <span class="server-label">التوقيت الرسمي (Server)</span>
+                <span class="clock-time" id="adminServerTime">00:00:00</span>
+                <span class="clock-date" id="adminServerDate">--/--/----</span>
             </div>
             <button onclick="logout()" class="btn btn-dark btn-sm">خروج</button>
         </div>
@@ -267,13 +262,13 @@
 
     <!-- شاشة الموظف -->
     <div id="employeeSection" class="hidden">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
             <div>
                 <h4 id="welcomeMsg" style="margin:0; font-size:1rem;"></h4>
-                <div class="server-clock-box" style="margin-top:5px; background: #fff; color: #2c3e50; border: 1px solid #ddd;">
-                    <span class="server-clock-dot"></span>
-                    <span style="font-size:0.75rem;">توقيت السيرفر الرسمي: </span>
-                    <span id="userServerClock" style="font-size:0.85rem;">--:--:--</span>
+                <div class="server-clock-box" style="margin-top:5px; padding: 4px 12px; min-width: 140px; background: #fff; color: #2c3e50; border:1px solid #ddd;">
+                    <span class="server-label" style="font-size:0.5rem;">توقيت النظام الرسمي</span>
+                    <span class="clock-time" id="userServerTime" style="font-size:1rem;">00:00:00</span>
+                    <span class="clock-date" id="userServerDate" style="font-size:0.65rem;">--/--/----</span>
                 </div>
             </div>
             <button onclick="logout()" class="btn btn-dark btn-sm">خروج</button>
@@ -305,7 +300,6 @@
                     <div class="control-card" style="border:2px solid #2980b9; padding:10px; border-radius:15px;"><h4>🕌 صلاة</h4><button onclick="startMyBreak('صلاة')" class="btn btn-info" style="width:100%">بدء</button></div>
                     <div class="control-card" style="border:2px solid #f39c12; padding:10px; border-radius:15px;"><h4>🤝 ميتنج</h4><button onclick="startMyBreak('ميتنج')" class="btn btn-warning" style="width:100%">بدء</button></div>
                     
-                    <!-- زر متابع العميل - يظهر للاشخاص المحددين فقط -->
                     <div id="followUpCard" class="control-card hidden" style="border:2px solid var(--followup-color); padding:10px; border-radius:15px;"><h4>📞 متابع عميل</h4><button onclick="startMyBreak('متابع عميل')" class="btn btn-followup" style="width:100%">بدء</button></div>
                     
                     <div class="control-card" style="border:2px solid #c0392b; padding:10px; border-radius:15px;"><h4>🚨 خروج اضطراري</h4><div id="emStatusArea"><button onclick="sendEmRequest()" class="btn btn-dark btn-sm" style="width:100%">طلب خروج</button></div></div>
@@ -342,16 +336,26 @@
     let serverTimeOffset = 0; 
     const MANAGERS = ['mahmoud', 'abutamim', 'ahmed', 'admin'];
 
-    // وظيفة الحصول على توقيت السيرفر المعتمد
+    // الحصول على توقيت السيرفر بالملي ثانية
     function getServerTime() {
         return Date.now() + serverTimeOffset;
     }
 
+    // تنسيق التاريخ والوقت بناءً على توقيت السيرفر
     function getServerDateString() {
-        return new Date(getServerTime()).toLocaleDateString('ar-EG');
+        const d = new Date(getServerTime());
+        const day = d.getDate().toString().padStart(2, '0');
+        const month = (d.getMonth() + 1).toString().padStart(2, '0');
+        const year = d.getFullYear();
+        return `${day}/${month}/${year}`;
     }
 
-    // جلب الفرق الزمني بين الجهاز والسيرفر
+    function getServerTimeString() {
+        const d = new Date(getServerTime());
+        return d.toLocaleTimeString('en-GB'); // HH:MM:SS
+    }
+
+    // سحب الفرق الزمني فور الاتصال
     db.ref(".info/serverTimeOffset").on("value", (snap) => {
         serverTimeOffset = snap.val() || 0;
     });
@@ -423,15 +427,16 @@
     function startGlobalTimer() { 
         if(timerInterval) clearInterval(timerInterval); 
         timerInterval = setInterval(() => { 
-            const sTime = getServerTime();
-            const timeStr = new Date(sTime).toLocaleTimeString('ar-EG');
-            
-            // تحديث ساعة السيرفر المرئية
+            const sTimeStr = getServerTimeString();
+            const sDateStr = getServerDateString();
+
             if(currentUser && currentUser.role === 'admin') {
-                document.getElementById('adminServerClock').innerText = timeStr;
+                document.getElementById('adminServerTime').innerText = sTimeStr;
+                document.getElementById('adminServerDate').innerText = sDateStr;
                 updateMonitorValuesOnly();
             } else if(currentUser) {
-                document.getElementById('userServerClock').innerText = timeStr;
+                document.getElementById('userServerTime').innerText = sTimeStr;
+                document.getElementById('userServerDate').innerText = sDateStr;
                 updateUserUI(); 
             }
         }, 1000); 
@@ -587,11 +592,11 @@
             const grouped = {};
             Object.keys(u.sessions).forEach(key => {
                 const s = u.sessions[key];
-                const sDateParts = s.date.split('/');
-                const sDateObj = new Date(sDateParts[2], sDateParts[1] - 1, sDateParts[0]);
+                const parts = s.date.split('/');
+                const sessionDateObj = new Date(parts[2], parts[1]-1, parts[0]);
                 
-                if (startDate && sDateObj < new Date(startDate)) return;
-                if (endDate && sDateObj > new Date(endDate)) return;
+                if (startDate && sessionDateObj < new Date(startDate)) return;
+                if (endDate && sessionDateObj > new Date(endDate)) return;
                 
                 if(!grouped[s.date]) grouped[s.date] = { acts: [], total: 0, prayer: 0, follow: 0 };
                 const dur = parseInt(s.duration) || 0;
@@ -625,8 +630,8 @@
         if (u.overtimeHistory) {
             Object.keys(u.overtimeHistory).forEach(key => {
                 const ot = u.overtimeHistory[key];
-                const otDateParts = ot.date.split('/');
-                const otDateObj = new Date(otDateParts[2], otDateParts[1] - 1, otDateParts[0]);
+                const parts = ot.date.split('/');
+                const otDateObj = new Date(parts[2], parts[1]-1, parts[0]);
                 
                 if (startDate && otDateObj < new Date(startDate)) return;
                 if (endDate && otDateObj > new Date(endDate)) return;
