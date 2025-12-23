@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -300,7 +299,23 @@
 
     let allUsersData = {}, currentUser = null, timerInterval = null, isLoaded = false, adminTypingBuffer = {}, adminSelectBuffer = {};
     let editingUserKey = null, soundActive = false, maxBreaksAllowed = 3, maxPrayersAllowed = 2;
+    let serverTimeOffset = 0; // الفارق الزمني بين الجهاز والسيرفر
     const MANAGERS = ['mahmoud', 'abutamim', 'ahmed', 'admin'];
+
+    // وظيفة للحصول على وقت السيرفر بدقة بغض النظر عن وقت الجهاز
+    function getServerTime() {
+        return Date.now() + serverTimeOffset;
+    }
+
+    // وظيفة للحصول على التاريخ الحالي بناءً على وقت السيرفر
+    function getServerDateString() {
+        return new Date(getServerTime()).toLocaleDateString('ar-EG');
+    }
+
+    // جلب الفارق الزمني من فيربيز بمجرد الاتصال
+    db.ref(".info/serverTimeOffset").on("value", (snap) => {
+        serverTimeOffset = snap.val() || 0;
+    });
 
     db.ref('settings/limits').on('value', (snap) => {
         const limits = snap.val() || { breaks: 3, prayers: 2 };
@@ -444,7 +459,7 @@
 
             let liveG = u.usedSeconds || 0, liveP = u.prayerSeconds || 0, liveM = u.meetingSeconds || 0, liveF = u.followUpSeconds || 0;
             if (u.isOnBreak && u.lastStartTime) {
-                let elap = Math.floor((Date.now() - u.lastStartTime) / 1000);
+                let elap = Math.floor((getServerTime() - u.lastStartTime) / 1000);
                 if (u.breakType === 'بريك عام') { liveG += elap; activeBreaks++; } 
                 else if (u.breakType === 'صلاة') { liveP += elap; activePrayers++; }
                 else if (u.breakType === 'ميتنج') liveM += elap;
@@ -494,7 +509,7 @@
 
             let liveG = u.usedSeconds || 0, liveP = u.prayerSeconds || 0, liveM = u.meetingSeconds || 0, liveF = u.followUpSeconds || 0;
             if (u.isOnBreak && u.lastStartTime) {
-                let elap = Math.floor((Date.now() - u.lastStartTime) / 1000);
+                let elap = Math.floor((getServerTime() - u.lastStartTime) / 1000);
                 if (u.breakType === 'بريك عام' || u.breakType === 'طوارئ') { liveG += elap; } 
                 else if (u.breakType === 'صلاة') { liveP += elap; }
                 else if (u.breakType === 'ميتنج') { liveM += elap; }
@@ -527,9 +542,12 @@
             const grouped = {};
             Object.keys(u.sessions).forEach(key => {
                 const s = u.sessions[key];
-                const sessionDate = parseArabicDate(s.date);
-                if (startDate && sessionDate < new Date(startDate)) return;
-                if (endDate && sessionDate > new Date(endDate)) return;
+                const sessionDateParts = s.date.split('/');
+                const sessionDateObj = new Date(sessionDateParts[2], sessionDateParts[1] - 1, sessionDateParts[0]);
+                
+                if (startDate && sessionDateObj < new Date(startDate)) return;
+                if (endDate && sessionDateObj > new Date(endDate)) return;
+                
                 if(!grouped[s.date]) grouped[s.date] = { acts: [], total: 0, prayer: 0, follow: 0 };
                 const dur = parseInt(s.duration) || 0;
                 
@@ -540,7 +558,10 @@
                 if(s.type === 'صلاة') grouped[s.date].prayer += dur;
                 if(s.type === 'متابع عميل') grouped[s.date].follow += dur;
             });
-            Object.keys(grouped).reverse().forEach(d => {
+            Object.keys(grouped).sort((a,b) => {
+                const pA = a.split('/'), pB = b.split('/');
+                return new Date(pB[2], pB[1]-1, pB[0]) - new Date(pA[2], pA[1]-1, pA[0]);
+            }).forEach(d => {
                 const dayUsedSeconds = grouped[d].total;
                 const dayOxSeconds = Math.max(0, dayUsedSeconds - allowanceSeconds);
                 totalOxSeconds += dayOxSeconds;
@@ -559,9 +580,12 @@
         if (u.overtimeHistory) {
             Object.keys(u.overtimeHistory).forEach(key => {
                 const ot = u.overtimeHistory[key];
-                const otDate = parseArabicDate(ot.date);
-                if (startDate && otDate < new Date(startDate)) return;
-                if (endDate && otDate > new Date(endDate)) return;
+                const otDateParts = ot.date.split('/');
+                const otDateObj = new Date(otDateParts[2], otDateParts[1] - 1, otDateParts[0]);
+                
+                if (startDate && otDateObj < new Date(startDate)) return;
+                if (endDate && otDateObj > new Date(endDate)) return;
+                
                 totalOtHours += parseFloat(ot.hours);
                 let delCol = isMahmoud ? `<td><button class="btn btn-danger btn-sm" onclick="deleteOtRecord('${un}', '${key}')">حذف</button></td>` : '';
                 otBody.innerHTML += `<tr><td>${ot.date}</td><td>${ot.hours} ساعة</td><td style="color:green; font-weight:bold;">✅ ${ot.approvedBy}</td>${delCol}</tr>`;
@@ -608,13 +632,13 @@
             const currentPraying = Object.values(allUsersData).filter(u => u.isOnBreak && u.breakType === 'صلاة').length;
             if (currentPraying >= maxPrayersAllowed) return alert(`وصلت للحد الأقصى للصلاة (${maxPrayersAllowed})`);
         }
-        db.ref('users/'+un).update({ isOnBreak: true, breakType: type, lastStartTime: Date.now(), lastReason: reason }); 
+        db.ref('users/'+un).update({ isOnBreak: true, breakType: type, lastStartTime: getServerTime(), lastReason: reason }); 
         adminTypingBuffer[un] = '';
     };
 
     window.adminStop = (un) => { 
-        const u = allUsersData[un], d = Math.floor((Date.now() - (u.lastStartTime || Date.now()))/1000); 
-        db.ref('users/'+un+'/sessions').push({ date: new Date().toLocaleDateString('ar-EG'), type: u.breakType, reason: u.lastReason, duration: d, timestamp: Date.now() }); 
+        const u = allUsersData[un], d = Math.floor((getServerTime() - (u.lastStartTime || getServerTime()))/1000); 
+        db.ref('users/'+un+'/sessions').push({ date: getServerDateString(), type: u.breakType, reason: u.lastReason, duration: d, timestamp: getServerTime() }); 
         const updates = { isOnBreak: false, lastStartTime: null }; 
         if(u.breakType==='بريك عام' || u.breakType==='طوارئ') updates.usedSeconds = (u.usedSeconds||0) + d; 
         else if(u.breakType==='صلاة') updates.prayerSeconds = (u.prayerSeconds||0) + d; 
@@ -624,7 +648,7 @@
         db.ref('users/'+un).update(updates); 
     };
 
-    function sendEmRequest() { const r = document.getElementById('breakReason').value.trim(); if(!r) return alert("اكتب السبب"); db.ref('users/'+currentUser.username+'/emRequest').set({ reason: r, status: 'قيد الانتظار', timestamp: Date.now() }).then(() => alert("تم الإرسال 🚨")); }
+    function sendEmRequest() { const r = document.getElementById('breakReason').value.trim(); if(!r) return alert("اكتب السبب"); db.ref('users/'+currentUser.username+'/emRequest').set({ reason: r, status: 'قيد الانتظار', timestamp: getServerTime() }).then(() => alert("تم الإرسال 🚨")); }
     function updateEmStatus() { const el = document.getElementById('emStatusArea'); if(!currentUser.emRequest) return el.innerHTML = `<button onclick="sendEmRequest()" class="btn btn-dark btn-sm" style="width:100%">طلب خروج</button>`; if(currentUser.emRequest.status === 'قيد الانتظار') el.innerHTML = `<span style="color:orange; font-size:0.8rem;">⏳ قيد الانتظار...</span>`; else if(currentUser.emRequest.status === 'تم القبول') el.innerHTML = `<button onclick="startMyBreak('طوارئ')" class="btn btn-danger btn-sm" style="width:100%">ابدأ الآن</button>`; else el.innerHTML = `<span style="color:red; font-size:0.7rem;">✖ رُفض</span> <button onclick="db.ref('users/'+currentUser.username+'/emRequest').remove()" class="btn btn-dark btn-sm">إلغاء</button>`; }
     function renderAdminEmRequests() { 
         const tb = document.getElementById('adminEmBody'); tb.innerHTML = ''; let count = 0; 
@@ -639,7 +663,7 @@
     }
     window.handleEm = (un, app) => { db.ref(`users/${un}/emRequest`).update({ status: app ? 'تم القبول' : 'رُفض' }); }
 
-    function sendOtRequest() { const h = document.getElementById('otHoursInput').value; if(!h || h <= 0) return alert("ادخل الساعات"); db.ref('users/'+currentUser.username+'/otRequest').set({ hours: h, status: 'قيد الانتظار', timestamp: Date.now() }).then(() => alert("تم الإرسال ✅")); }
+    function sendOtRequest() { const h = document.getElementById('otHoursInput').value; if(!h || h <= 0) return alert("ادخل الساعات"); db.ref('users/'+currentUser.username+'/otRequest').set({ hours: h, status: 'قيد الانتظار', timestamp: getServerTime() }).then(() => alert("تم الإرسال ✅")); }
     function updateOtStatus() { const el = document.getElementById('otStatusDisplay'); if(!currentUser.otRequest) { el.innerText = ""; return; } const st = currentUser.otRequest.status; if(st === 'قيد الانتظار') el.innerText = `⏳ طلبك لـ (${currentUser.otRequest.hours}س) قيد الانتظار...`; else if(st === 'تم القبول') el.innerText = `✅ تم قبول (${currentUser.otRequest.hours}س) من ${currentUser.otRequest.handledBy}`; else el.innerText = `❌ تم رفض طلب الإضافي.`; }
     function renderAdminOtRequests() { 
         const tb = document.getElementById('adminOtBody'); tb.innerHTML = ''; let count = 0; 
@@ -652,9 +676,9 @@
         }); 
         document.getElementById('otBadge').innerText = count; count > 0 ? document.getElementById('otBadge').classList.remove('hidden') : document.getElementById('otBadge').classList.add('hidden'); 
     }
-    window.handleOt = (un, app) => { const req = allUsersData[un].otRequest; if(app) { db.ref(`users/${un}/totalApprovedOt`).set((allUsersData[un].totalApprovedOt||0) + parseFloat(req.hours)); db.ref(`users/${un}/overtimeHistory/${Date.now()}`).set({ date: new Date().toLocaleDateString('ar-EG'), hours: req.hours, approvedBy: currentUser.realName || currentUser.username }); } db.ref(`users/${un}/otRequest`).update({ status: app ? 'تم القبول' : 'رُفض', handledBy: currentUser.realName || currentUser.username }); }
+    window.handleOt = (un, app) => { const req = allUsersData[un].otRequest; if(app) { db.ref(`users/${un}/totalApprovedOt`).set((allUsersData[un].totalApprovedOt||0) + parseFloat(req.hours)); db.ref(`users/${un}/overtimeHistory/${getServerTime()}`).set({ date: getServerDateString(), hours: req.hours, approvedBy: currentUser.realName || currentUser.username }); } db.ref(`users/${un}/otRequest`).update({ status: app ? 'تم القبول' : 'رُفض', handledBy: currentUser.realName || currentUser.username }); }
 
-    function endDay() { if(!confirm("إقفال اليوم للكل وتصفير العدادات؟")) return; Object.values(allUsersData).forEach(u => { if(!u || !u.username || MANAGERS.includes(u.username)) return; let g = u.usedSeconds || 0; if(u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')) g += Math.floor((Date.now() - (u.lastStartTime||Date.now()))/1000); db.ref('users/'+u.username+'/history/'+Date.now()).set({ date: new Date().toLocaleDateString('ar-EG'), totalGeneral: g }); db.ref('users/'+u.username).update({ usedSeconds: 0, prayerSeconds: 0, meetingSeconds: 0, followUpSeconds: 0, isOnBreak: false, lastStartTime: null, otRequest: null, emRequest: null }); }); alert("تم إقفال اليوم بنجاح ✅"); }
+    function endDay() { if(!confirm("إقفال اليوم للكل وتصفير العدادات؟")) return; Object.values(allUsersData).forEach(u => { if(!u || !u.username || MANAGERS.includes(u.username)) return; let g = u.usedSeconds || 0; if(u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')) g += Math.floor((getServerTime() - (u.lastStartTime||getServerTime()))/1000); db.ref('users/'+u.username+'/history/'+getServerTime()).set({ date: getServerDateString(), totalGeneral: g }); db.ref('users/'+u.username).update({ usedSeconds: 0, prayerSeconds: 0, meetingSeconds: 0, followUpSeconds: 0, isOnBreak: false, lastStartTime: null, otRequest: null, emRequest: null }); }); alert("تم إقفال اليوم بنجاح ✅"); }
 
     function startMyBreak(t) { 
         if(currentUser.isOnBreak) return alert("أنت نشط بالفعل في " + currentUser.breakType); 
@@ -669,12 +693,12 @@
         let r = document.getElementById('breakReason').value.trim(); 
         if(t === 'طوارئ' && currentUser.emRequest) r = currentUser.emRequest.reason; 
         if((t==='بريك عام' || t==='طوارئ') && !r) return alert("اكتب السبب"); 
-        db.ref('users/'+currentUser.username).update({ isOnBreak: true, breakType: t, lastStartTime: Date.now(), lastReason: r || t }); 
+        db.ref('users/'+currentUser.username).update({ isOnBreak: true, breakType: t, lastStartTime: getServerTime(), lastReason: r || t }); 
     }
 
     function stopMyBreak() { 
-        const u = currentUser, d = Math.floor((Date.now() - (u.lastStartTime || Date.now()))/1000); 
-        db.ref('users/'+u.username+'/sessions').push({ date: new Date().toLocaleDateString('ar-EG'), type: u.breakType, reason: u.lastReason, duration: d }); 
+        const u = currentUser, d = Math.floor((getServerTime() - (u.lastStartTime || getServerTime()))/1000); 
+        db.ref('users/'+u.username+'/sessions').push({ date: getServerDateString(), type: u.breakType, reason: u.lastReason, duration: d }); 
         const updates = { isOnBreak: false, lastStartTime: null, lastReason: "" }; 
         if(u.breakType==='بريك عام' || u.breakType==='طوارئ') updates.usedSeconds = (u.usedSeconds||0) + d; 
         else if(u.breakType==='صلاة') updates.prayerSeconds = (u.prayerSeconds||0) + d; 
@@ -694,7 +718,7 @@
         if (currentUser.isOnBreak) {
             document.getElementById('controlsArea').classList.add('hidden'); document.getElementById('stopArea').classList.remove('hidden'); 
             msg.innerText = (currentUser.breakType === 'صلاة') ? "تقبل الله" : (currentUser.breakType === 'استراحة VIP') ? "أنت في استراحة VIP الآن 👑" : "أنت الآن في " + currentUser.breakType;
-            const elap = Math.floor((Date.now() - (currentUser.lastStartTime||Date.now())) / 1000);
+            const elap = Math.floor((getServerTime() - (currentUser.lastStartTime||getServerTime())) / 1000);
             if (currentUser.breakType === 'بريك عام' || currentUser.breakType === 'طوارئ') {
                 const rem = allowance - ((u.usedSeconds||0) + elap);
                 if (rem >= 0) { lbl.innerText = "رصيد البريك المتبقي"; timer.innerText = formatTime(rem); timer.style.color = "#2c3e50"; stopAlarm(); }
