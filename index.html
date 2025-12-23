@@ -74,7 +74,6 @@
         .vip-badge { background: #ffd700; color: #000; padding: 2px 8px; border-radius: 5px; font-weight: bold; font-size: 0.75rem; box-shadow: 0 0 5px #ffd700; }
         .del-btn-report { background: #ff7675; color: white; border: none; border-radius: 5px; cursor: pointer; padding: 2px 5px; font-size: 0.7rem; margin-right: 5px; }
 
-        /* ستايل ساعة السيرفر المدمجة */
         .server-clock-box {
             background: #2c3e50;
             color: #fff;
@@ -89,7 +88,7 @@
             margin-bottom: 10px;
             min-width: 180px;
         }
-        .clock-time { font-size: 1.2rem; font-weight: 800; color: #2ecc71; font-family: monospace; }
+        .clock-time { font-size: 1.1rem; font-weight: 800; color: #2ecc71; font-family: 'Cairo', sans-serif; }
         .clock-date { font-size: 0.75rem; color: #bdc3c7; font-weight: bold; }
         .server-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; color: #e74c3c; }
     </style>
@@ -125,8 +124,8 @@
                 <button onclick="enableSound()" class="btn btn-sm btn-info" id="soundBtn" style="margin-top:10px;">🔊 تفعيل التنبيهات</button>
             </div>
             <div class="server-clock-box">
-                <span class="server-label">التوقيت الرسمي (Server)</span>
-                <span class="clock-time" id="adminServerTime">00:00:00</span>
+                <span class="server-label">التوقيت الرسمي (12H)</span>
+                <span class="clock-time" id="adminServerTime">00:00:00 AM</span>
                 <span class="clock-date" id="adminServerDate">--/--/----</span>
             </div>
             <button onclick="logout()" class="btn btn-dark btn-sm">خروج</button>
@@ -266,8 +265,8 @@
             <div>
                 <h4 id="welcomeMsg" style="margin:0; font-size:1rem;"></h4>
                 <div class="server-clock-box" style="margin-top:5px; padding: 4px 12px; min-width: 140px; background: #fff; color: #2c3e50; border:1px solid #ddd;">
-                    <span class="server-label" style="font-size:0.5rem;">توقيت النظام الرسمي</span>
-                    <span class="clock-time" id="userServerTime" style="font-size:1rem;">00:00:00</span>
+                    <span class="server-label" style="font-size:0.5rem;">توقيت النظام</span>
+                    <span class="clock-time" id="userServerTime" style="font-size:0.95rem;">00:00:00 AM</span>
                     <span class="clock-date" id="userServerDate" style="font-size:0.65rem;">--/--/----</span>
                 </div>
             </div>
@@ -288,20 +287,16 @@
             <div id="controlsArea">
                 <input type="text" id="breakReason" placeholder="اكتب سبب البريك..." style="text-align: center;">
                 
-                <!-- قسم الـ VIP المخصص -->
                 <div id="vipControlArea" class="hidden" style="margin-bottom: 20px; padding: 15px; background: linear-gradient(45deg, #fff9e6, #fff); border: 2px solid #ffd700; border-radius: 15px; box-shadow: 0 4px 10px rgba(255, 215, 0, 0.2);">
                     <h4 style="color:#b8860b; margin-top:0;">🌟 منطقة VIP المتميزة</h4>
                     <button onclick="startMyBreak('استراحة VIP')" class="btn btn-vip" style="width:100%; font-size: 1.2rem; padding: 15px;">👑 بدء استراحة VIP خاصة</button>
-                    <p style="font-size: 0.75rem; color: #888; margin-top: 5px;">* هذه الاستراحة لا تُحسب من رصيدك اليومي وتعمل في أي وقت.</p>
                 </div>
 
                 <div class="employee-controls" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
                     <div class="control-card" style="border:2px solid #27ae60; padding:10px; border-radius:15px;"><h4>🍔 بريك عام</h4><button onclick="startMyBreak('بريك عام')" class="btn btn-success" style="width:100%">بدء</button></div>
                     <div class="control-card" style="border:2px solid #2980b9; padding:10px; border-radius:15px;"><h4>🕌 صلاة</h4><button onclick="startMyBreak('صلاة')" class="btn btn-info" style="width:100%">بدء</button></div>
                     <div class="control-card" style="border:2px solid #f39c12; padding:10px; border-radius:15px;"><h4>🤝 ميتنج</h4><button onclick="startMyBreak('ميتنج')" class="btn btn-warning" style="width:100%">بدء</button></div>
-                    
                     <div id="followUpCard" class="control-card hidden" style="border:2px solid var(--followup-color); padding:10px; border-radius:15px;"><h4>📞 متابع عميل</h4><button onclick="startMyBreak('متابع عميل')" class="btn btn-followup" style="width:100%">بدء</button></div>
-                    
                     <div class="control-card" style="border:2px solid #c0392b; padding:10px; border-radius:15px;"><h4>🚨 خروج اضطراري</h4><div id="emStatusArea"><button onclick="sendEmRequest()" class="btn btn-dark btn-sm" style="width:100%">طلب خروج</button></div></div>
                 </div>
                 <div style="margin-top: 20px; padding: 15px; background: #fcf6ff; border: 1px solid #e0d0f0; border-radius: 15px;">
@@ -336,12 +331,10 @@
     let serverTimeOffset = 0; 
     const MANAGERS = ['mahmoud', 'abutamim', 'ahmed', 'admin'];
 
-    // الحصول على توقيت السيرفر بالملي ثانية
     function getServerTime() {
         return Date.now() + serverTimeOffset;
     }
 
-    // تنسيق التاريخ والوقت بناءً على توقيت السيرفر
     function getServerDateString() {
         const d = new Date(getServerTime());
         const day = d.getDate().toString().padStart(2, '0');
@@ -350,12 +343,18 @@
         return `${day}/${month}/${year}`;
     }
 
+    // تعديل صيغة الوقت لنظام 12 ساعة
     function getServerTimeString() {
         const d = new Date(getServerTime());
-        return d.toLocaleTimeString('en-GB'); // HH:MM:SS
+        let hours = d.getHours();
+        const minutes = d.getMinutes().toString().padStart(2, '0');
+        const seconds = d.getSeconds().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // الساعة 0 تصبح 12
+        return `${hours.toString().padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
     }
 
-    // سحب الفرق الزمني فور الاتصال
     db.ref(".info/serverTimeOffset").on("value", (snap) => {
         serverTimeOffset = snap.val() || 0;
     });
@@ -431,12 +430,12 @@
             const sDateStr = getServerDateString();
 
             if(currentUser && currentUser.role === 'admin') {
-                document.getElementById('adminServerTime').innerText = sTimeStr;
-                document.getElementById('adminServerDate').innerText = sDateStr;
+                const tEl = document.getElementById('adminServerTime'); if(tEl) tEl.innerText = sTimeStr;
+                const dEl = document.getElementById('adminServerDate'); if(dEl) dEl.innerText = sDateStr;
                 updateMonitorValuesOnly();
             } else if(currentUser) {
-                document.getElementById('userServerTime').innerText = sTimeStr;
-                document.getElementById('userServerDate').innerText = sDateStr;
+                const tEl = document.getElementById('userServerTime'); if(tEl) tEl.innerText = sTimeStr;
+                const dEl = document.getElementById('userServerDate'); if(dEl) dEl.innerText = sDateStr;
                 updateUserUI(); 
             }
         }, 1000); 
@@ -707,7 +706,7 @@
                 tb.innerHTML += `<tr><td>${displayName}</td><td style="color:red; font-weight:bold;">${u.emRequest.reason}</td><td>${new Date(u.emRequest.timestamp).toLocaleTimeString('ar-EG')}</td><td><button onclick="handleEm('${u.username}', true)" class="btn btn-success btn-sm">✔</button><button onclick="handleEm('${u.username}', false)" class="btn btn-danger btn-sm">✖</button></td></tr>`; 
             } 
         }); 
-        document.getElementById('emBadge').innerText = count; count > 0 ? document.getElementById('emBadge').classList.remove('hidden') : document.getElementById('emBadge').classList.add('hidden'); 
+        const b = document.getElementById('emBadge'); if(b) { b.innerText = count; count > 0 ? b.classList.remove('hidden') : b.classList.add('hidden'); }
     }
     window.handleEm = (un, app) => { db.ref(`users/${un}/emRequest`).update({ status: app ? 'تم القبول' : 'رُفض' }); }
 
@@ -722,7 +721,7 @@
                 tb.innerHTML += `<tr><td>${displayName}</td><td>${u.otRequest.hours}س</td><td>${new Date(u.otRequest.timestamp).toLocaleTimeString('ar-EG')}</td><td><button onclick="handleOt('${u.username}', true)" class="btn btn-success btn-sm">✔</button><button onclick="handleOt('${u.username}', false)" class="btn btn-danger btn-sm">✖</button></td></tr>`; 
             } 
         }); 
-        document.getElementById('otBadge').innerText = count; count > 0 ? document.getElementById('otBadge').classList.remove('hidden') : document.getElementById('otBadge').classList.add('hidden'); 
+        const b = document.getElementById('otBadge'); if(b) { b.innerText = count; count > 0 ? b.classList.remove('hidden') : b.classList.add('hidden'); }
     }
     window.handleOt = (un, app) => { const req = allUsersData[un].otRequest; if(app) { db.ref(`users/${un}/totalApprovedOt`).set((allUsersData[un].totalApprovedOt||0) + parseFloat(req.hours)); db.ref(`users/${un}/overtimeHistory/${getServerTime()}`).set({ date: getServerDateString(), hours: req.hours, approvedBy: currentUser.realName || currentUser.username }); } db.ref(`users/${un}/otRequest`).update({ status: app ? 'تم القبول' : 'رُفض', handledBy: currentUser.realName || currentUser.username }); }
 
