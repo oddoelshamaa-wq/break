@@ -73,6 +73,30 @@
         
         .vip-badge { background: #ffd700; color: #000; padding: 2px 8px; border-radius: 5px; font-weight: bold; font-size: 0.75rem; box-shadow: 0 0 5px #ffd700; }
         .del-btn-report { background: #ff7675; color: white; border: none; border-radius: 5px; cursor: pointer; padding: 2px 5px; font-size: 0.7rem; margin-right: 5px; }
+
+        /* ستايل ساعة السيرفر */
+        .server-clock-box {
+            background: #2c3e50;
+            color: #fff;
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 2px solid #34495e;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+        }
+        .server-clock-dot {
+            height: 8px;
+            width: 8px;
+            background-color: #e74c3c;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
@@ -102,6 +126,11 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
             <div>
                 <h2 style="margin:0; font-size:1.3rem;">لوحة الإدارة 🚀</h2>
+                <div class="server-clock-box">
+                    <span class="server-clock-dot"></span>
+                    <span>ساعة السيرفر: </span>
+                    <span id="adminServerClock">--:--:--</span>
+                </div><br>
                 <span id="currentManagerDisplay" style="font-size: 0.8rem; font-weight: bold;"></span>
                 <button onclick="enableSound()" class="btn btn-sm btn-info" id="soundBtn">🔊 تفعيل نظام التنبيهات</button>
             </div>
@@ -238,7 +267,18 @@
 
     <!-- شاشة الموظف -->
     <div id="employeeSection" class="hidden">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h4 id="welcomeMsg" style="margin:0; font-size:1rem;"></h4><button onclick="logout()" class="btn btn-dark btn-sm">خروج</button></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <div>
+                <h4 id="welcomeMsg" style="margin:0; font-size:1rem;"></h4>
+                <div class="server-clock-box" style="margin-top:5px; background: #fff; color: #2c3e50; border: 1px solid #ddd;">
+                    <span class="server-clock-dot"></span>
+                    <span style="font-size:0.75rem;">توقيت السيرفر الرسمي: </span>
+                    <span id="userServerClock" style="font-size:0.85rem;">--:--:--</span>
+                </div>
+            </div>
+            <button onclick="logout()" class="btn btn-dark btn-sm">خروج</button>
+        </div>
+        
         <div style="text-align: center;">
             <div style="background: #f1f2f6; padding: 20px; border-radius: 20px; margin-bottom: 20px;">
                 <div id="timerLabel" class="timer-label">رصيد البريك المتبقي</div>
@@ -299,20 +339,19 @@
 
     let allUsersData = {}, currentUser = null, timerInterval = null, isLoaded = false, adminTypingBuffer = {}, adminSelectBuffer = {};
     let editingUserKey = null, soundActive = false, maxBreaksAllowed = 3, maxPrayersAllowed = 2;
-    let serverTimeOffset = 0; // الفارق الزمني بين الجهاز والسيرفر
+    let serverTimeOffset = 0; 
     const MANAGERS = ['mahmoud', 'abutamim', 'ahmed', 'admin'];
 
-    // وظيفة للحصول على وقت السيرفر بدقة بغض النظر عن وقت الجهاز
+    // وظيفة الحصول على توقيت السيرفر المعتمد
     function getServerTime() {
         return Date.now() + serverTimeOffset;
     }
 
-    // وظيفة للحصول على التاريخ الحالي بناءً على وقت السيرفر
     function getServerDateString() {
         return new Date(getServerTime()).toLocaleDateString('ar-EG');
     }
 
-    // جلب الفارق الزمني من فيربيز بمجرد الاتصال
+    // جلب الفرق الزمني بين الجهاز والسيرفر
     db.ref(".info/serverTimeOffset").on("value", (snap) => {
         serverTimeOffset = snap.val() || 0;
     });
@@ -384,9 +423,15 @@
     function startGlobalTimer() { 
         if(timerInterval) clearInterval(timerInterval); 
         timerInterval = setInterval(() => { 
+            const sTime = getServerTime();
+            const timeStr = new Date(sTime).toLocaleTimeString('ar-EG');
+            
+            // تحديث ساعة السيرفر المرئية
             if(currentUser && currentUser.role === 'admin') {
+                document.getElementById('adminServerClock').innerText = timeStr;
                 updateMonitorValuesOnly();
             } else if(currentUser) {
+                document.getElementById('userServerClock').innerText = timeStr;
                 updateUserUI(); 
             }
         }, 1000); 
@@ -542,11 +587,11 @@
             const grouped = {};
             Object.keys(u.sessions).forEach(key => {
                 const s = u.sessions[key];
-                const sessionDateParts = s.date.split('/');
-                const sessionDateObj = new Date(sessionDateParts[2], sessionDateParts[1] - 1, sessionDateParts[0]);
+                const sDateParts = s.date.split('/');
+                const sDateObj = new Date(sDateParts[2], sDateParts[1] - 1, sDateParts[0]);
                 
-                if (startDate && sessionDateObj < new Date(startDate)) return;
-                if (endDate && sessionDateObj > new Date(endDate)) return;
+                if (startDate && sDateObj < new Date(startDate)) return;
+                if (endDate && sDateObj > new Date(endDate)) return;
                 
                 if(!grouped[s.date]) grouped[s.date] = { acts: [], total: 0, prayer: 0, follow: 0 };
                 const dur = parseInt(s.duration) || 0;
@@ -613,8 +658,6 @@
 
     window.deleteSessionRecord = (employeeUn, sessionKey) => { if(confirm("هل أنت متأكد من حذف هذا النشاط من السجل؟")) { db.ref(`users/${employeeUn}/sessions/${sessionKey}`).remove().then(() => { alert("تم الحذف بنجاح"); renderUserReport(); }); } };
     window.deleteOtRecord = (employeeUn, otKey) => { if(confirm("هل أنت متأكد من حذف سجل العمل الإضافي هذا؟")) { db.ref(`users/${employeeUn}/overtimeHistory/${otKey}`).remove().then(() => { alert("تم الحذف بنجاح"); renderUserReport(); }); } };
-
-    function parseArabicDate(dateStr) { const parts = dateStr.split('/'); return new Date(parts[2], parts[1] - 1, parts[0]); }
 
     window.saveAdminTyping = (u, val) => { adminTypingBuffer[u] = val; }
     window.saveAdminSelect = (u, val) => { adminSelectBuffer[u] = val; }
