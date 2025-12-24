@@ -525,10 +525,9 @@
         if(!currentUser || currentUser.role === 'admin') return;
         const currentActive = Object.values(allUsersData).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
         const box = document.getElementById('breakLimitAlert');
-        // تم التعديل هنا لعدم إظهار الرقم للموظف
         if(currentActive >= maxBreaksAllowed) { 
             box.style.display = 'block'; 
-            box.innerText = `عذراً، الحد الأقصى للموظفين في البريك مكتمل حالياً. يرجى المحاولة لاحقاً.`; 
+            box.innerText = `يا بطل، زمايلك كلهم في البريك دلوقتي (الحد الأقصى ${maxBreaksAllowed}). استنى دقايق لحد ما حد يرجع عشان نفضل شغالين.. أول ما حد يرجع الطريق هيكون مفتوح ليك! 💪`; 
         }
         else box.style.display = 'none';
     }
