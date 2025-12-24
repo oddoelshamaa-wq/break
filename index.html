@@ -525,7 +525,11 @@
         if(!currentUser || currentUser.role === 'admin') return;
         const currentActive = Object.values(allUsersData).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
         const box = document.getElementById('breakLimitAlert');
-        if(currentActive >= maxBreaksAllowed) { box.style.display = 'block'; box.innerText = `الحد الأقصى للبريك (${maxBreaksAllowed}) مكتمل حالياً.`; }
+        // تم التعديل هنا لعدم إظهار الرقم للموظف
+        if(currentActive >= maxBreaksAllowed) { 
+            box.style.display = 'block'; 
+            box.innerText = `عذراً، الحد الأقصى للموظفين في البريك مكتمل حالياً. يرجى المحاولة لاحقاً.`; 
+        }
         else box.style.display = 'none';
     }
 
