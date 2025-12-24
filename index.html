@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة البريك والأكسدة - النسخة الشاملة</title>
+    <title>نظام إدارة البريك والأكسدة - النسخة الشاملة المصلحة</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -59,30 +59,12 @@
         .dot-green { background-color: #2ecc71; box-shadow: 0 0 10px #2ecc71; }
         .dot-grey { background-color: #95a5a6; }
         
-        /* شاشة البث العاجل */
-        #broadcastOverlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.98);
-            z-index: 10000; display: none; flex-direction: column;
-            align-items: center; justify-content: center; color: white;
-            text-align: center; padding: 20px;
-        }
-        .broadcast-box {
-            background: white; color: #2c3e50; padding: 40px;
-            border-radius: 30px; max-width: 700px; width: 90%;
-            box-shadow: 0 0 60px rgba(231, 76, 60, 1);
-            border: 10px solid #e74c3c;
-            animation: pulse-emergency 1s infinite;
-        }
-        @keyframes pulse-emergency {
-            0% { transform: scale(1); border-color: #e74c3c; }
-            50% { transform: scale(1.03); border-color: #ff0000; }
-            100% { transform: scale(1); border-color: #e74c3c; }
-        }
+        #broadcastOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.98); z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; }
+        .broadcast-box { background: white; color: #2c3e50; padding: 40px; border-radius: 30px; max-width: 700px; width: 90%; box-shadow: 0 0 60px rgba(231, 76, 60, 1); border: 10px solid #e74c3c; animation: pulse-emergency 1s infinite; }
+        @keyframes pulse-emergency { 0% { transform: scale(1); border-color: #e74c3c; } 50% { transform: scale(1.03); border-color: #ff0000; } 100% { transform: scale(1); border-color: #e74c3c; } }
 
         .server-clock-box { background: #2c3e50; color: #fff; padding: 10px 20px; border-radius: 15px; font-size: 1rem; display: inline-flex; flex-direction: column; align-items: center; border: 2px solid #34495e; box-shadow: 0 5px 15px rgba(0,0,0,0.2); margin-bottom: 15px; }
         .clock-time { font-size: 1.3rem; font-weight: 800; color: #2ecc71; font-family: 'Cairo', sans-serif; }
-        
         .badge-count { background: red; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; position: absolute; margin-top: -12px; margin-right: 5px; font-weight: bold; }
         .activity-text { font-size: 0.8rem; color: #555; text-align: right; display: block; border-bottom: 1px dashed #ddd; padding: 4px 0; }
     </style>
@@ -100,13 +82,12 @@
 <audio id="requestRing" loop><source src="https://assets.mixkit.co/active_storage/sfx/1110/1110-preview.mp3" type="audio/mp3"></audio>
 <audio id="broadcastSound" loop><source src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" type="audio/mp3"></audio>
 
-<!-- شاشة البث العاجل -->
 <div id="broadcastOverlay">
     <div class="broadcast-box">
         <div style="font-size: 6rem;">🚨</div>
         <h1 style="color: #c0392b; margin: 10px 0; font-size: 2.8rem;">رسالة عاجلة من الإدارة</h1>
         <div id="broadcastMsgText" style="font-size: 2rem; font-weight: bold; margin: 30px 0; color: #2d3436; background: #fff3f3; padding: 20px; border-radius: 15px;"></div>
-        <button onclick="acknowledgeBroadcast()" class="btn btn-danger" style="width: 100%; padding: 25px; font-size: 1.8rem; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.2);">استلمت الرسالة (إيقاف الإنذار) ✅</button>
+        <button onclick="acknowledgeBroadcast()" class="btn btn-danger" style="width: 100%; padding: 25px; font-size: 1.8rem; border-radius: 20px;">استلمت الرسالة ✅</button>
     </div>
 </div>
 
@@ -130,18 +111,16 @@
                 <button onclick="initAudio(true)" class="btn btn-sm btn-info" id="soundBtnAdmin" style="margin-top:10px;">🔊 تفعيل أصوات التنبيه</button>
             </div>
             <div class="server-clock-box">
-                <span style="font-size: 0.7rem; color: #bdc3c7;">توقيت السيرفر</span>
                 <span class="clock-time" id="adminServerTime">00:00:00 AM</span>
                 <span id="adminServerDate" style="font-size: 0.8rem;"></span>
             </div>
             <button onclick="logout()" class="btn btn-dark btn-sm">خروج</button>
         </div>
 
-        <!-- أداة البث العاجل -->
-        <div style="background: #fff3f3; border: 4px solid #c0392b; padding: 20px; border-radius: 20px; margin-bottom: 25px; box-shadow: 0 8px 20px rgba(192, 57, 43, 0.15);">
-            <h4 style="color: #c0392b; margin-top: 0; font-size: 1.2rem;">📢 إرسال تعميم عاجل (تنبيه صوتي وشاشة كاملة للموظفين)</h4>
+        <div style="background: #fff3f3; border: 4px solid #c0392b; padding: 20px; border-radius: 20px; margin-bottom: 25px;">
+            <h4 style="color: #c0392b; margin-top: 0;">📢 إرسال تعميم عاجل للموظفين</h4>
             <div style="display: flex; gap: 10px;">
-                <input type="text" id="broadcastInput" placeholder="اكتب الرسالة التحذيرية هنا..." style="margin:0; border-color: #c0392b; height: 60px; font-size: 1.1rem;">
+                <input type="text" id="broadcastInput" placeholder="اكتب الرسالة التحذيرية هنا..." style="margin:0; height: 60px;">
                 <button onclick="sendBroadcast()" class="btn btn-danger" style="padding: 0 40px; font-size: 1.2rem;">بث الآن 🚀</button>
             </div>
         </div>
@@ -154,160 +133,97 @@
             <button onclick="switchAdminTab('users')" class="btn btn-success btn-sm">⚙️ الموظفين</button>
         </div>
 
-        <!-- تاب المراقبة -->
         <div id="tab-monitor">
             <div class="limit-box" style="background: #f8f9fa; padding: 15px; border-radius: 15px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 20px;">
                 <div><strong>🍔 حد البريك:</strong> <input type="number" id="maxBreaksInput" style="width:70px; margin:0;" value="3"></div>
                 <div><strong>🕌 حد الصلاة:</strong> <input type="number" id="maxPrayersInput" style="width:70px; margin:0;" value="2"></div>
-                <button onclick="updateLimits()" class="btn btn-dark btn-sm">حفظ الحدود للكل</button>
+                <button onclick="updateLimits()" class="btn btn-dark btn-sm">حفظ الحدود</button>
             </div>
             
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <input type="text" id="monitorSearch" placeholder="بحث عن موظف..." class="search-input" oninput="renderMonitorTable()">
-                <button onclick="endDay()" class="btn btn-danger btn-sm" style="flex-shrink: 0;">🛑 إقفال وتصفير اليوم</button>
+                <button onclick="endDay()" class="btn btn-danger btn-sm">🛑 تصفير اليوم</button>
             </div>
-
-            <div id="statusCountersDisplay" style="text-align:center; font-weight:bold; margin-bottom:15px; font-size:1.1rem; color:#2c3e50; background: #f1f2f6; padding: 15px; border-radius: 15px;"></div>
-            
+            <div id="statusCountersDisplay" style="text-align:center; font-weight:bold; margin-bottom:15px; background: #f1f2f6; padding: 15px; border-radius: 15px;"></div>
             <div class="table-responsive">
                 <table>
-                    <thead>
-                        <tr>
-                            <th>الموظف</th>
-                            <th>الحالة والسبب</th>
-                            <th>البريك (متبقي)</th>
-                            <th>صلاة / متبع</th>
-                            <th>ميتنج / VIP</th>
-                            <th>تحكم المشرف</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>الموظف</th><th>الحالة والسبب</th><th>البريك (متبقي)</th><th>صلاة / متبع</th><th>ميتنج / VIP</th><th>التحكم</th></tr></thead>
                     <tbody id="monitorBody"></tbody>
                 </table>
             </div>
         </div>
 
-        <!-- تاب الطوارئ -->
-        <div id="tab-emergency" class="hidden">
-            <h3>🚨 طلبات الخروج الاضطراري</h3>
-            <div class="table-responsive"><table><thead><tr><th>الموظف</th><th>السبب</th><th>الوقت</th><th>القرار</th></tr></thead><tbody id="adminEmBody"></tbody></table></div>
-        </div>
-
-        <!-- تاب الإضافي -->
-        <div id="tab-overtime" class="hidden">
-            <h3>🕒 طلبات العمل الإضافي</h3>
-            <div class="table-responsive"><table><thead><tr><th>الموظف</th><th>الساعات</th><th>الوقت</th><th>القرار</th></tr></thead><tbody id="adminOtBody"></tbody></table></div>
-        </div>
-
-        <!-- تاب التقارير -->
+        <!-- الأقسام الأخرى (موجودة في الكود البرمجي) -->
+        <div id="tab-emergency" class="hidden"><h3>🚨 طلبات الطوارئ</h3><div class="table-responsive"><table><thead><tr><th>الموظف</th><th>السبب</th><th>الوقت</th><th>القرار</th></tr></thead><tbody id="adminEmBody"></tbody></table></div></div>
+        <div id="tab-overtime" class="hidden"><h3>🕒 طلبات الإضافي</h3><div class="table-responsive"><table><thead><tr><th>الموظف</th><th>الساعات</th><th>الوقت</th><th>القرار</th></tr></thead><tbody id="adminOtBody"></tbody></table></div></div>
         <div id="tab-reports" class="hidden">
             <div class="filter-box">
-                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px;">
-                    <select id="reportUserSelect"><option value="">-- اختر موظف --</option></select>
-                    <input type="date" id="filterStartDate">
-                    <input type="date" id="filterEndDate">
-                </div>
-                <button onclick="renderUserReport()" class="btn btn-primary" style="width:100%; margin-top: 10px;">🔍 عرض تقرير الموظف</button>
-                <button id="masterDeleteBtn" onclick="deleteAllReports()" class="btn btn-danger hidden" style="width:100%; margin-top: 10px;">⚠️ حذف جميع سجلات النظام (محمود فقط)</button>
+                <select id="reportUserSelect"><option value="">-- اختر موظف --</option></select>
+                <div style="display: flex; gap: 10px; margin-top: 10px;"><input type="date" id="filterStartDate"><input type="date" id="filterEndDate"></div>
+                <button onclick="renderUserReport()" class="btn btn-primary" style="width:100%; margin-top: 10px;">🔍 عرض التقرير</button>
+                <button id="masterDeleteBtn" onclick="deleteAllReports()" class="btn btn-danger hidden" style="width:100%; margin-top: 10px;">⚠️ حذف الكل (محمود فقط)</button>
             </div>
-
             <div class="summary-card hidden" id="monthlySummary">
-                <div class="summary-item"><h5>صافي الأكسدة</h5><p id="monthTotalBreaks" style="color:red;">0د</p></div>
+                <div class="summary-item"><h5>صافي الأكسدة</h5><p id="monthTotalBreaks">0د</p></div>
                 <div class="summary-item"><h5>إجمالي الصلاة</h5><p id="monthTotalPrayer">0د</p></div>
-                <div class="summary-item"><h5>متابعة العملاء</h5><p id="monthTotalFollowUp" style="color:var(--followup-color);">0د</p></div>
-                <div class="summary-item"><h5>إجمالي VIP</h5><p id="monthTotalVIP" style="color:#b8860b;">0د</p></div>
-                <div class="summary-item"><h5>إجمالي الإضافي</h5><p id="monthTotalOvertime" style="color:#8e44ad">0س</p></div>
+                <div class="summary-item"><h5>متابعة</h5><p id="monthTotalFollowUp">0د</p></div>
+                <div class="summary-item"><h5>VIP</h5><p id="monthTotalVIP">0د</p></div>
+                <div class="summary-item"><h5>إضافي</h5><p id="monthTotalOvertime">0س</p></div>
             </div>
-
-            <div class="table-responsive">
-                <table>
-                    <thead><tr><th>التاريخ</th><th>سجل التحركات</th><th>الإجمالي</th><th>صافي الأكسدة</th></tr></thead>
-                    <tbody id="sessionsReportBody"></tbody>
-                </table>
-            </div>
+            <div class="table-responsive"><table><thead><tr><th>التاريخ</th><th>النشاط</th><th>الإجمالي</th><th>صافي الأكسدة</th></tr></thead><tbody id="sessionsReportBody"></tbody></table></div>
         </div>
-
-        <!-- تاب إدارة الموظفين -->
         <div id="tab-users" class="hidden">
             <div style="background:#f9f9f9; padding:25px; border-radius:20px; border: 1px dashed #ccc; margin-bottom: 25px;">
-                <h4 style="margin-top:0;" id="formTitle">📝 إضافة موظف جديد</h4>
+                <h4 id="formTitle">📝 إضافة موظف جديد</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <input type="text" id="newRealName" placeholder="الاسم الحقيقي">
-                    <input type="text" id="newUsername" placeholder="اسم المستخدم (Login ID)">
+                    <input type="text" id="newUsername" placeholder="Username">
                     <input type="text" id="newPassword" placeholder="كلمة المرور">
-                    <input type="number" id="newAllowance" value="45" placeholder="دقائق البريك المسموحة">
+                    <input type="number" id="newAllowance" value="45">
                 </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="margin-left: 20px;"><input type="checkbox" id="isVIPUser"> ⭐ تفعيل وضع VIP</label>
-                    <label><input type="checkbox" id="canFollowUp"> 📞 تفعيل خاصية المتبع</label>
-                </div>
-                <button onclick="saveUser()" id="saveUserBtn" class="btn btn-success" style="width:100%; padding: 15px;">حفظ الموظف</button>
+                <label style="margin-left: 20px;"><input type="checkbox" id="isVIPUser"> ⭐ VIP</label><label><input type="checkbox" id="canFollowUp"> 📞 متبع</label>
+                <button onclick="saveUser()" id="saveUserBtn" class="btn btn-success" style="width:100%; margin-top:15px;">حفظ الموظف</button>
             </div>
-            <div class="table-responsive">
-                <table>
-                    <thead><tr><th>الاسم الحقيقي</th><th>Username</th><th>Password</th><th>المدة</th><th>إجراء</th></tr></thead>
-                    <tbody id="usersManagementBody"></tbody>
-                </table>
-            </div>
+            <div class="table-responsive"><table><thead><tr><th>الاسم الحقيقي</th><th>Username</th><th>Password</th><th>المدة</th><th>إجراء</th></tr></thead><tbody id="usersManagementBody"></tbody></table></div>
         </div>
     </div>
 
     <!-- شاشة الموظف -->
     <div id="employeeSection" class="hidden">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
-            <div>
-                <h3 id="welcomeMsg" style="margin:0; text-align:right;"></h3>
-                <button onclick="initAudio(true)" id="soundBtnUser" class="btn btn-warning btn-sm" style="margin-top: 10px;">🔔 تفعيل التنبيهات الصوتية والسطحية</button>
-            </div>
-            <div class="server-clock-box">
-                <span class="clock-time" id="userServerTime">00:00:00 AM</span>
-            </div>
+            <div><h3 id="welcomeMsg" style="margin:0;"></h3><button onclick="initAudio(true)" id="soundBtnUser" class="btn btn-warning btn-sm" style="margin-top: 10px;">🔔 تفعيل التنبيهات</button></div>
+            <div class="server-clock-box"><span class="clock-time" id="userServerTime">00:00:00 AM</span></div>
             <button onclick="logout()" class="btn btn-dark btn-sm">خروج</button>
         </div>
-        
         <div style="text-align: center;">
-            <div style="background: #f1f2f6; padding: 30px; border-radius: 25px; margin-bottom: 25px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);">
+            <div style="background: #f1f2f6; padding: 30px; border-radius: 25px; margin-bottom: 25px;">
                 <div id="timerLabel" class="timer-label">رصيد البريك المتبقي</div>
                 <div class="timer-display" id="userTimer">00:00</div>
-                <h3 id="userStatusMsg" style="font-weight:bold; color: #27ae60;"></h3>
-                <div id="overtimeAlert" class="hidden" style="color:white; background:red; padding:15px; border-radius:15px; font-weight:bold; font-size: 1.2rem;">⚠️ أنت الآن في مرحلة الأكسدة!</div>
+                <div id="overtimeAlert" class="hidden" style="color:white; background:red; padding:15px; border-radius:15px; font-weight:bold;">⚠️ أنت في مرحلة الأكسدة!</div>
             </div>
-
-            <div id="breakLimitAlert" style="background:#fff3cd; padding:20px; border-radius:15px; margin-bottom:20px; display:none; color:#856404; border:2px solid #ffeeba;"></div>
-
+            <div id="breakLimitAlert" style="background:#fff3cd; padding:20px; border-radius:15px; margin-bottom:20px; display:none; color:#856404;"></div>
             <div id="controlsArea">
-                <input type="text" id="breakReason" placeholder="اكتب سبب النشاط (إلزامي للبريك والطوارئ)..." style="text-align: center; height: 60px; font-size: 1.2rem;">
-                
-                <div id="vipControlArea" class="hidden" style="margin-bottom: 25px; padding: 20px; background: #fff9e6; border: 3px solid #ffd700; border-radius: 20px;">
-                    <button onclick="startMyBreak('استراحة VIP')" class="btn btn-vip" style="width:100%; font-size: 1.5rem; padding: 20px;">👑 بدء استراحة VIP خاصة</button>
-                </div>
-
-                <div class="employee-controls" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px;">
-                    <button onclick="startMyBreak('بريك عام')" class="btn btn-success" style="height: 100px; font-size: 1.1rem; flex-direction: column;">🍔<br>بريك عام</button>
-                    <button onclick="startMyBreak('صلاة')" class="btn btn-info" style="height: 100px; font-size: 1.1rem; flex-direction: column;">🕌<br>صلاة</button>
-                    <button onclick="startMyBreak('ميتنج')" class="btn btn-warning" style="height: 100px; font-size: 1.1rem; flex-direction: column;">🤝<br>ميتنج</button>
-                    <button id="followUpCard" onclick="startMyBreak('متابع عميل')" class="btn btn-followup hidden" style="height: 100px; font-size: 1.1rem; flex-direction: column;">📞<br>متابع عميل</button>
+                <input type="text" id="breakReason" placeholder="اكتب السبب..." style="text-align: center; height: 60px;">
+                <div id="vipControlArea" class="hidden"><button onclick="startMyBreak('استراحة VIP')" class="btn btn-vip" style="width:100%; font-size: 1.5rem; margin-bottom:15px;">👑 بدء استراحة VIP</button></div>
+                <div class="employee-controls" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px;">
+                    <button onclick="startMyBreak('بريك عام')" class="btn btn-success">🍔 بريك عام</button>
+                    <button onclick="startMyBreak('صلاة')" class="btn btn-info">🕌 صلاة</button>
+                    <button onclick="startMyBreak('ميتنج')" class="btn btn-warning">🤝 ميتنج</button>
+                    <button id="followUpCard" onclick="startMyBreak('متابع عميل')" class="btn btn-followup hidden">📞 متابع عميل</button>
                     <div id="emStatusArea"></div>
                 </div>
-
                 <div style="margin-top: 30px; padding: 20px; background: #fcf6ff; border: 2px solid #e0d0f0; border-radius: 20px;">
-                    <h4 style="color:#8e44ad; margin-top:0;">💼 طلب عمل إضافي (Overtime)</h4>
-                    <div style="display:flex; gap:10px; justify-content: center; align-items: center;">
-                        <input type="number" id="otHoursInput" placeholder="ساعات" style="margin:0; width: 100px; height: 50px;">
-                        <button onclick="sendOtRequest()" class="btn btn-purple" style="height: 50px;">إرسال الطلب</button>
-                    </div>
+                    <h4>💼 طلب عمل إضافي</h4>
+                    <input type="number" id="otHoursInput" placeholder="ساعات" style="width: 80px;"><button onclick="sendOtRequest()" class="btn btn-purple" style="margin-right:10px;">إرسال</button>
                     <p id="otStatusDisplay" style="margin-top:10px; font-weight:bold;"></p>
                 </div>
             </div>
-
-            <div id="stopArea" class="hidden" style="margin-top:20px;">
-                <button onclick="stopMyBreak()" class="btn btn-danger" style="padding: 30px; width: 100%; font-size: 2rem; border-radius: 20px; box-shadow: 0 10px 30px rgba(192, 57, 43, 0.3);">🛑 إنهاء النشاط والعودة</button>
-            </div>
+            <div id="stopArea" class="hidden" style="margin-top:20px;"><button onclick="stopMyBreak()" class="btn btn-danger" style="padding: 30px; width: 100%; font-size: 2rem; border-radius: 20px;">🛑 إنهاء والعودة</button></div>
         </div>
     </div>
 </div>
 
 <script>
-    // إعدادات فايربيس
     const firebaseConfig = {
         apiKey: "AIzaSyC2J8fVx7qAz_g33gUNQxXMEJHsWeFrjuk",
         authDomain: "break-3ccd9.firebaseapp.com",
@@ -321,56 +237,46 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let allUsersData = {}, currentUser = null, timerInterval = null, isLoaded = false;
-    let audioUnlocked = false, maxBreaksAllowed = 3, maxPrayersAllowed = 2, lastBroadcastID = "";
+    let allUsersData = {}, currentUser = null, isLoaded = false, audioUnlocked = false;
+    let maxBreaksAllowed = 3, maxPrayersAllowed = 2, lastBroadcastID = "";
     let initialServerTime = Date.now(), initialPerformanceTime = performance.now();
 
-    // مزامنة الوقت مع السيرفر
     function getServerTime() { return initialServerTime + (performance.now() - initialPerformanceTime); }
-    function getServerDateString() { 
-        const d = new Date(getServerTime()); 
-        return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`; 
-    }
-    function getServerTimeString() { 
-        const d = new Date(getServerTime()); 
-        let h = d.getHours(); const m = d.getMinutes().toString().padStart(2, '0'), s = d.getSeconds().toString().padStart(2, '0'), am = h >= 12 ? 'PM' : 'AM'; 
-        h = h % 12 || 12; return `${h.toString().padStart(2, '0')}:${m}:${s} ${am}`; 
-    }
+    function getServerDateString() { const d = new Date(getServerTime()); return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`; }
+    function getServerTimeString() { const d = new Date(getServerTime()); let h = d.getHours(); const m = d.getMinutes().toString().padStart(2, '0'), s = d.getSeconds().toString().padStart(2, '0'), am = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return `${h.toString().padStart(2, '0')}:${m}:${s} ${am}`; }
 
     db.ref(".info/serverTimeOffset").on("value", (s) => { initialServerTime = Date.now() + (s.val() || 0); initialPerformanceTime = performance.now(); });
 
     const MANAGERS = ['mahmoud', 'abutamim', 'ahmed', 'admin'];
 
-    // فك قفل الأصوات
+    // مراقبة الإعدادات
+    db.ref('settings/limits').on('value', (s) => {
+        const l = s.val() || { breaks: 3, prayers: 2 };
+        maxBreaksAllowed = l.breaks || 3;
+        maxPrayersAllowed = l.prayers || 2;
+        if (document.getElementById('maxBreaksInput')) document.getElementById('maxBreaksInput').value = maxBreaksAllowed;
+        if (document.getElementById('maxPrayersInput')) document.getElementById('maxPrayersInput').value = maxPrayersAllowed;
+    });
+
     function initAudio(msg = false) {
         if (audioUnlocked) return;
         ['alarmSound', 'notifySound', 'requestRing', 'broadcastSound'].forEach(id => {
-            const a = document.getElementById(id);
-            a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(() => {});
+            const a = document.getElementById(id); if (a) { a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(() => {}); }
         });
         audioUnlocked = true;
-        if (document.getElementById('soundBtnAdmin')) {
-            document.getElementById('soundBtnAdmin').innerText = "✅ الأصوات مفعّلة";
-            document.getElementById('soundBtnAdmin').classList.replace('btn-info', 'btn-success');
-        }
+        if (document.getElementById('soundBtnAdmin')) { document.getElementById('soundBtnAdmin').innerText = "✅ مفعّل"; document.getElementById('soundBtnAdmin').classList.replace('btn-info', 'btn-success'); }
         if (document.getElementById('soundBtnUser')) document.getElementById('soundBtnUser').style.display = 'none';
-        if (msg) alert("تم تفعيل النظام الصوتي بنجاح! 🔔");
-        if ("Notification" in window) Notification.requestPermission();
+        if (msg) alert("تم تفعيل الصوت بنجاح! 🔔");
     }
 
-    // استماع للبث العاجل
     db.ref('settings/broadcast').on('value', (snap) => {
         const data = snap.val();
         if (data && data.id !== lastBroadcastID) {
             lastBroadcastID = data.id;
             if (currentUser && currentUser.role !== 'admin') {
-                document.getElementById('broadcastMsgText').innerText = data.message;
+                document.getElementById('broadcastMsgText').innerText = data.message || '';
                 document.getElementById('broadcastOverlay').style.display = 'flex';
                 if (audioUnlocked) document.getElementById('broadcastSound').play();
-                if (Notification.permission === "granted") {
-                    const n = new Notification("🚨 تنبيه إداري عاجل", { body: data.message, requireInteraction: true });
-                    n.onclick = () => window.focus();
-                }
             }
         }
     });
@@ -387,7 +293,6 @@
         document.getElementById('broadcastInput').value = "";
     }
 
-    // استماع لبيانات المستخدمين
     db.ref('users').on('value', (snap) => {
         const newData = snap.val() || {};
         if (currentUser && currentUser.role === 'admin' && isLoaded && audioUnlocked) {
@@ -397,8 +302,7 @@
                 if (newData[un].isOnBreak && (!allUsersData[un] || !allUsersData[un].isOnBreak)) document.getElementById('notifySound').play();
                 if ((newData[un].otRequest && newData[un].otRequest.status === 'قيد الانتظار') || (newData[un].emRequest && newData[un].emRequest.status === 'قيد الانتظار')) pending = true;
             });
-            const ring = document.getElementById('requestRing');
-            if (pending) { if (ring.paused) ring.play(); } else { ring.pause(); ring.currentTime = 0; }
+            const ring = document.getElementById('requestRing'); if (pending) { if (ring.paused) ring.play(); } else { ring.pause(); ring.currentTime = 0; }
         }
         allUsersData = newData;
         if (!isLoaded) { isLoaded = true; document.getElementById('loading').style.display = 'none'; document.getElementById('mainContainer').classList.remove('hidden'); checkSavedSession(); }
@@ -409,52 +313,51 @@
         }
     });
 
-    // تسجيل الدخول
     function attemptLogin() {
         const u = document.getElementById('loginUser').value.trim().toLowerCase(), p = document.getElementById('loginPass').value.trim();
         if (allUsersData[u] && allUsersData[u].password === p) {
             currentUser = allUsersData[u]; currentUser.role = MANAGERS.includes(u) ? 'admin' : 'employee';
-            localStorage.setItem('break_sys_user', u);
-            if (currentUser.role === 'admin') showAdmin(); else { setupPresence(u); showEmployee(); }
-        } else alert("بيانات غير صحيحة");
+            localStorage.setItem('break_sys_user', u); if (currentUser.role === 'admin') showAdmin(); else { setupPresence(u); showEmployee(); }
+        } else alert("خطأ");
     }
 
-    function logout() { if(currentUser && currentUser.role !== 'admin') db.ref("users/"+currentUser.username+"/state").set("offline"); localStorage.removeItem('break_sys_user'); location.reload(); }
+    function logout() { localStorage.removeItem('break_sys_user'); location.reload(); }
     function setupPresence(un) { const s = db.ref("users/"+un+"/state"); db.ref(".info/connected").on("value", sn => { if(sn.val()) s.onDisconnect().set("offline").then(()=>s.set("online")); }); }
     function checkSavedSession() { const s = localStorage.getItem('break_sys_user'); if(s && allUsersData[s]) { currentUser = allUsersData[s]; currentUser.role = MANAGERS.includes(s) ? 'admin' : 'employee'; if(currentUser.role==='admin') showAdmin(); else { setupPresence(s); showEmployee(); } } }
-    
-    function showAdmin() { document.getElementById('loginSection').classList.add('hidden'); document.getElementById('adminSection').classList.remove('hidden'); document.getElementById('currentManagerDisplay').innerText = currentUser.realName; switchAdminTab('monitor'); startGlobalTimer(); }
-    function showEmployee() { document.getElementById('loginSection').classList.add('hidden'); document.getElementById('employeeSection').classList.remove('hidden'); document.getElementById('welcomeMsg').innerText = "أهلاً، " + currentUser.realName; startGlobalTimer(); }
+    function showAdmin() { document.getElementById('loginSection').classList.add('hidden'); document.getElementById('adminSection').classList.remove('hidden'); document.getElementById('currentManagerDisplay').innerText = currentUser.realName || currentUser.username; switchAdminTab('monitor'); startGlobalTimer(); }
+    function showEmployee() { document.getElementById('loginSection').classList.add('hidden'); document.getElementById('employeeSection').classList.remove('hidden'); document.getElementById('welcomeMsg').innerText = "أهلاً، " + (currentUser.realName || currentUser.username); startGlobalTimer(); }
     function switchAdminTab(t) { ['tab-monitor','tab-reports','tab-users','tab-overtime','tab-emergency'].forEach(id => document.getElementById(id).classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); if(t==='reports') updateReportSelect(); }
 
     function startGlobalTimer() { setInterval(() => {
         const st = getServerTimeString();
-        if(currentUser && currentUser.role === 'admin') { document.getElementById('adminServerTime').innerText = st; document.getElementById('adminServerDate').innerText = getServerDateString(); updateMonitorValuesOnly(); }
-        else if(currentUser) { document.getElementById('userServerTime').innerText = st; updateUserUI(); }
+        if(currentUser && currentUser.role === 'admin') { 
+            const el = document.getElementById('adminServerTime'); if(el) el.innerText = st; 
+            const del = document.getElementById('adminServerDate'); if(del) del.innerText = getServerDateString();
+            updateMonitorValuesOnly(); 
+        } else if(currentUser) { 
+            const uel = document.getElementById('userServerTime'); if(uel) uel.innerText = st; 
+            updateUserUI(); 
+        }
     }, 1000); }
 
-    // المراقبة الحية
     function renderMonitorTable() {
         const tbody = document.getElementById('monitorBody'), search = document.getElementById('monitorSearch').value.toLowerCase();
         tbody.innerHTML = ''; let ab=0, ap=0;
         Object.values(allUsersData).forEach(u => {
             if(!u.username || MANAGERS.includes(u.username)) return;
-            if(search && !u.realName.toLowerCase().includes(search)) return;
+            if(search && !(u.realName || '').toLowerCase().includes(search)) return;
             let g=u.usedSeconds||0, p=u.prayerSeconds||0, m=u.meetingSeconds||0, f=u.followUpSeconds||0, v=u.vipSeconds||0;
             if(u.isOnBreak) {
                 let el = Math.floor((getServerTime() - u.lastStartTime)/1000);
-                if(u.breakType==='بريك عام'||u.breakType==='طوارئ') { g+=el; ab++; }
-                else if(u.breakType==='صلاة') { p+=el; ap++; }
-                else if(u.breakType==='ميتنج') m+=el;
-                else if(u.breakType==='متابع عميل') f+=el;
-                else if(u.breakType==='استراحة VIP') v+=el;
+                if(u.breakType==='بريك عام'||u.breakType==='طوارئ') { g+=el; ab++; } else if(u.breakType==='صلاة') { p+=el; ap++; }
             }
-            const rem = (u.allowance*60)-g, remT = rem>=0 ? formatTime(rem) : `<span style="color:red; font-weight:bold;">-${formatTime(Math.abs(rem))}</span>`;
+            const rem = ((u.allowance || 45)*60)-g, remT = rem>=0 ? formatTime(rem) : `<span style="color:red; font-weight:bold;">-${formatTime(Math.abs(rem))}</span>`;
             const on = `<span class="online-dot ${u.state==='online'?'dot-green':'dot-grey'}"></span>`;
-            const ctrl = u.isOnBreak ? `<button onclick="adminStop('${u.username}')" class="btn btn-danger btn-sm">🛑 إيقاف</button>` : `<button onclick="adminStart('${u.username}')" class="btn btn-success btn-sm">▶ بدء</button>`;
-            tbody.innerHTML += `<tr><td>${u.realName} ${on}</td><td>${u.isOnBreak?u.breakType:'متاح'}<br><small>${u.lastReason||''}</small></td><td><span id="rem_${u.username}">${remT}</span></td><td>${formatTime(p)} / ${formatTime(f)}</td><td>${formatTime(m)} / ${formatTime(v)}</td><td>${ctrl}</td></tr>`;
+            const ctrl = u.isOnBreak ? `<button onclick="adminStop('${u.username}')" class="btn btn-danger btn-sm">🛑</button>` : `<button onclick="adminStart('${u.username}')" class="btn btn-success btn-sm">▶</button>`;
+            tbody.innerHTML += `<tr><td>${u.realName || u.username} ${on}</td><td>${u.isOnBreak?(u.breakType || ''):'متاح'}<br><small>${u.lastReason||''}</small></td><td><span id="rem_${u.username}">${remT}</span></td><td>${formatTime(p)} / ${formatTime(u.followUpSeconds || 0)}</td><td>${formatTime(u.meetingSeconds || 0)} / ${formatTime(u.vipSeconds || 0)}</td><td>${ctrl}</td></tr>`;
         });
-        document.getElementById('statusCountersDisplay').innerText = `البريك الحالي: (${ab}/${maxBreaksAllowed}) | المصلين الآن: (${ap}/${maxPrayersAllowed})`;
+        const cntEl = document.getElementById('statusCountersDisplay');
+        if(cntEl) cntEl.innerText = `البريك الحالي: (${ab}/${maxBreaksAllowed}) | المصلين الآن: (${ap}/${maxPrayersAllowed})`;
     }
 
     function updateMonitorValuesOnly() {
@@ -462,23 +365,22 @@
             if(!u.username || MANAGERS.includes(u.username)) return;
             let g=u.usedSeconds||0;
             if(u.isOnBreak && (u.breakType==='بريك عام'||u.breakType==='طوارئ')) g+=Math.floor((getServerTime()-u.lastStartTime)/1000);
-            const rem = (u.allowance*60)-g, remT = rem>=0 ? formatTime(rem) : `<span style="color:red; font-weight:bold;">-${formatTime(Math.abs(rem))}</span>`;
-            if(document.getElementById(`rem_${u.username}`)) document.getElementById(`rem_${u.username}`).innerHTML = remT;
+            const rem = ((u.allowance || 45)*60)-g, remT = rem>=0 ? formatTime(rem) : `<span style="color:red; font-weight:bold;">-${formatTime(Math.abs(rem))}</span>`;
+            const el = document.getElementById(`rem_${u.username}`); if(el) el.innerHTML = remT;
         });
     }
 
-    // عمليات الموظف
     function startMyBreak(t) {
         if(currentUser.isOnBreak) return;
-        if(t==='بريك عام' && Object.values(allUsersData).filter(x=>x.isOnBreak && (x.breakType==='بريك عام'||x.breakType==='طوارئ')).length >= maxBreaksAllowed) return alert("الحد الأقصى مكتمل");
+        if(t==='بريك عام' && Object.values(allUsersData).filter(x=>x.isOnBreak && (x.breakType==='بريك عام'||x.breakType==='طوارئ')).length >= maxBreaksAllowed) return alert("الحد مكتمل");
         const r = document.getElementById('breakReason').value.trim();
-        if(!r && (t==='بريك عام'||t==='طوارئ')) return alert("يجب كتابة السبب!");
+        if(!r && (t==='بريك عام'||t==='طوارئ')) return alert("السبب مطلوب!");
         db.ref('users/'+currentUser.username).update({ isOnBreak: true, breakType: t, lastStartTime: getServerTime(), lastReason: r || t });
     }
 
     function stopMyBreak() {
         const u = currentUser, d = Math.floor((getServerTime() - u.lastStartTime)/1000);
-        db.ref('users/'+u.username+'/sessions').push({ date: getServerDateString(), type: u.breakType, duration: d, reason: u.lastReason });
+        db.ref('users/'+u.username+'/sessions').push({ date: getServerDateString(), type: u.breakType || '', duration: d, reason: u.lastReason || '' });
         const up = { isOnBreak: false, lastStartTime: null, lastReason: '' };
         if(u.breakType==='بريك عام'||u.breakType==='طوارئ') up.usedSeconds = (u.usedSeconds||0)+d;
         else if(u.breakType==='صلاة') up.prayerSeconds = (u.prayerSeconds||0)+d;
@@ -511,66 +413,63 @@
     function checkBreakLimit() {
         const c = Object.values(allUsersData).filter(x=>x.isOnBreak && (x.breakType==='بريك عام'||x.breakType==='طوارئ')).length;
         const b = document.getElementById('breakLimitAlert');
-        if(c >= maxBreaksAllowed) { b.style.display='block'; b.innerText = `⚠️ الحد الأقصى مكتمل (${maxBreaksAllowed}). يرجى الانتظار.`; } else b.style.display='none';
+        if(b) { if(c >= maxBreaksAllowed) { b.style.display='block'; b.innerText = `⚠️ الحد الأقصى مكتمل (${maxBreaksAllowed}). يرجى الانتظار.`; } else b.style.display='none'; }
     }
 
-    // إعدادات المشرف
     function adminStart(un) { db.ref('users/'+un).update({ isOnBreak: true, breakType: 'بريك عام', lastStartTime: getServerTime(), lastReason: 'بواسطة المشرف' }); }
     function adminStop(un) {
         const u = allUsersData[un], d = Math.floor((getServerTime()-u.lastStartTime)/1000);
-        db.ref('users/'+un+'/sessions').push({ date: getServerDateString(), type: u.breakType, duration: d, reason: 'إنهاء إداري' });
+        db.ref('users/'+un+'/sessions').push({ date: getServerDateString(), type: u.breakType || 'بريك عام', duration: d, reason: 'إنهاء إداري' });
         db.ref('users/'+un).update({ isOnBreak: false, usedSeconds: (u.usedSeconds||0)+d });
     }
 
-    function updateLimits() { db.ref('settings/limits').set({ breaks: parseInt(document.getElementById('maxBreaksInput').value), prayers: parseInt(document.getElementById('maxPrayersInput').value) }); alert("تم الحفظ ✅"); }
-    function endDay() { if(confirm("هل تريد تصفير جميع العدادات لليوم الجديد؟")) { Object.keys(allUsersData).forEach(un => { if(!MANAGERS.includes(un)) db.ref('users/'+un).update({ usedSeconds:0, prayerSeconds:0, meetingSeconds:0, followUpSeconds:0, vipSeconds:0, isOnBreak:false, emRequest:null, otRequest:null }); }); } }
+    function updateLimits() { db.ref('settings/limits').set({ breaks: parseInt(document.getElementById('maxBreaksInput').value), prayers: parseInt(document.getElementById('maxPrayersInput').value) }); alert("تم الحفظ"); }
+    function endDay() { if(confirm("تصفير العدادات؟")) { Object.keys(allUsersData).forEach(un => { if(!MANAGERS.includes(un)) db.ref('users/'+un).update({ usedSeconds:0, prayerSeconds:0, meetingSeconds:0, followUpSeconds:0, vipSeconds:0, isOnBreak:false, emRequest:null, otRequest:null }); }); } }
 
-    // إدارة الموظفين
     function saveUser() {
         const un = document.getElementById('newUsername').value.trim().toLowerCase(), p = document.getElementById('newPassword').value, n = document.getElementById('newRealName').value, a = parseInt(document.getElementById('newAllowance').value);
         if(!un || !p || !n) return alert("أكمل البيانات");
         db.ref('users/'+un).update({ username: un, password: p, realName: n, allowance: a, isVIP: document.getElementById('isVIPUser').checked, canFollowUp: document.getElementById('canFollowUp').checked, usedSeconds:0, prayerSeconds:0, meetingSeconds:0, followUpSeconds:0, vipSeconds:0, isOnBreak:false });
         alert("تم الحفظ ✅");
     }
+    
     function renderUserManagementTable() {
-        const tb = document.getElementById('usersManagementBody'); tb.innerHTML = '';
-        Object.values(allUsersData).forEach(u => { if(!MANAGERS.includes(u.username)) tb.innerHTML += `<tr><td>${u.realName}</td><td>${u.username}</td><td>${u.password}</td><td>${u.allowance}د</td><td><button onclick="db.ref('users/${u.username}').remove()" class="btn btn-danger btn-sm">🗑</button></td></tr>`; });
+        const tb = document.getElementById('usersManagementBody'); if(!tb) return; tb.innerHTML = '';
+        Object.values(allUsersData).forEach(u => { if(!MANAGERS.includes(u.username)) tb.innerHTML += `<tr><td>${u.realName || u.username}</td><td>${u.username}</td><td>${u.password}</td><td>${u.allowance || 45}د</td><td><button onclick="db.ref('users/${u.username}').remove()">🗑</button></td></tr>`; });
     }
 
-    // الطلبات (طوارئ وإضافي)
     function sendEmRequest() { const r = document.getElementById('breakReason').value; db.ref('users/'+currentUser.username+'/emRequest').set({ reason: r, status: 'قيد الانتظار', timestamp: getServerTime() }); }
-    function updateEmStatus() { const el = document.getElementById('emStatusArea'); if(!currentUser.emRequest) el.innerHTML = `<button onclick="sendEmRequest()" class="btn btn-dark" style="width:100%; height:100px;">🚨<br>طلب طوارئ</button>`; else el.innerHTML = `حالة الطوارئ: ${currentUser.emRequest.status}`; }
+    function updateEmStatus() { const el = document.getElementById('emStatusArea'); if(!el) return; if(!currentUser.emRequest) el.innerHTML = `<button onclick="sendEmRequest()" class="btn btn-dark" style="width:100%; height:100px;">🚨<br>طلب طوارئ</button>`; else el.innerHTML = `حالة الطوارئ: ${currentUser.emRequest.status}`; }
     function renderAdminEmRequests() {
-        const tb = document.getElementById('adminEmBody'); tb.innerHTML = ''; let c=0;
-        Object.values(allUsersData).forEach(u => { if(u.emRequest && u.emRequest.status==='قيد الانتظار') { c++; tb.innerHTML += `<tr><td>${u.realName}</td><td>${u.emRequest.reason}</td><td>--</td><td><button onclick="db.ref('users/${u.username}/emRequest').update({status:'تم القبول'})">✔</button></td></tr>`; } });
-        document.getElementById('emBadge').innerText=c; c>0 ? document.getElementById('emBadge').classList.remove('hidden') : document.getElementById('emBadge').classList.add('hidden');
+        const tb = document.getElementById('adminEmBody'); if(!tb) return; tb.innerHTML = ''; let c=0;
+        Object.values(allUsersData).forEach(u => { if(u.emRequest && u.emRequest.status==='قيد الانتظار') { c++; tb.innerHTML += `<tr><td>${u.realName || u.username}</td><td>${u.emRequest.reason || ''}</td><td>--</td><td><button onclick="db.ref('users/${u.username}/emRequest').update({status:'تم القبول'})">✔</button></td></tr>`; } });
+        const b = document.getElementById('emBadge'); if(b) { b.innerText=c; c>0 ? b.classList.remove('hidden') : b.classList.add('hidden'); }
     }
 
     function sendOtRequest() { const h = document.getElementById('otHoursInput').value; db.ref('users/'+currentUser.username+'/otRequest').set({ hours: h, status: 'قيد الانتظار', timestamp: getServerTime() }); }
-    function updateOtStatus() { const el = document.getElementById('otStatusDisplay'); if(!currentUser.otRequest) return; el.innerText = "طلب الإضافي: " + currentUser.otRequest.status; }
+    function updateOtStatus() { const el = document.getElementById('otStatusDisplay'); if(!el || !currentUser.otRequest) return; el.innerText = "طلب الإضافي: " + (currentUser.otRequest.status || ''); }
     function renderAdminOtRequests() {
-        const tb = document.getElementById('adminOtBody'); tb.innerHTML = ''; let c=0;
-        Object.values(allUsersData).forEach(u => { if(u.otRequest && u.otRequest.status==='قيد الانتظار') { c++; tb.innerHTML += `<tr><td>${u.realName}</td><td>${u.otRequest.hours}س</td><td>--</td><td><button onclick="approveOt('${u.username}')">✔</button></td></tr>`; } });
-        document.getElementById('otBadge').innerText=c; c>0 ? document.getElementById('otBadge').classList.remove('hidden') : document.getElementById('otBadge').classList.add('hidden');
+        const tb = document.getElementById('adminOtBody'); if(!tb) return; tb.innerHTML = ''; let c=0;
+        Object.values(allUsersData).forEach(u => { if(u.otRequest && u.otRequest.status==='قيد الانتظار') { c++; tb.innerHTML += `<tr><td>${u.realName || u.username}</td><td>${u.otRequest.hours || 0}س</td><td>--</td><td><button onclick="approveOt('${u.username}')">✔</button></td></tr>`; } });
+        const b = document.getElementById('otBadge'); if(b) { b.innerText=c; c>0 ? b.classList.remove('hidden') : b.classList.add('hidden'); }
     }
-    function approveOt(un) { const req = allUsersData[un].otRequest; db.ref('users/'+un+'/overtimeHistory').push({ date: getServerDateString(), hours: req.hours, approvedBy: currentUser.realName }); db.ref('users/'+un+'/otRequest').update({status:'تم القبول'}); }
+    function approveOt(un) { const req = allUsersData[un].otRequest; if(req) db.ref('users/'+un+'/overtimeHistory').push({ date: getServerDateString(), hours: req.hours, approvedBy: currentUser.realName || currentUser.username }); db.ref('users/'+un+'/otRequest').update({status:'تم القبول'}); }
 
-    // التقارير
-    function updateReportSelect() { const sel = document.getElementById('reportUserSelect'); sel.innerHTML = '<option value="">-- اختر موظف --</option>'; Object.values(allUsersData).forEach(u => { if(!MANAGERS.includes(u.username)) sel.innerHTML += `<option value="${u.username}">${u.realName}</option>`; }); }
+    function updateReportSelect() { const sel = document.getElementById('reportUserSelect'); if(!sel) return; sel.innerHTML = '<option value="">-- اختر موظف --</option>'; Object.values(allUsersData).forEach(u => { if(!MANAGERS.includes(u.username)) sel.innerHTML += `<option value="${u.username}">${u.realName || u.username}</option>`; }); }
     function renderUserReport() {
         const un = document.getElementById('reportUserSelect').value; if(!un) return;
         const u = allUsersData[un], sBody = document.getElementById('sessionsReportBody'), mSum = document.getElementById('monthlySummary');
         const start = document.getElementById('filterStartDate').value, end = document.getElementById('filterEndDate').value;
-        sBody.innerHTML = ''; mSum.classList.remove('hidden');
+        if(sBody) sBody.innerHTML = ''; if(mSum) mSum.classList.remove('hidden');
         let tOx=0, tPr=0, tFo=0, tVi=0, tOt=0, allow=(u.allowance||45)*60;
         if(u.sessions) {
             const grp = {};
             Object.values(u.sessions).forEach(s => {
-                const day = s.date, comp = day.split('/').reverse().join('-');
+                const day = s.date || '', comp = day.split('/').reverse().join('-');
                 if((start && comp < start) || (end && comp > end)) return;
                 if(!grp[day]) grp[day] = { acts:[], tot:0, pr:0, fo:0, vi:0 };
                 const dur = parseInt(s.duration)||0;
-                grp[day].acts.push(`• ${s.type} (${Math.round(dur/60)}د)`);
+                grp[day].acts.push(`• ${s.type || ''} (${Math.round(dur/60)}د)`);
                 if(s.type==='بريك عام'||s.type==='طوارئ') grp[day].tot+=dur;
                 else if(s.type==='صلاة') grp[day].pr+=dur;
                 else if(s.type==='متابع عميل') grp[day].fo+=dur;
@@ -578,23 +477,20 @@
             });
             Object.keys(grp).sort().reverse().forEach(d => {
                 const ox = Math.max(0, grp[d].tot - allow); tOx+=ox; tPr+=grp[d].pr; tFo+=grp[d].fo; tVi+=grp[d].vi;
-                sBody.innerHTML += `<tr><td>${d}</td><td>${grp[d].acts.join('<br>')}</td><td>${Math.round(grp[d].tot/60)}د</td><td style="color:${ox>0?'red':'green'}">${Math.round(ox/60)}د</td></tr>`;
+                if(sBody) sBody.innerHTML += `<tr><td>${d}</td><td>${grp[d].acts.join('<br>')}</td><td>${Math.round(grp[d].tot/60)}د</td><td style="color:${ox>0?'red':'green'}">${Math.round(ox/60)}د</td></tr>`;
             });
         }
-        if(u.overtimeHistory) Object.values(u.overtimeHistory).forEach(ot => tOt+=parseFloat(ot.hours));
-        document.getElementById('monthTotalBreaks').innerText = Math.round(tOx/60)+"د";
-        document.getElementById('monthTotalPrayer').innerText = Math.round(tPr/60)+"د";
-        document.getElementById('monthTotalFollowUp').innerText = Math.round(tFo/60)+"د";
-        document.getElementById('monthTotalVIP').innerText = Math.round(tVi/60)+"د";
-        document.getElementById('monthTotalOvertime').innerText = tOt+"س";
+        if(u.overtimeHistory) Object.values(u.overtimeHistory).forEach(ot => tOt+=parseFloat(ot.hours || 0));
+        if(document.getElementById('monthTotalBreaks')) document.getElementById('monthTotalBreaks').innerText = Math.round(tOx/60)+"د";
+        if(document.getElementById('monthTotalPrayer')) document.getElementById('monthTotalPrayer').innerText = Math.round(tPr/60)+"د";
+        if(document.getElementById('monthTotalFollowUp')) document.getElementById('monthTotalFollowUp').innerText = Math.round(tFo/60)+"د";
+        if(document.getElementById('monthTotalVIP')) document.getElementById('monthTotalVIP').innerText = Math.round(tVi/60)+"د";
+        if(document.getElementById('monthTotalOvertime')) document.getElementById('monthTotalOvertime').innerText = tOt+"س";
     }
 
-    // المساعدة
-    function formatTime(s) { const m=Math.floor(s/60), sec=s%60; return `${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`; }
-    function playAlarm() { document.body.classList.add('وضع-التنبيه'); document.getElementById('overtimeAlert').classList.remove('hidden'); if(audioUnlocked) document.getElementById('alarmSound').play(); }
+    function formatTime(s) { if(isNaN(s) || s < 0) return "00:00"; const m=Math.floor(s/60), sec=s%60; return `${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`; }
+    function playAlarm() { document.body.classList.add('وضع-التنبيه'); if(document.getElementById('overtimeAlert')) document.getElementById('overtimeAlert').classList.remove('hidden'); if(audioUnlocked) document.getElementById('alarmSound').play(); }
     function stopAlarm() { document.body.classList.remove('وضع-التنبيه'); if(document.getElementById('overtimeAlert')) document.getElementById('overtimeAlert').classList.add('hidden'); document.getElementById('alarmSound').pause(); }
-    function deleteAllReports() { if(confirm("سيتم مسح كل الأرشيف نهائياً. هل أنت متأكد؟")) { Object.keys(allUsersData).forEach(un => { if(!MANAGERS.includes(un)) { db.ref('users/'+un+'/sessions').remove(); db.ref('users/'+un+'/overtimeHistory').remove(); } }); } }
-
 </script>
 </body>
 </html>
