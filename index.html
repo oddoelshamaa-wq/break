@@ -1,4 +1,3 @@
-html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -634,7 +633,11 @@ html
                 if ((start && cD < start) || (end && cD > end)) return;
                 if(!grouped[s.date]) grouped[s.date] = { acts: [], total: 0, prayer: 0, follow: 0, vip: 0 };
                 const dur = parseInt(s.duration) || 0;
-                grouped[s.date].acts.push(`<span class="activity-text">${s.type}: [${Math.round(dur/60)}د]</span>`);
+                
+                // إضافة زر الحذف إذا كان المشرف هو محمود
+                let delBtn = (currentUser.username === 'mahmoud') ? `<button onclick="deleteSession('${un}', '${k}')" class="del-btn-report">حذف</button>` : '';
+                
+                grouped[s.date].acts.push(`<span class="activity-text">${delBtn} ${s.type}: [${Math.round(dur/60)}د]</span>`);
                 if(s.type === 'بريك عام' || s.type === 'طوارئ') grouped[s.date].total += dur;
                 else if(s.type === 'صلاة') grouped[s.date].prayer += dur; else if(s.type === 'متابع عميل') grouped[s.date].follow += dur; else if(s.type === 'استراحة VIP') grouped[s.date].vip += dur;
             });
@@ -656,6 +659,15 @@ html
         document.getElementById('monthTotalVIP').innerText = Math.round(tVi/60) + " د";
         document.getElementById('monthTotalOvertime').innerText = tOt + " س";
     }
+
+    // وظيفة حذف نشاط معين
+    window.deleteSession = (un, sessionKey) => {
+        if(!confirm("هل أنت متأكد من حذف هذا السجل نهائياً؟")) return;
+        db.ref(`users/${un}/sessions/${sessionKey}`).remove().then(() => {
+            alert("تم الحذف بنجاح");
+            renderUserReport(); // تحديث الجدول بعد الحذف
+        });
+    };
 
     window.adminStart = (un) => { 
         const type = adminSelectBuffer[un] || 'بريك عام', reason = (adminTypingBuffer[un] || "إداري"); 
