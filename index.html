@@ -121,10 +121,10 @@
     <h3>جاري تحميل النظام الحقيقي...</h3>
 </div>
 
-<audio id="alarmSound" loop><source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg"></audio>
-<audio id="notifySound"><source src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" type="audio/mp3"></audio>
-<audio id="requestRing" loop><source src="https://assets.mixkit.co/active_storage/sfx/1110/1110-preview.mp3" type="audio/mp3"></audio>
-<audio id="broadcastSound" loop><source src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" type="audio/mp3"></audio>
+<audio id="alarmSound" loop preload="auto"><source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg"></audio>
+<audio id="notifySound" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" type="audio/mp3"></audio>
+<audio id="requestRing" loop preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/1110/1110-preview.mp3" type="audio/mp3"></audio>
+<audio id="broadcastSound" loop preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" type="audio/mp3"></audio>
 
 <!-- شاشة البث الإجبارية -->
 <div id="broadcastOverlay">
@@ -306,7 +306,7 @@
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
             <div>
                 <h4 id="welcomeMsg" style="margin:0; font-size:1rem;"></h4>
-                <button onclick="requestNotificationPermission()" id="notifBtn" class="btn btn-warning btn-sm" style="margin-top: 5px;">🔔 تفعيل تنبيهات سطح المكتب (هام)</button>
+                <button onclick="requestNotificationPermission()" id="notifBtn" class="btn btn-warning btn-sm" style="margin-top: 5px;">🔊 تفعيل التنبيهات والصوت (هام)</button>
                 <div class="server-clock-box" style="margin-top:5px; padding: 4px 12px; min-width: 140px; background: #fff; color: #2c3e50; border:1px solid #ddd;">
                     <span class="server-label" style="font-size:0.5rem;">توقيت النظام</span>
                     <span class="clock-time" id="userServerTime" style="font-size:0.95rem;">00:00:00 AM</span>
@@ -416,8 +416,9 @@
             if (permission === "granted") {
                 alert("تم تفعيل التنبيهات بنجاح ✅");
                 document.getElementById('notifBtn').style.display = 'none';
-                enableSound();
             }
+            // في كل الحالات نقوم بتفعيل الصوت لأنه يحتاج ضغطة زر
+            enableSound();
         });
     }
 
@@ -487,6 +488,7 @@
             let hasAnyPending = false;
             Object.keys(newData).forEach(un => {
                 if (MANAGERS.includes(un)) return;
+                // صوت عند خروج موظف جديد لبريك
                 if (newData[un].isOnBreak && (!allUsersData[un] || !allUsersData[un].isOnBreak)) {
                    document.getElementById('notifySound').play().catch(e=>{});
                 }
@@ -525,7 +527,6 @@
                 updateEmStatus(); 
                 updateOtStatus(); 
                 checkBreakLimit(); 
-                if(Notification.permission === "granted") document.getElementById('notifBtn').style.display = 'none';
             }
         }
     });
@@ -550,7 +551,28 @@
     }
 
     function setupPresence(un) { const c = db.ref(".info/connected"), s = db.ref("users/" + un + "/state"); c.on("value", snap => { if (snap.val()) s.onDisconnect().set("offline").then(() => s.set("online")); }); }
-    function enableSound() { soundActive = true; document.getElementById('soundBtn').innerText = "🔊 التنبيهات مفعّلة"; document.getElementById('soundBtn').classList.replace('btn-info','btn-success'); }
+    
+    // تعديل دالة تفعيل الصوت لتعمل على المتصفحات
+    function enableSound() { 
+        soundActive = true; 
+        
+        // "Unlock" audio on mobile/browsers by playing and pausing immediately
+        const sounds = ['alarmSound', 'notifySound', 'requestRing', 'broadcastSound'];
+        sounds.forEach(id => {
+            const s = document.getElementById(id);
+            s.play().then(() => {
+                s.pause();
+                s.currentTime = 0;
+            }).catch(e => console.log("Audio unlock failed for " + id));
+        });
+
+        const btn = document.getElementById('soundBtn') || document.getElementById('notifBtn');
+        if(btn) {
+            btn.innerText = "🔊 التنبيهات مفعّلة بنجاح";
+            btn.style.background = "#27ae60";
+        }
+    }
+
     function checkSavedSession() { const s = localStorage.getItem('break_sys_user'); if (s && allUsersData[s]) { currentUser = allUsersData[s]; currentUser.role = MANAGERS.includes(s) ? 'admin' : 'employee'; if (currentUser.role === 'admin') showAdmin(); else { setupPresence(s); showEmployee(); } } }
     
     function attemptLogin() { 
@@ -724,10 +746,9 @@
         });
     }
 
-    // دالة تحويل التاريخ من DD/MM/YYYY إلى YYYY-MM-DD للمقارنة النصية الدقيقة
     function formatToCompare(dateStr) {
         if (!dateStr) return "";
-        if (dateStr.includes('-')) return dateStr; // إذا كان أصلاً YYYY-MM-DD
+        if (dateStr.includes('-')) return dateStr;
         const parts = dateStr.split('/');
         return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
     }
@@ -736,8 +757,8 @@
         const un = document.getElementById('reportUserSelect').value; if(!un) return;
         const u = allUsersData[un], sBody = document.getElementById('sessionsReportBody'), otBody = document.getElementById('approvedOtReportBody'), mSum = document.getElementById('monthlySummary');
         
-        const startVal = document.getElementById('filterStartDate').value; // YYYY-MM-DD
-        const endVal = document.getElementById('filterEndDate').value;     // YYYY-MM-DD
+        const startVal = document.getElementById('filterStartDate').value;
+        const endVal = document.getElementById('filterEndDate').value;
 
         sBody.innerHTML = ''; otBody.innerHTML = ''; mSum.classList.remove('hidden');
         
@@ -752,14 +773,11 @@
             Object.keys(u.sessions).forEach(key => {
                 const s = u.sessions[key];
                 const compareDate = formatToCompare(s.date);
-
-                // مقارنة نصية صارمة
                 if (startVal && compareDate < startVal) return;
                 if (endVal && compareDate > endVal) return;
                 
                 if(!grouped[s.date]) grouped[s.date] = { acts: [], total: 0, prayer: 0, follow: 0, vip: 0, compareStr: compareDate };
                 const dur = parseInt(s.duration) || 0;
-                
                 let delBtn = isMahmoud ? `<button class="del-btn-report" onclick="deleteSessionRecord('${un}', '${key}')">حذف</button>` : '';
                 grouped[s.date].acts.push(`<span class="activity-text">${delBtn} • ${s.type}: ${s.reason} [${Math.round(dur/60)}د]</span>`);
                 
@@ -769,19 +787,15 @@
                 if(s.type === 'استراحة VIP') grouped[s.date].vip += dur;
             });
 
-            // فرز حسب التاريخ التنازلي
             const sortedDates = Object.keys(grouped).sort((a,b) => grouped[b].compareStr.localeCompare(grouped[a].compareStr));
             
             sortedDates.forEach(d => {
                 const dayUsed = grouped[d].total;
                 const dayOx = Math.max(0, dayUsed - dailyAllowanceS);
-                
-                // إضافة للعدادات العلوية فقط للأيام التي ظهرت في الجدول
                 totalOxS += dayOx;
                 totalPrayS += grouped[d].prayer;
                 totalFollowS += grouped[d].follow;
                 totalVipS += grouped[d].vip;
-                
                 sBody.innerHTML += `<tr><td><span class="day-badge">${d}</span></td><td>${grouped[d].acts.join('')}</td><td>${Math.round(dayUsed/60)} دقيقة</td><td style="color:${dayOx > 0 ? 'red' : 'green'}; font-weight:bold;">${Math.round(dayOx/60)} دقيقة</td></tr>`;
             });
         }
@@ -790,17 +804,14 @@
             Object.keys(u.overtimeHistory).forEach(key => {
                 const ot = u.overtimeHistory[key];
                 const compareDate = formatToCompare(ot.date);
-
                 if (startVal && compareDate < startVal) return;
                 if (endVal && compareDate > endVal) return;
-
                 totalOtH += parseFloat(ot.hours);
                 let delCol = isMahmoud ? `<td><button class="btn btn-danger btn-sm" onclick="deleteOtRecord('${un}', '${key}')">حذف</button></td>` : '';
                 otBody.innerHTML += `<tr><td>${ot.date}</td><td>${ot.hours} ساعة</td><td style="color:green; font-weight:bold;">✅ ${ot.approvedBy}</td>${delCol}</tr>`;
             });
         }
 
-        // تحديث المربعات الملونة لتطابق محتوى الجدول بالظبط
         document.getElementById('monthTotalBreaks').innerText = Math.round(totalOxS/60) + " دقيقة";
         document.getElementById('monthTotalPrayer').innerText = Math.round(totalPrayS/60) + " دقيقة";
         document.getElementById('monthTotalFollowUp').innerText = Math.round(totalFollowS/60) + " دقيقة";
@@ -929,7 +940,7 @@
     }
 
     function formatTime(s) { if(isNaN(s) || s < 0) return "00:00"; return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`; }
-    function playAlarm() { document.body.classList.add('وضع-التنبيه'); document.getElementById('overtimeAlert').classList.remove('hidden'); if(document.getElementById('alarmSound').paused) document.getElementById('alarmSound').play().catch(e=>{}); }
+    function playAlarm() { if(soundActive) { document.body.classList.add('وضع-التنبيه'); document.getElementById('overtimeAlert').classList.remove('hidden'); if(document.getElementById('alarmSound').paused) document.getElementById('alarmSound').play().catch(e=>{}); } }
     function stopAlarm() { document.body.classList.remove('وضع-التنبيه'); if(document.getElementById('overtimeAlert')) document.getElementById('overtimeAlert').classList.add('hidden'); document.getElementById('alarmSound').pause(); document.getElementById('alarmSound').currentTime=0; }
     function updateReportSelect() { const sel = document.getElementById('reportUserSelect'); sel.innerHTML = '<option value="">-- اختر موظف --</option>'; Object.values(allUsersData).forEach(u => { if(u && u.username && !MANAGERS.includes(u.username)) sel.innerHTML += `<option value="${u.username}">${u.realName || u.username}</option>`; }); }
 </script>
