@@ -1,3 +1,4 @@
+html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -428,14 +429,12 @@
     const localLoadTime = Date.now();
     db.ref('refreshSignal').on('value', (snap) => {
         const signalTime = snap.val();
-        // إذا كانت الإشارة أحدث من وقت تحميل الصفحة الحالي، وكان المستخدم موظفاً، قم بالرفرش
         if (signalTime && signalTime > localLoadTime && currentUser && currentUser.role !== 'admin') {
             location.reload();
         }
     });
 
     function triggerGlobalRefresh() {
-        // نحدث إشارة الرفرش في القاعدة لإجبار الموظفين على إعادة تحميل الصفحة
         db.ref('refreshSignal').set(getServerTime());
     }
 
@@ -516,7 +515,7 @@
     function updateLimits() {
         const b = parseInt(document.getElementById('maxBreaksInput').value), p = parseInt(document.getElementById('maxPrayersInput').value);
         db.ref('settings/limits').set({ breaks: b, prayers: p }).then(() => {
-            triggerGlobalRefresh(); // تحديث للكل
+            triggerGlobalRefresh();
             alert("تم التحديث ✅");
         });
     }
@@ -527,7 +526,7 @@
         const box = document.getElementById('breakLimitAlert');
         if(currentActive >= maxBreaksAllowed) { 
             box.style.display = 'block'; 
-            box.innerText = `يا بطل، زمايلك كلهم في البريك دلوقتي (الحد الأقصى ${maxBreaksAllowed}). استنى دقايق لحد ما حد يرجع عشان نفضل شغالين.. أول ما حد يرجع الطريق هيكون مفتوح ليك! 💪`; 
+            box.innerText = `يا بطل، زمايلك كلهم في البريك دلوقتي. استنى دقايق لحد ما حد يرجع عشان نفضل شغالين.. أول ما حد يرجع الطريق هيكون مفتوح ليك! 💪`; 
         }
         else box.style.display = 'none';
     }
