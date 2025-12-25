@@ -62,7 +62,6 @@
         .admin-row-top { display: flex; gap: 4px; }
         .admin-row-top select { margin: 0; height: 38px; flex: 1.5; font-size: 0.8rem; border: 2px solid #ddd; }
         .activity-text { font-size: 0.75rem; color: #555; text-align: right; line-height: 1.5; display: block; padding: 2px 0; border-bottom: 1px dashed #eee; }
-        .day-badge { background: #eee; padding: 2px 8px; border-radius: 5px; font-weight: bold; font-size: 0.75rem; }
         .badge-count { background: red; color: white; padding: 2px 6px; border-radius: 50%; font-size: 0.7rem; position: absolute; margin-top: -10px; margin-right: 5px; }
 
         .filter-box { background: #f8f9fa; padding: 15px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 15px; }
@@ -435,7 +434,7 @@
         const data = snap.val() || {}, employeeLog = document.getElementById('employeeBroadcastLog'), adminLog = document.getElementById('adminBroadcastLog');
         if(employeeLog) employeeLog.innerHTML = ""; if(adminLog) adminLog.innerHTML = "";
         const keys = Object.keys(data).sort((a, b) => data[b].timestamp - data[a].timestamp);
-        if (keys.length === 0 && employeeLog) employeeLog.innerHTML = `<p style="text-align: center; color: #ccc; padding: 10px;">لا يوجد تنبيهات</p>`;
+        if (keys.length === 0 && employeeLog) employeeLog.innerHTML = `<p style="text-align: center; color: #ccc; padding: 10px;">لا يوجد تنبيهات حالياً</p>`;
         keys.forEach(key => {
             const b = data[key], timeStr = new Date(b.timestamp).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'});
             if (adminLog) adminLog.innerHTML += `<div class="log-item"><span><b>[${timeStr}]</b> ${b.message}</span><button onclick="deleteBroadcast('${key}')" class="btn btn-danger btn-sm" style="padding:2px 5px; font-size:0.6rem;">حذف</button></div>`;
@@ -661,14 +660,19 @@
         const u = allUsersData[un], d = Math.floor((getServerTime() - u.lastStartTime)/1000); 
         db.ref('users/'+un+'/sessions').push({ date: getServerDateString(), type: u.breakType, reason: u.lastReason, duration: d }); 
         const up = { isOnBreak: false, lastStartTime: null }; 
-        if(u.breakType==='بريك عام' || u.breakType==='طوارئ') up.usedSeconds = (u.usedSeconds||0)+d; else if(u.breakType==='صلاة') up.prayerSeconds = (u.prayerSeconds||0)+d; else if(u.breakType==='ميتنج') up.meetingSeconds = (u.meetingSeconds||0)+d; else if(u.breakType==='متابع عميل') up.followUpSeconds = (u.followUpSeconds||0)+d; else if(u.breakType==='استراحة VIP') up.vipSeconds = (u.vipSeconds||0)+d;
+        if(u.breakType==='بريك عام' || u.breakType==='طوارئ') {
+            up.usedSeconds = (u.usedSeconds||0)+d;
+            if(u.breakType==='طوارئ') up.emRequest = null; // حذف الطلب لكي يحتاج طلب جديد عند التكرار
+        } else if(u.breakType==='صلاة') up.prayerSeconds = (u.prayerSeconds||0)+d; 
+        else if(u.breakType==='ميتنج') up.meetingSeconds = (u.meetingSeconds||0)+d; 
+        else if(u.breakType==='متابع عميل') up.followUpSeconds = (u.followUpSeconds||0)+d; 
+        else if(u.breakType==='استراحة VIP') up.vipSeconds = (u.vipSeconds||0)+d;
         db.ref('users/'+un).update(up).then(() => triggerGlobalRefresh()); 
     };
 
     function startMyBreak(t) { 
         if(currentUser.isOnBreak) return; 
 
-        // إذا كان بريك عادي، نتحقق من الحد، أما "طوارئ" فتفتح مباشرة لأن المشرف وافق عليها
         if (t === 'بريك عام') {
             const currentActive = Object.values(allUsersData).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
             if (currentActive >= maxBreaksAllowed) {
@@ -687,7 +691,14 @@
         const u = currentUser, d = Math.floor((getServerTime() - u.lastStartTime)/1000); 
         db.ref('users/'+u.username+'/sessions').push({ date: getServerDateString(), type: u.breakType, reason: u.lastReason, duration: d }); 
         const up = { isOnBreak: false, lastStartTime: null }; 
-        if(u.breakType==='بريك عام' || u.breakType==='طوارئ') up.usedSeconds = (u.usedSeconds||0)+d; else if(u.breakType==='صلاة') up.prayerSeconds = (u.prayerSeconds||0)+d; else if(u.breakType==='ميتنج') up.meetingSeconds = (u.meetingSeconds||0)+d; else if(u.breakType==='متابع عميل') up.followUpSeconds = (u.followUpSeconds||0)+d; else if(u.breakType==='استراحة VIP') up.vipSeconds = (u.vipSeconds||0)+d;
+        if(u.breakType==='بريك عام' || u.breakType==='طوارئ') {
+            up.usedSeconds = (u.usedSeconds||0)+d;
+            if(u.breakType === 'طوارئ') up.emRequest = null; // تصفير الطلب لكي يطلب من جديد المرة القادمة
+        } else if(u.breakType==='صلاة') up.prayerSeconds = (u.prayerSeconds||0)+d; 
+        else if(u.breakType==='ميتنج') up.meetingSeconds = (u.meetingSeconds||0)+d; 
+        else if(u.breakType==='متابع عميل') up.followUpSeconds = (u.followUpSeconds||0)+d; 
+        else if(u.breakType==='استراحة VIP') up.vipSeconds = (u.vipSeconds||0)+d;
+        
         db.ref('users/'+u.username).update(up); document.getElementById('breakReason').value = ""; 
     }
 
