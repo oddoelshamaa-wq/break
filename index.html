@@ -92,7 +92,6 @@
         .clock-date { font-size: 0.75rem; color: #bdc3c7; font-weight: bold; }
         .server-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; color: #e74c3c; }
 
-        /* ستايلات ميزة البث العاجل */
         #broadcastOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.95);
@@ -144,7 +143,6 @@
 <audio id="requestRing" loop preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/1110/1110-preview.mp3" type="audio/mp3"></audio>
 <audio id="broadcastSound" loop preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" type="audio/mp3"></audio>
 
-<!-- شاشة البث الإجبارية -->
 <div id="broadcastOverlay">
     <div class="broadcast-content">
         <div style="font-size: 5rem; margin-bottom: 10px;">🚨</div>
@@ -170,7 +168,6 @@
         </div>
     </div>
 
-    <!-- لوحة الإدارة -->
     <div id="adminSection" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
             <div>
@@ -186,7 +183,6 @@
             <button onclick="logout()" class="btn btn-dark btn-sm">خروج</button>
         </div>
 
-        <!-- قسم إرسال البث العاجل (Broadcast) -->
         <div style="background: #fff3f3; border: 3px solid #c0392b; padding: 15px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(192, 57, 43, 0.1);">
             <h4 style="color: #c0392b; margin-top: 0;">📢 إرسال رسالة عاجلة لجميع الموظفين</h4>
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -207,7 +203,6 @@
             <button onclick="switchAdminTab('users')" class="btn btn-success btn-sm">⚙️ إدارة الموظفين</button>
         </div>
 
-        <!-- المراقبة -->
         <div id="tab-monitor">
             <div class="limit-box">
                 <div class="limit-input-group">
@@ -238,19 +233,16 @@
             </div>
         </div>
 
-        <!-- طلبات الطوارئ -->
         <div id="tab-emergency" class="hidden">
             <h3>🚨 طلبات الخروج اضطراري</h3>
             <div class="table-responsive"><table><thead><tr><th>الموظف</th><th>السبب</th><th>الوقت</th><th>القرار</th></tr></thead><tbody id="adminEmBody"></tbody></table></div>
         </div>
 
-        <!-- طلبات الإضافي -->
         <div id="tab-overtime" class="hidden">
             <h3>🕒 طلبات العمل الإضافي</h3>
             <div class="table-responsive"><table><thead><tr><th>الموظف</th><th>الساعات</th><th>وقت الطلب</th><th>القرار</th></tr></thead><tbody id="adminOtBody"></tbody></table></div>
         </div>
 
-        <!-- التقارير -->
         <div id="tab-reports" class="hidden">
             <div class="filter-box">
                 <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; align-items: end;">
@@ -290,13 +282,12 @@
             <h4 style="font-size:1.1rem; margin-bottom:10px; color:#8e44ad;">📄 تفاصيل العمل الإضافي المعتمد</h4>
             <div class="table-responsive" style="border:1px solid #8e44ad; border-radius:10px;">
                 <table>
-                    <thead><tr><th>تاريخ الموافقة</th><th>عدد الساعات</th><th>بواسطة المشرف</th><th id="otActionHeader" class="hidden">إجراء</th></tr></thead>
+                    <thead><tr><th>تاريخ الموافقة</th><th>عدد الساعات</th><th>بواسطة المشرف</th></tr></thead>
                     <tbody id="approvedOtReportBody"></tbody>
                 </table>
             </div>
         </div>
 
-        <!-- إدارة الموظفين -->
         <div id="tab-users" class="hidden">
             <div style="background:#f9f9f9; padding:20px; border-radius:15px; border: 1px dashed #ccc; margin-bottom: 20px;">
                 <h4 style="margin-top:0;" id="formTitle">📝 إضافة موظف جديد</h4>
@@ -328,7 +319,6 @@
         </div>
     </div>
 
-    <!-- شاشة الموظف -->
     <div id="employeeSection" class="hidden">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
             <div>
@@ -351,7 +341,6 @@
                 <div id="overtimeAlert" class="hidden" style="color:white; background:red; padding:10px; border-radius:10px; font-weight:bold;">أنت الآن في مرحلة الأكسدة!</div>
             </div>
 
-            <!-- سجل التنبيهات للموظف -->
             <div class="notification-log">
                 <div class="log-header">
                     <span>📑 سجل التنبيهات الإدارية</span>
@@ -411,7 +400,6 @@
     let adminTypingBuffer = {}, adminSelectBuffer = {}, editingUserKey = null, soundActive = false;
     let maxBreaksAllowed = 3, maxPrayersAllowed = 2, lastReceivedBroadcastID = localStorage.getItem('last_broadcast_id') || "";
     
-    // توقيت الخادم
     let initialServerTime = Date.now(), initialPerformanceTime = performance.now();
     db.ref(".info/serverTimeOffset").on("value", (snap) => {
         initialServerTime = Date.now() + (snap.val() || 0);
@@ -424,7 +412,6 @@
 
     const MANAGERS = ['mahmoud', 'abutamim', 'ahmed', 'admin'];
 
-    // --- نظام التحديث التلقائي للموظفين (الإشارة) ---
     const localLoadTime = Date.now();
     db.ref('refreshSignal').on('value', (snap) => {
         const signalTime = snap.val();
@@ -437,7 +424,6 @@
         db.ref('refreshSignal').set(getServerTime());
     }
 
-    // نظام البث
     function showToast(msg) {
         const toast = document.getElementById('bottomToast');
         document.getElementById('toastText').innerText = msg;
@@ -598,8 +584,9 @@
                 else if (u.breakType === 'صلاة') { lp += elap; actP++; } else if (u.breakType === 'ميتنج') lm += elap; else if (u.breakType === 'متابع عميل') lf += elap; else if (u.breakType === 'استراحة VIP') lv += elap;
             }
             const rem = ((u.allowance||45)*60) - lg, online = `<span class="online-dot ${u.state === 'online' ? 'dot-green' : 'dot-grey'}"></span>`, savedS = adminSelectBuffer[u.username] || 'بريك عام';
+            const statusCell = u.isOnBreak ? `<span style="color:#c0392b; font-weight:bold;">${u.breakType}</span><br><small style="color:#555;">السبب: ${u.lastReason || '---'}</small>` : '<span style="color:#27ae60; font-weight:bold;">متاح ✅</span>';
             const ctrl = u.isOnBreak ? `<button onclick="adminStop('${u.username}')" class="btn btn-danger btn-sm" style="width:100%">🛑 إيقاف</button>` : `<div class="admin-table-ctrl"><div class="admin-row-top"><select id="sel_${u.username}" onchange="saveAdminSelect('${u.username}', this.value)"><option value="بريك عام" ${savedS=='بريك عام'?'selected':''}>بريك</option><option value="صلاة" ${savedS=='صلاة'?'selected':''}>صلاة</option><option value="ميتنج" ${savedS=='ميتنج'?'selected':''}>ميتنج</option><option value="متابع عميل" ${savedS=='متابع عميل'?'selected':''}>متابع</option><option value="استراحة VIP" ${savedS=='استراحة VIP'?'selected':''}>VIP</option></select><button onclick="adminStart('${u.username}')" class="btn btn-success btn-sm">▶</button></div><input type="text" id="inp_${u.username}" placeholder="السبب..." oninput="saveAdminTyping('${u.username}', this.value)"></div>`;
-            tbody.innerHTML += `<tr class="${u.isOnBreak && u.breakType==='بريك عام' && rem < 300 && rem > 0?'صف-تحذير':''}"><td>${u.realName || u.username} ${online}</td><td>${u.isOnBreak?u.breakType:'متاح'}</td><td><span id="rem_${u.username}">${rem>=0?formatTime(rem):'<span style="color:red; font-weight:bold;">-'+formatTime(Math.abs(rem))+'</span>'}</span></td><td><span id="pray_${u.username}">${formatTime(lp)}</span><br><small>متبع: <span id="follow_${u.username}">${formatTime(lf)}</span></small></td><td><span id="meet_${u.username}">${formatTime(lm)}</span><br><small>VIP: <span id="vip_${u.username}">${formatTime(lv)}</span></small></td><td>${ctrl}</td></tr>`;
+            tbody.innerHTML += `<tr class="${u.isOnBreak && u.breakType==='بريك عام' && rem < 300 && rem > 0?'صف-تحذير':''}"><td>${u.realName || u.username} ${online}</td><td>${statusCell}</td><td><span id="rem_${u.username}">${rem>=0?formatTime(rem):'<span style="color:red; font-weight:bold;">-'+formatTime(Math.abs(rem))+'</span>'}</span></td><td><span id="pray_${u.username}">${formatTime(lp)}</span><br><small>متبع: <span id="follow_${u.username}">${formatTime(lf)}</span></small></td><td><span id="meet_${u.username}">${formatTime(lm)}</span><br><small>VIP: <span id="vip_${u.username}">${formatTime(lv)}</span></small></td><td>${ctrl}</td></tr>`;
         });
         document.getElementById('statusCountersDisplay').innerText = `البريك: (${actB}/${maxBreaksAllowed}) | الصلاة: (${actP}/${maxPrayersAllowed})`;
     }
@@ -633,11 +620,8 @@
                 if ((start && cD < start) || (end && cD > end)) return;
                 if(!grouped[s.date]) grouped[s.date] = { acts: [], total: 0, prayer: 0, follow: 0, vip: 0 };
                 const dur = parseInt(s.duration) || 0;
-                
-                // إضافة زر الحذف إذا كان المشرف هو محمود
                 let delBtn = (currentUser.username === 'mahmoud') ? `<button onclick="deleteSession('${un}', '${k}')" class="del-btn-report">حذف</button>` : '';
-                
-                grouped[s.date].acts.push(`<span class="activity-text">${delBtn} ${s.type}: [${Math.round(dur/60)}د]</span>`);
+                grouped[s.date].acts.push(`<span class="activity-text">${delBtn} ${s.type}: [${Math.round(dur/60)}د] - السبب: ${s.reason||'---'}</span>`);
                 if(s.type === 'بريك عام' || s.type === 'طوارئ') grouped[s.date].total += dur;
                 else if(s.type === 'صلاة') grouped[s.date].prayer += dur; else if(s.type === 'متابع عميل') grouped[s.date].follow += dur; else if(s.type === 'استراحة VIP') grouped[s.date].vip += dur;
             });
@@ -660,12 +644,11 @@
         document.getElementById('monthTotalOvertime').innerText = tOt + " س";
     }
 
-    // وظيفة حذف نشاط معين
     window.deleteSession = (un, sessionKey) => {
         if(!confirm("هل أنت متأكد من حذف هذا السجل نهائياً؟")) return;
         db.ref(`users/${un}/sessions/${sessionKey}`).remove().then(() => {
             alert("تم الحذف بنجاح");
-            renderUserReport(); // تحديث الجدول بعد الحذف
+            renderUserReport();
         });
     };
 
@@ -683,8 +666,10 @@
     };
 
     function startMyBreak(t) { 
-        if(currentUser.isOnBreak) return; let r = document.getElementById('breakReason').value.trim(); 
-        if(t === 'طوارئ' && currentUser.emRequest) r = currentUser.emRequest.reason; if((t==='بريك عام'||t==='طوارئ') && !r) return alert("اكتب السبب"); 
+        if(currentUser.isOnBreak) return; 
+        let r = document.getElementById('breakReason').value.trim(); 
+        if(t === 'طوارئ' && currentUser.emRequest) r = currentUser.emRequest.reason; 
+        if((t==='بريك عام' || t==='طوارئ' || t==='ميتنج' || t==='متابع عميل') && !r) return alert("برجاء كتابة السبب أولاً!"); 
         db.ref('users/'+currentUser.username).update({ isOnBreak: true, breakType: t, lastStartTime: getServerTime(), lastReason: r || t }); 
     }
 
