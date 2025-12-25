@@ -667,6 +667,16 @@
 
     function startMyBreak(t) { 
         if(currentUser.isOnBreak) return; 
+
+        // القيد الجديد: منع الدخول لو العداد مكتمل
+        if (t === 'بريك عام' || t === 'طوارئ') {
+            const currentActive = Object.values(allUsersData).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
+            if (currentActive >= maxBreaksAllowed) {
+                alert(`عذراً، لا يمكنك الخروج الآن لأن عدد الموظفين في البريك وصل للحد الأقصى (${maxBreaksAllowed}). يرجى الانتظار لحين عودة زميلك.`);
+                return;
+            }
+        }
+
         let r = document.getElementById('breakReason').value.trim(); 
         if(t === 'طوارئ' && currentUser.emRequest) r = currentUser.emRequest.reason; 
         if((t==='بريك عام' || t==='طوارئ' || t==='ميتنج' || t==='متابع عميل') && !r) return alert("برجاء كتابة السبب أولاً!"); 
