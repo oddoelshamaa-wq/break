@@ -111,6 +111,21 @@
             100% { transform: scale(1); box-shadow: 0 0 20px #e74c3c; }
         }
 
+        /* ستايل شاشة التفعيل الإجباري للصوت */
+        #forceSoundOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
+            z-index: 20000; display: none; flex-direction: column;
+            align-items: center; justify-content: center; color: white;
+            text-align: center; padding: 20px;
+        }
+        .force-sound-box {
+            background: white; color: #2c3e50; padding: 40px;
+            border-radius: 20px; max-width: 500px; width: 90%;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
         #bottomToast {
             position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%);
             background: #e74c3c; color: white; padding: 15px 30px;
@@ -141,6 +156,20 @@
 <audio id="notifySound" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" type="audio/mp3"></audio>
 <audio id="requestRing" loop preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/1110/1110-preview.mp3" type="audio/mp3"></audio>
 <audio id="broadcastSound" loop preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" type="audio/mp3"></audio>
+
+<!-- شاشة التفعيل الإجباري للصوت -->
+<div id="forceSoundOverlay">
+    <div class="force-sound-box">
+        <div style="font-size: 4rem; margin-bottom: 10px;">🔊</div>
+        <h2 style="margin:0; color:#2c3e50;">تفعيل النظام</h2>
+        <p style="margin: 15px 0; font-size: 1.1rem; color:#666;">
+            لضمان استلام التنبيهات ورسائل الإدارة، يجب تفعيل الصوت والمتصفح أولاً.
+        </p>
+        <button onclick="activateSystemAndSound()" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1.2rem; margin-top: 10px; border-radius: 12px; box-shadow: 0 5px 15px rgba(41, 128, 185, 0.3);">
+            ✅ بدء الدوام وتفعيل الصوت
+        </button>
+    </div>
+</div>
 
 <div id="broadcastOverlay">
     <div class="broadcast-content">
@@ -322,7 +351,8 @@
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
             <div>
                 <h4 id="welcomeMsg" style="margin:0; font-size:1rem;"></h4>
-                <button onclick="requestNotificationPermission()" id="notifBtn" class="btn btn-warning btn-sm" style="margin-top: 5px;">🔊 تفعيل التنبيهات والصوت</button>
+                <!-- الزر القديم سيختفي أو يتغير لونه تلقائيا -->
+                <button onclick="requestNotificationPermission()" id="notifBtn" class="btn btn-warning btn-sm" style="margin-top: 5px; opacity: 0.6; pointer-events: none;">🔊 الصوت مفعل تلقائياً</button>
                 <div class="server-clock-box" style="margin-top:5px; padding: 4px 12px; min-width: 140px; background: #fff; color: #2c3e50; border:1px solid #ddd;">
                     <span class="server-label" style="font-size:0.5rem;">توقيت النظام</span>
                     <span class="clock-time" id="userServerTime" style="font-size:0.95rem;">00:00:00 AM</span>
@@ -430,6 +460,38 @@
         setTimeout(() => toast.classList.remove('show'), 6000);
     }
 
+    // وظيفة تفعيل الصوت الإجبارية
+    function activateSystemAndSound() {
+        // تشغيل جميع الأصوات بشكل صامت لكسر حظر المتصفح
+        const audios = ['alarmSound', 'notifySound', 'requestRing', 'broadcastSound'];
+        audios.forEach(id => {
+            const s = document.getElementById(id);
+            s.volume = 0; // صامت لحظيا
+            s.play().then(() => {
+                s.pause();
+                s.currentTime = 0;
+                s.volume = 1; // إعادة الصوت
+            }).catch(e => console.log("Audio block", e));
+        });
+
+        soundActive = true;
+        
+        // طلب الإذن
+        if ("Notification" in window) {
+            Notification.requestPermission();
+        }
+
+        // إخفاء شاشة الإجبار
+        document.getElementById('forceSoundOverlay').style.display = 'none';
+        
+        // تحديث حالة الزر
+        const btn = document.getElementById('notifBtn');
+        if(btn) { btn.innerText = "🔊 الصوت مفعل"; btn.style.background = "#27ae60"; }
+
+        // بدء المؤقتات
+        startGlobalTimer();
+    }
+
     db.ref('broadcasts').on('value', (snap) => {
         const data = snap.val() || {}, employeeLog = document.getElementById('employeeBroadcastLog'), adminLog = document.getElementById('adminBroadcastLog');
         if(employeeLog) employeeLog.innerHTML = ""; if(adminLog) adminLog.innerHTML = "";
@@ -461,6 +523,7 @@
     function showBroadcastOverlay(msg) {
         document.getElementById('broadcastMsgText').innerText = msg;
         document.getElementById('broadcastOverlay').style.display = 'flex';
+        // محاولة تشغيل الصوت (سيعمل إذا كان قد تم تفعيله في البداية)
         if (soundActive) document.getElementById('broadcastSound').play().catch(e => {});
         if (Notification.permission === "granted") new Notification("📢 تنبيه إداري عاجل", { body: msg, requireInteraction: true });
     }
@@ -527,7 +590,16 @@
     function setupPresence(un) { const s = db.ref("users/" + un + "/state"); db.ref(".info/connected").on("value", snap => { if (snap.val()) s.onDisconnect().set("offline").then(() => s.set("online")); }); }
     function logout() { if(currentUser && currentUser.role !== 'admin') db.ref("users/"+currentUser.username+"/state").set("offline"); localStorage.removeItem('break_sys_user'); location.reload(); }
     function showAdmin() { document.getElementById('loginSection').classList.add('hidden'); document.getElementById('adminSection').classList.remove('hidden'); document.getElementById('currentManagerDisplay').innerText = `المشرف: ${currentUser.realName || currentUser.username}`; switchAdminTab('monitor'); startGlobalTimer(); }
-    function showEmployee() { document.getElementById('loginSection').classList.add('hidden'); document.getElementById('employeeSection').classList.remove('hidden'); document.getElementById('welcomeMsg').innerText = `أهلاً، ${currentUser.realName || currentUser.username}`; startGlobalTimer(); }
+    
+    function showEmployee() { 
+        document.getElementById('loginSection').classList.add('hidden'); 
+        document.getElementById('employeeSection').classList.remove('hidden'); 
+        document.getElementById('welcomeMsg').innerText = `أهلاً، ${currentUser.realName || currentUser.username}`; 
+        
+        // إظهار شاشة التفعيل الإجباري بدلاً من البدء مباشرة
+        document.getElementById('forceSoundOverlay').style.display = 'flex';
+    }
+    
     function switchAdminTab(t) { ['tab-monitor','tab-reports','tab-users','tab-overtime','tab-emergency'].forEach(id => document.getElementById(id).classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); if(t==='reports') updateReportSelect(); }
     
     function startGlobalTimer() { 
