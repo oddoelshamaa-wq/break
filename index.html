@@ -464,33 +464,24 @@
 
     // وظيفة تفعيل الصوت الإجبارية
     function activateSystemAndSound() {
-        // تشغيل جميع الأصوات بشكل صامت لكسر حظر المتصفح
         const audios = ['alarmSound', 'notifySound', 'requestRing', 'broadcastSound'];
         audios.forEach(id => {
             const s = document.getElementById(id);
-            s.volume = 0; // صامت لحظيا
+            s.volume = 0; 
             s.play().then(() => {
                 s.pause();
                 s.currentTime = 0;
-                s.volume = 1; // إعادة الصوت
+                s.volume = 1;
             }).catch(e => console.log("Audio block", e));
         });
 
         soundActive = true;
-        
-        // طلب الإذن
         if ("Notification" in window) {
             Notification.requestPermission();
         }
-
-        // إخفاء شاشة الإجبار
         document.getElementById('forceSoundOverlay').style.display = 'none';
-        
-        // تحديث حالة الزر
         const btn = document.getElementById('notifBtn');
         if(btn) { btn.innerText = "🔊 الصوت مفعل"; btn.style.background = "#27ae60"; }
-
-        // بدء المؤقتات
         startGlobalTimer();
     }
 
@@ -525,7 +516,6 @@
     function showBroadcastOverlay(msg) {
         document.getElementById('broadcastMsgText').innerText = msg;
         document.getElementById('broadcastOverlay').style.display = 'flex';
-        // محاولة تشغيل الصوت (سيعمل إذا كان قد تم تفعيله في البداية)
         if (soundActive) document.getElementById('broadcastSound').play().catch(e => {});
         if (Notification.permission === "granted") new Notification("📢 تنبيه إداري عاجل", { body: msg, requireInteraction: true });
     }
@@ -561,10 +551,11 @@
                 renderAdminEmRequests(); 
                 renderAdminOtRequests(); 
                 renderUserManagementTable(); 
+                // تحديث التقارير حياً عند أي تغيير في قاعدة البيانات
                 if(!document.getElementById('tab-reports').classList.contains('hidden')) renderUserReport(); 
                 if(currentUser.username === 'mahmoud') {
                     document.getElementById('masterDeleteBtn').classList.remove('hidden');
-                    document.getElementById('rangeDeleteBtn').classList.remove('hidden'); // إظهار الزر الجديد لمحمود
+                    document.getElementById('rangeDeleteBtn').classList.remove('hidden');
                 }
             }
             else { updateUserUI(); updateEmStatus(); updateOtStatus(); checkBreakLimit(); }
@@ -607,8 +598,6 @@
         document.getElementById('loginSection').classList.add('hidden'); 
         document.getElementById('employeeSection').classList.remove('hidden'); 
         document.getElementById('welcomeMsg').innerText = `أهلاً، ${currentUser.realName || currentUser.username}`; 
-        
-        // إظهار شاشة التفعيل الإجباري بدلاً من البدء مباشرة
         document.getElementById('forceSoundOverlay').style.display = 'flex';
     }
     
@@ -729,9 +718,10 @@
 
     window.deleteSession = (un, sessionKey) => {
         if(!confirm("هل أنت متأكد من حذف هذا السجل نهائياً؟")) return;
+        // عند الحذف من الداتابيز، سيقوم مستمع (db.ref('users').on) بالتحديث عند كل المشرفين فوراً
         db.ref(`users/${un}/sessions/${sessionKey}`).remove().then(() => {
             alert("تم الحذف بنجاح");
-            renderUserReport();
+            renderUserReport(); 
         });
     };
 
@@ -746,7 +736,7 @@
         const up = { isOnBreak: false, lastStartTime: null }; 
         if(u.breakType==='بريك عام' || u.breakType==='طوارئ') {
             up.usedSeconds = (u.usedSeconds||0)+d;
-            if(u.breakType==='طوارئ') up.emRequest = null; // حذف الطلب لكي يحتاج طلب جديد عند التكرار
+            if(u.breakType==='طوارئ') up.emRequest = null;
         } else if(u.breakType==='صلاة') up.prayerSeconds = (u.prayerSeconds||0)+d; 
         else if(u.breakType==='ميتنج') up.meetingSeconds = (u.meetingSeconds||0)+d; 
         else if(u.breakType==='متابع عميل') up.followUpSeconds = (u.followUpSeconds||0)+d; 
@@ -777,7 +767,7 @@
         const up = { isOnBreak: false, lastStartTime: null }; 
         if(u.breakType==='بريك عام' || u.breakType==='طوارئ') {
             up.usedSeconds = (u.usedSeconds||0)+d;
-            if(u.breakType === 'طوارئ') up.emRequest = null; // تصفير الطلب لكي يطلب من جديد المرة القادمة
+            if(u.breakType === 'طوارئ') up.emRequest = null;
         } else if(u.breakType==='صلاة') up.prayerSeconds = (u.prayerSeconds||0)+d; 
         else if(u.breakType==='ميتنج') up.meetingSeconds = (u.meetingSeconds||0)+d; 
         else if(u.breakType==='متابع عميل') up.followUpSeconds = (u.followUpSeconds||0)+d; 
@@ -823,7 +813,6 @@
     function requestNotificationPermission() { if (!("Notification" in window)) return alert("لا يدعم"); Notification.requestPermission().then(p => { if (p === "granted") alert("تم ✅"); enableSound(); }); }
     function deleteAllReports() { if(confirm("حذف الأرشيف نهائياً؟")) { Object.keys(allUsersData).forEach(u => { db.ref(`users/${u}/sessions`).remove(); db.ref(`users/${u}/overtimeHistory`).remove(); }); alert("تم الحذف"); triggerGlobalRefresh(); } }
     
-    // الوظيفة الجديدة لحذف السجلات بناءً على التاريخ والموظف المحدد
     function deleteReportsInRange() {
         const un = document.getElementById('reportUserSelect').value;
         const start = document.getElementById('filterStartDate').value;
@@ -849,7 +838,6 @@
             if (u.sessions) {
                 Object.keys(u.sessions).forEach(key => {
                     const session = u.sessions[key];
-                    // تحويل التاريخ من DD/MM/YYYY إلى YYYY-MM-DD للمقارنة
                     const parts = session.date.split('/'); 
                     const isoDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
                     
