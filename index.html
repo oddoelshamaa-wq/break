@@ -289,6 +289,8 @@
                 </div>
                 <button onclick="renderUserReport()" class="btn btn-primary" style="width:100%; margin-top: 10px;">🔍 استخراج التقرير المفلتر</button>
                 
+                <button id="rangeDeleteBtn" onclick="deleteReportsInRange()" class="btn btn-warning hidden" style="width:100%; margin-top: 10px; background:#e17055; font-size: 1rem;">🗑 حذف سجلات الفترة المحددة (محمود فقط)</button>
+                
                 <button id="masterDeleteBtn" onclick="deleteAllReports()" class="btn btn-danger hidden" style="width:100%; margin-top: 10px; background:#d63031; font-size: 1rem;">⚠️ حذف أرشيف جميع الموظفين نهائياً (محمود فقط)</button>
             </div>
 
@@ -554,7 +556,17 @@
         if (currentUser) {
             const updatedMe = allUsersData[currentUser.username];
             if(updatedMe) { const r = currentUser.role; currentUser = updatedMe; currentUser.role = r; }
-            if (currentUser.role === 'admin') { renderMonitorTable(); renderAdminEmRequests(); renderAdminOtRequests(); renderUserManagementTable(); if(!document.getElementById('tab-reports').classList.contains('hidden')) renderUserReport(); if(currentUser.username === 'mahmoud') document.getElementById('masterDeleteBtn').classList.remove('hidden'); }
+            if (currentUser.role === 'admin') { 
+                renderMonitorTable(); 
+                renderAdminEmRequests(); 
+                renderAdminOtRequests(); 
+                renderUserManagementTable(); 
+                if(!document.getElementById('tab-reports').classList.contains('hidden')) renderUserReport(); 
+                if(currentUser.username === 'mahmoud') {
+                    document.getElementById('masterDeleteBtn').classList.remove('hidden');
+                    document.getElementById('rangeDeleteBtn').classList.remove('hidden'); // إظهار الزر الجديد لمحمود
+                }
+            }
             else { updateUserUI(); updateEmStatus(); updateOtStatus(); checkBreakLimit(); }
         }
     });
@@ -810,6 +822,59 @@
     function endDay() { if(confirm("إقفال اليوم للجميع؟")) { Object.keys(allUsersData).forEach(un => { if(!MANAGERS.includes(un)) db.ref('users/'+un).update({ usedSeconds: 0, prayerSeconds: 0, meetingSeconds: 0, followUpSeconds: 0, vipSeconds: 0, isOnBreak: false, lastStartTime: null, otRequest: null, emRequest: null }); }); triggerGlobalRefresh(); } }
     function requestNotificationPermission() { if (!("Notification" in window)) return alert("لا يدعم"); Notification.requestPermission().then(p => { if (p === "granted") alert("تم ✅"); enableSound(); }); }
     function deleteAllReports() { if(confirm("حذف الأرشيف نهائياً؟")) { Object.keys(allUsersData).forEach(u => { db.ref(`users/${u}/sessions`).remove(); db.ref(`users/${u}/overtimeHistory`).remove(); }); alert("تم الحذف"); triggerGlobalRefresh(); } }
+    
+    // الوظيفة الجديدة لحذف السجلات بناءً على التاريخ والموظف المحدد
+    function deleteReportsInRange() {
+        const un = document.getElementById('reportUserSelect').value;
+        const start = document.getElementById('filterStartDate').value;
+        const end = document.getElementById('filterEndDate').value;
+
+        if (!currentUser || currentUser.username !== 'mahmoud') return alert("عفواً، هذه الميزة للمدير العام (محمود) فقط.");
+        if (!start || !end) return alert("يجب تحديد تاريخ البداية والنهاية أولاً!");
+        
+        let msg = "هل أنت متأكد من حذف السجلات في هذه الفترة؟\n";
+        msg += `من: ${start}\nإلى: ${end}`;
+        if (un) {
+            msg += `\nللموظف: ${allUsersData[un].realName}`;
+        } else {
+            msg += `\n⚠️ تنبيه: لم يتم اختيار موظف، سيتم الحذف لجميع الموظفين في هذه الفترة!`;
+        }
+        
+        if (!confirm(msg)) return;
+
+        const targets = un ? [un] : Object.keys(allUsersData).filter(k => !MANAGERS.includes(k));
+
+        targets.forEach(userKey => {
+            const u = allUsersData[userKey];
+            if (u.sessions) {
+                Object.keys(u.sessions).forEach(key => {
+                    const session = u.sessions[key];
+                    // تحويل التاريخ من DD/MM/YYYY إلى YYYY-MM-DD للمقارنة
+                    const parts = session.date.split('/'); 
+                    const isoDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                    
+                    if (isoDate >= start && isoDate <= end) {
+                        db.ref(`users/${userKey}/sessions/${key}`).remove();
+                    }
+                });
+            }
+            if (u.overtimeHistory) {
+                Object.keys(u.overtimeHistory).forEach(key => {
+                    const ot = u.overtimeHistory[key];
+                    const parts = ot.date.split('/');
+                    const isoDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                    
+                    if (isoDate >= start && isoDate <= end) {
+                        db.ref(`users/${userKey}/overtimeHistory/${key}`).remove();
+                    }
+                });
+            }
+        });
+
+        alert("تمت عملية الحذف للفترة المحددة بنجاح ✅");
+        triggerGlobalRefresh();
+        if(un) renderUserReport(); 
+    }
 </script>
 </body>
 </html>
