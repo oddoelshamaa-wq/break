@@ -111,7 +111,6 @@
             100% { transform: scale(1); box-shadow: 0 0 20px #e74c3c; }
         }
 
-        /* ستايل شاشة التفعيل الإجباري للصوت */
         #forceSoundOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
@@ -157,7 +156,6 @@
 <audio id="requestRing" loop preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/1110/1110-preview.mp3" type="audio/mp3"></audio>
 <audio id="broadcastSound" loop preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" type="audio/mp3"></audio>
 
-<!-- شاشة التفعيل الإجباري للصوت -->
 <div id="forceSoundOverlay">
     <div class="force-sound-box">
         <div style="font-size: 4rem; margin-bottom: 10px;">🔊</div>
@@ -226,8 +224,9 @@
         <div class="nav-tabs">
             <button onclick="switchAdminTab('monitor')" class="btn btn-primary btn-sm">📡 المراقبة الحية</button>
             <button onclick="switchAdminTab('emergency')" class="btn btn-danger btn-sm">🚨 الطوارئ <span id="emBadge" class="badge-count hidden">0</span></button>
+            <button onclick="switchAdminTab('meetings')" class="btn btn-warning btn-sm">🤝 اجتماعات <span id="meetBadge" class="badge-count hidden">0</span></button>
             <button onclick="switchAdminTab('overtime')" class="btn btn-purple btn-sm">🕒 الإضافي <span id="otBadge" class="badge-count hidden">0</span></button>
-            <button onclick="switchAdminTab('reports')" class="btn btn-warning btn-sm">📊 التقارير</button>
+            <button onclick="switchAdminTab('reports')" class="btn btn-info btn-sm">📊 التقارير</button>
             <button onclick="switchAdminTab('users')" class="btn btn-success btn-sm">⚙️ إدارة الموظفين</button>
         </div>
 
@@ -264,6 +263,11 @@
         <div id="tab-emergency" class="hidden">
             <h3>🚨 طلبات الخروج اضطراري</h3>
             <div class="table-responsive"><table><thead><tr><th>الموظف</th><th>السبب</th><th>الوقت</th><th>القرار</th></tr></thead><tbody id="adminEmBody"></tbody></table></div>
+        </div>
+
+        <div id="tab-meetings" class="hidden">
+            <h3>🤝 طلبات الاجتماعات (Meeting)</h3>
+            <div class="table-responsive"><table><thead><tr><th>الموظف</th><th>السبب / التفاصيل</th><th>وقت الطلب</th><th>القرار</th></tr></thead><tbody id="adminMeetBody"></tbody></table></div>
         </div>
 
         <div id="tab-overtime" class="hidden">
@@ -353,7 +357,6 @@
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
             <div>
                 <h4 id="welcomeMsg" style="margin:0; font-size:1rem;"></h4>
-                <!-- الزر القديم سيختفي أو يتغير لونه تلقائيا -->
                 <button onclick="requestNotificationPermission()" id="notifBtn" class="btn btn-warning btn-sm" style="margin-top: 5px; opacity: 0.6; pointer-events: none;">🔊 الصوت مفعل تلقائياً</button>
                 <div class="server-clock-box" style="margin-top:5px; padding: 4px 12px; min-width: 140px; background: #fff; color: #2c3e50; border:1px solid #ddd;">
                     <span class="server-label" style="font-size:0.5rem;">توقيت النظام</span>
@@ -386,7 +389,7 @@
             </div>
 
             <div id="controlsArea" style="margin-top: 15px;">
-                <input type="text" id="breakReason" placeholder="اكتب سبب البريك..." style="text-align: center;">
+                <input type="text" id="breakReason" placeholder="اكتب سبب البريك / الميتنج / الطوارئ..." style="text-align: center;">
                 
                 <div id="vipControlArea" class="hidden" style="margin-bottom: 20px; padding: 15px; background: linear-gradient(45deg, #fff9e6, #fff); border: 2px solid #ffd700; border-radius: 15px; box-shadow: 0 4px 10px rgba(255, 215, 0, 0.2);">
                     <h4 style="color:#b8860b; margin-top:0;">🌟 منطقة VIP المتميزة</h4>
@@ -396,7 +399,7 @@
                 <div class="employee-controls" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
                     <div class="control-card" style="border:2px solid #27ae60; padding:10px; border-radius:15px;"><h4>🍔 بريك عام</h4><button onclick="startMyBreak('بريك عام')" class="btn btn-success" style="width:100%">بدء</button></div>
                     <div class="control-card" style="border:2px solid #2980b9; padding:10px; border-radius:15px;"><h4>🕌 صلاة</h4><button onclick="startMyBreak('صلاة')" class="btn btn-info" style="width:100%">بدء</button></div>
-                    <div class="control-card" style="border:2px solid #f39c12; padding:10px; border-radius:15px;"><h4>🤝 ميتنج</h4><button onclick="startMyBreak('ميتنج')" class="btn btn-warning" style="width:100%">بدء</button></div>
+                    <div class="control-card" style="border:2px solid #f39c12; padding:10px; border-radius:15px;"><h4>🤝 ميتنج</h4><div id="meetingStatusArea"><button onclick="sendMeetingRequest()" class="btn btn-warning" style="width:100%">طلب ميتنج</button></div></div>
                     <div id="followUpCard" class="control-card hidden" style="border:2px solid var(--followup-color); padding:10px; border-radius:15px;"><h4>📞 متابع عميل</h4><button onclick="startMyBreak('متابع عميل')" class="btn btn-followup" style="width:100%">بدء</button></div>
                     <div class="control-card" style="border:2px solid #c0392b; padding:10px; border-radius:15px;"><h4>🚨 خروج اضطراري</h4><div id="emStatusArea"><button onclick="sendEmRequest()" class="btn btn-dark btn-sm" style="width:100%">طلب خروج</button></div></div>
                 </div>
@@ -462,7 +465,6 @@
         setTimeout(() => toast.classList.remove('show'), 6000);
     }
 
-    // وظيفة تفعيل الصوت الإجبارية
     function activateSystemAndSound() {
         const audios = ['alarmSound', 'notifySound', 'requestRing', 'broadcastSound'];
         audios.forEach(id => {
@@ -529,6 +531,7 @@
         if(document.getElementById('maxPrayersInput')) document.getElementById('maxPrayersInput').value = maxPrayersAllowed;
     });
 
+    // المستمع الرئيسي - هنا يتم التحديث اللحظي لجميع المشرفين
     db.ref('users').on('value', (snap) => {
         const newData = snap.val() || {};
         if (currentUser && currentUser.role === 'admin' && isLoaded && soundActive) {
@@ -536,7 +539,9 @@
             Object.keys(newData).forEach(un => {
                 if (MANAGERS.includes(un)) return;
                 if (newData[un].isOnBreak && (!allUsersData[un] || !allUsersData[un].isOnBreak)) document.getElementById('notifySound').play().catch(e=>{});
-                if ((newData[un].otRequest && newData[un].otRequest.status === 'قيد الانتظار') || (newData[un].emRequest && newData[un].emRequest.status === 'قيد الانتظار')) pending = true;
+                if ((newData[un].otRequest && newData[un].otRequest.status === 'قيد الانتظار') || 
+                    (newData[un].emRequest && newData[un].emRequest.status === 'قيد الانتظار') ||
+                    (newData[un].meetingRequest && newData[un].meetingRequest.status === 'قيد الانتظار')) pending = true;
             });
             const ring = document.getElementById('requestRing');
             if (pending) { if (ring.paused) ring.play().catch(e=>{}); } else { ring.pause(); ring.currentTime = 0; }
@@ -548,17 +553,18 @@
             if(updatedMe) { const r = currentUser.role; currentUser = updatedMe; currentUser.role = r; }
             if (currentUser.role === 'admin') { 
                 renderMonitorTable(); 
-                renderAdminEmRequests(); 
+                renderAdminEmRequests();
+                renderAdminMeetingRequests(); 
                 renderAdminOtRequests(); 
                 renderUserManagementTable(); 
-                // تحديث التقارير حياً عند أي تغيير في قاعدة البيانات
+                // هذا السطر يضمن تحديث التقرير فوراً عند حذف محمود لأي سجل
                 if(!document.getElementById('tab-reports').classList.contains('hidden')) renderUserReport(); 
                 if(currentUser.username === 'mahmoud') {
                     document.getElementById('masterDeleteBtn').classList.remove('hidden');
                     document.getElementById('rangeDeleteBtn').classList.remove('hidden');
                 }
             }
-            else { updateUserUI(); updateEmStatus(); updateOtStatus(); checkBreakLimit(); }
+            else { updateUserUI(); updateEmStatus(); updateMeetingStatus(); updateOtStatus(); checkBreakLimit(); }
         }
     });
 
@@ -601,7 +607,7 @@
         document.getElementById('forceSoundOverlay').style.display = 'flex';
     }
     
-    function switchAdminTab(t) { ['tab-monitor','tab-reports','tab-users','tab-overtime','tab-emergency'].forEach(id => document.getElementById(id).classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); if(t==='reports') updateReportSelect(); }
+    function switchAdminTab(t) { ['tab-monitor','tab-reports','tab-users','tab-overtime','tab-emergency','tab-meetings'].forEach(id => document.getElementById(id).classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); if(t==='reports') updateReportSelect(); }
     
     function startGlobalTimer() { 
         if(timerInterval) clearInterval(timerInterval); 
@@ -716,11 +722,14 @@
         document.getElementById('monthTotalOvertime').innerText = tOt + " س";
     }
 
+    // دالة حذف الجلسة - تضمن التزامن مع الكل
     window.deleteSession = (un, sessionKey) => {
         if(!confirm("هل أنت متأكد من حذف هذا السجل نهائياً؟")) return;
-        // عند الحذف من الداتابيز، سيقوم مستمع (db.ref('users').on) بالتحديث عند كل المشرفين فوراً
+        // الحذف من قاعدة البيانات سيؤدي تلقائياً لتحديث شاشات جميع المشرفين عبر المستمع الرئيسي
         db.ref(`users/${un}/sessions/${sessionKey}`).remove().then(() => {
             alert("تم الحذف بنجاح");
+            // لا حاجة لاستدعاء renderUserReport هنا يدوياً لأن المستمع الرئيسي سيقوم بذلك
+            // لكن يمكن تركها لتحسين سرعة الاستجابة للمستخدم الحالي
             renderUserReport(); 
         });
     };
@@ -738,7 +747,7 @@
             up.usedSeconds = (u.usedSeconds||0)+d;
             if(u.breakType==='طوارئ') up.emRequest = null;
         } else if(u.breakType==='صلاة') up.prayerSeconds = (u.prayerSeconds||0)+d; 
-        else if(u.breakType==='ميتنج') up.meetingSeconds = (u.meetingSeconds||0)+d; 
+        else if(u.breakType==='ميتنج') { up.meetingSeconds = (u.meetingSeconds||0)+d; up.meetingRequest = null; }
         else if(u.breakType==='متابع عميل') up.followUpSeconds = (u.followUpSeconds||0)+d; 
         else if(u.breakType==='استراحة VIP') up.vipSeconds = (u.vipSeconds||0)+d;
         db.ref('users/'+un).update(up).then(() => triggerGlobalRefresh()); 
@@ -756,7 +765,9 @@
         }
 
         let r = document.getElementById('breakReason').value.trim(); 
-        if(t === 'طوارئ' && currentUser.emRequest) r = currentUser.emRequest.reason; 
+        if(t === 'طوارئ' && currentUser.emRequest) r = currentUser.emRequest.reason;
+        if(t === 'ميتنج' && currentUser.meetingRequest) r = currentUser.meetingRequest.reason; 
+
         if((t==='بريك عام' || t==='طوارئ' || t==='ميتنج' || t==='متابع عميل') && !r) return alert("برجاء كتابة السبب أولاً!"); 
         db.ref('users/'+currentUser.username).update({ isOnBreak: true, breakType: t, lastStartTime: getServerTime(), lastReason: r || t }); 
     }
@@ -769,7 +780,7 @@
             up.usedSeconds = (u.usedSeconds||0)+d;
             if(u.breakType === 'طوارئ') up.emRequest = null;
         } else if(u.breakType==='صلاة') up.prayerSeconds = (u.prayerSeconds||0)+d; 
-        else if(u.breakType==='ميتنج') up.meetingSeconds = (u.meetingSeconds||0)+d; 
+        else if(u.breakType==='ميتنج') { up.meetingSeconds = (u.meetingSeconds||0)+d; up.meetingRequest = null; }
         else if(u.breakType==='متابع عميل') up.followUpSeconds = (u.followUpSeconds||0)+d; 
         else if(u.breakType==='استراحة VIP') up.vipSeconds = (u.vipSeconds||0)+d;
         
@@ -801,15 +812,23 @@
     function saveAdminTyping(u, v) { adminTypingBuffer[u] = v; }
     function saveAdminSelect(u, v) { adminSelectBuffer[u] = v; }
     function updateReportSelect() { const sel = document.getElementById('reportUserSelect'); sel.innerHTML = '<option value="">-- اختر موظف --</option>'; Object.values(allUsersData).forEach(u => { if(u.username && !MANAGERS.includes(u.username)) sel.innerHTML += `<option value="${u.username}">${u.realName || u.username}</option>`; }); }
+    
     function sendEmRequest() { const r = document.getElementById('breakReason').value.trim(); if(!r) return alert("اكتب السبب"); db.ref('users/'+currentUser.username+'/emRequest').set({ reason: r, status: 'قيد الانتظار', timestamp: getServerTime() }); }
     function updateEmStatus() { const el = document.getElementById('emStatusArea'); if(!currentUser.emRequest) return el.innerHTML = `<button onclick="sendEmRequest()" class="btn btn-dark btn-sm" style="width:100%">طلب خروج</button>`; if(currentUser.emRequest.status === 'قيد الانتظار') el.innerHTML = `<span style="color:orange; font-size:0.8rem;">⏳ انتظار...</span>`; else if(currentUser.emRequest.status === 'تم القبول') el.innerHTML = `<button onclick="startMyBreak('طوارئ')" class="btn btn-danger btn-sm" style="width:100%">ابدأ</button>`; else el.innerHTML = `<span style="color:red; font-size:0.7rem;">✖ رُفض</span>`; }
     function renderAdminEmRequests() { const tb = document.getElementById('adminEmBody'); tb.innerHTML = ''; let count = 0; Object.values(allUsersData).forEach(u => { if(u.emRequest && u.emRequest.status === 'قيد الانتظار') { count++; tb.innerHTML += `<tr><td>${u.realName || u.username}</td><td>${u.emRequest.reason}</td><td>${new Date(u.emRequest.timestamp).toLocaleTimeString()}</td><td><button onclick="handleEm('${u.username}', true)" class="btn btn-success btn-sm">✔</button><button onclick="handleEm('${u.username}', false)" class="btn btn-danger btn-sm">✖</button></td></tr>`; } }); document.getElementById('emBadge').innerText = count; count > 0 ? document.getElementById('emBadge').classList.remove('hidden') : document.getElementById('emBadge').classList.add('hidden'); }
     window.handleEm = (un, app) => { db.ref(`users/${un}/emRequest`).update({ status: app ? 'تم القبول' : 'رُفض' }).then(() => triggerGlobalRefresh()); }
+    
+    // Meeting Requests Logic
+    function sendMeetingRequest() { const r = document.getElementById('breakReason').value.trim(); if(!r) return alert("اكتب سبب الاجتماع"); db.ref('users/'+currentUser.username+'/meetingRequest').set({ reason: r, status: 'قيد الانتظار', timestamp: getServerTime() }); }
+    function updateMeetingStatus() { const el = document.getElementById('meetingStatusArea'); if(!currentUser.meetingRequest) return el.innerHTML = `<button onclick="sendMeetingRequest()" class="btn btn-warning" style="width:100%">طلب ميتنج</button>`; if(currentUser.meetingRequest.status === 'قيد الانتظار') el.innerHTML = `<span style="color:orange; font-size:0.8rem;">⏳ انتظار...</span>`; else if(currentUser.meetingRequest.status === 'تم القبول') el.innerHTML = `<button onclick="startMyBreak('ميتنج')" class="btn btn-success btn-sm" style="width:100%">ابدأ</button>`; else el.innerHTML = `<span style="color:red; font-size:0.7rem;">✖ رُفض</span>`; }
+    function renderAdminMeetingRequests() { const tb = document.getElementById('adminMeetBody'); tb.innerHTML = ''; let count = 0; Object.values(allUsersData).forEach(u => { if(u.meetingRequest && u.meetingRequest.status === 'قيد الانتظار') { count++; tb.innerHTML += `<tr><td>${u.realName || u.username}</td><td>${u.meetingRequest.reason}</td><td>${new Date(u.meetingRequest.timestamp).toLocaleTimeString()}</td><td><button onclick="handleMeeting('${u.username}', true)" class="btn btn-success btn-sm">✔</button><button onclick="handleMeeting('${u.username}', false)" class="btn btn-danger btn-sm">✖</button></td></tr>`; } }); document.getElementById('meetBadge').innerText = count; count > 0 ? document.getElementById('meetBadge').classList.remove('hidden') : document.getElementById('meetBadge').classList.add('hidden'); }
+    window.handleMeeting = (un, app) => { db.ref(`users/${un}/meetingRequest`).update({ status: app ? 'تم القبول' : 'رُفض' }).then(() => triggerGlobalRefresh()); }
+
     function sendOtRequest() { const h = document.getElementById('otHoursInput').value; if(!h) return; db.ref('users/'+currentUser.username+'/otRequest').set({ hours: h, status: 'قيد الانتظار', timestamp: getServerTime() }); }
     function updateOtStatus() { const el = document.getElementById('otStatusDisplay'); if(!currentUser.otRequest) return; el.innerText = currentUser.otRequest.status === 'قيد الانتظار' ? "⏳ طلب الإضافي قيد الانتظار" : currentUser.otRequest.status === 'تم القبول' ? "✅ تم قبول الإضافي" : "❌ تم الرفض"; }
     function renderAdminOtRequests() { const tb = document.getElementById('adminOtBody'); tb.innerHTML = ''; let count = 0; Object.values(allUsersData).forEach(u => { if(u.otRequest && u.otRequest.status === 'قيد الانتظار') { count++; tb.innerHTML += `<tr><td>${u.realName || u.username}</td><td>${u.otRequest.hours}س</td><td>${new Date(u.otRequest.timestamp).toLocaleTimeString()}</td><td><button onclick="handleOt('${u.username}', true)" class="btn btn-success btn-sm">✔</button><button onclick="handleOt('${u.username}', false)" class="btn btn-danger btn-sm">✖</button></td></tr>`; } }); document.getElementById('otBadge').innerText = count; count > 0 ? document.getElementById('otBadge').classList.remove('hidden') : document.getElementById('otBadge').classList.add('hidden'); }
     window.handleOt = (un, app) => { if(app) db.ref(`users/${un}/overtimeHistory/${getServerTime()}`).set({ date: getServerDateString(), hours: allUsersData[un].otRequest.hours, approvedBy: currentUser.username }); db.ref(`users/${un}/otRequest`).update({ status: app ? 'تم القبول' : 'رُفض' }).then(() => triggerGlobalRefresh()); }
-    function endDay() { if(confirm("إقفال اليوم للجميع؟")) { Object.keys(allUsersData).forEach(un => { if(!MANAGERS.includes(un)) db.ref('users/'+un).update({ usedSeconds: 0, prayerSeconds: 0, meetingSeconds: 0, followUpSeconds: 0, vipSeconds: 0, isOnBreak: false, lastStartTime: null, otRequest: null, emRequest: null }); }); triggerGlobalRefresh(); } }
+    function endDay() { if(confirm("إقفال اليوم للجميع؟")) { Object.keys(allUsersData).forEach(un => { if(!MANAGERS.includes(un)) db.ref('users/'+un).update({ usedSeconds: 0, prayerSeconds: 0, meetingSeconds: 0, followUpSeconds: 0, vipSeconds: 0, isOnBreak: false, lastStartTime: null, otRequest: null, emRequest: null, meetingRequest: null }); }); triggerGlobalRefresh(); } }
     function requestNotificationPermission() { if (!("Notification" in window)) return alert("لا يدعم"); Notification.requestPermission().then(p => { if (p === "granted") alert("تم ✅"); enableSound(); }); }
     function deleteAllReports() { if(confirm("حذف الأرشيف نهائياً؟")) { Object.keys(allUsersData).forEach(u => { db.ref(`users/${u}/sessions`).remove(); db.ref(`users/${u}/overtimeHistory`).remove(); }); alert("تم الحذف"); triggerGlobalRefresh(); } }
     
@@ -860,8 +879,8 @@
         });
 
         alert("تمت عملية الحذف للفترة المحددة بنجاح ✅");
+        // triggerGlobalRefresh() يجبر الموظفين على عمل ريلود، بينما المشرفون يحدث عندهم التقرير تلقائياً عبر المستمع
         triggerGlobalRefresh();
-        if(un) renderUserReport(); 
     }
 </script>
 </body>
