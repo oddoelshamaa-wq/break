@@ -448,7 +448,6 @@
 
     const MANAGERS = ['mahmoud', 'abutamim', 'ahmed', 'admin'];
 
-    // دالة لتحديد نوع الجهاز
     function getDeviceType() {
         const ua = navigator.userAgent;
         if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
@@ -480,6 +479,9 @@
     }
 
     function activateSystemAndSound() {
+        // حفظ أن المستخدم قام بالتفعيل في هذه الجلسة
+        sessionStorage.setItem('systemActive', 'true');
+
         const audios = ['alarmSound', 'notifySound', 'requestRing', 'broadcastSound'];
         audios.forEach(id => {
             const s = document.getElementById(id);
@@ -634,14 +636,32 @@
         }); 
     }
 
-    function logout() { if(currentUser && currentUser.role !== 'admin') db.ref("users/"+currentUser.username+"/state").set("offline"); localStorage.removeItem('break_sys_user'); location.reload(); }
+    function logout() { 
+        if(currentUser && currentUser.role !== 'admin') db.ref("users/"+currentUser.username+"/state").set("offline"); 
+        
+        localStorage.removeItem('break_sys_user'); 
+        sessionStorage.removeItem('systemActive'); // مسح حالة التفعيل عند الخروج
+        
+        location.reload(); 
+    }
+
     function showAdmin() { document.getElementById('loginSection').classList.add('hidden'); document.getElementById('adminSection').classList.remove('hidden'); document.getElementById('currentManagerDisplay').innerText = `المشرف: ${currentUser.realName || currentUser.username}`; switchAdminTab('monitor'); startGlobalTimer(); }
     
     function showEmployee() { 
         document.getElementById('loginSection').classList.add('hidden'); 
         document.getElementById('employeeSection').classList.remove('hidden'); 
         document.getElementById('welcomeMsg').innerText = `أهلاً، ${currentUser.realName || currentUser.username}`; 
-        document.getElementById('forceSoundOverlay').style.display = 'flex';
+        
+        // التحقق مما إذا كان قد تم التفعيل سابقاً في هذه الجلسة
+        if (sessionStorage.getItem('systemActive') === 'true') {
+             document.getElementById('forceSoundOverlay').style.display = 'none';
+             soundActive = true;
+             startGlobalTimer();
+             const btn = document.getElementById('notifBtn');
+             if(btn) { btn.innerText = "🔊 الصوت مفعل"; btn.style.background = "#27ae60"; }
+        } else {
+             document.getElementById('forceSoundOverlay').style.display = 'flex';
+        }
     }
     
     function switchAdminTab(t) { ['tab-monitor','tab-reports','tab-users','tab-overtime','tab-emergency','tab-meetings'].forEach(id => document.getElementById(id).classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); if(t==='reports') updateReportSelect(); }
@@ -702,9 +722,8 @@
             const rem = ((u.allowance||45)*60) - lg;
             const online = `<span class="online-dot ${u.state === 'online' ? 'dot-green' : 'dot-grey'}"></span>`;
             
-            // تحديد أيقونة الجهاز
             const deviceType = u.device || 'desktop';
-            let deviceIcon = '💻'; // افتراضي لابتوب
+            let deviceIcon = '💻'; 
             if (deviceType === 'mobile') deviceIcon = '📱';
             if (deviceType === 'tablet') deviceIcon = '📲';
 
@@ -722,7 +741,6 @@
             </tr>`;
         });
 
-        // تحديث العدادات بألوان توضيحية
         const breakColor = actB >= maxBreaksAllowed ? 'red' : 'green';
         const prayerColor = actP >= maxPrayersAllowed ? 'red' : 'green';
         
