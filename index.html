@@ -142,6 +142,8 @@
         .log-body { max-height: 200px; overflow-y: auto; padding: 10px; }
         .log-item { padding: 8px; border-bottom: 1px solid #f9f9f9; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; }
         .log-time { color: #999; font-size: 0.7rem; }
+        
+        .device-icon { font-size: 1.1rem; margin-right: 5px; }
     </style>
 </head>
 <body>
@@ -248,13 +250,13 @@
                 <button onclick="endDay()" class="btn btn-danger btn-sm" style="flex-shrink: 0;">🛑 إقفال اليوم</button>
             </div>
             
-            <div id="statusCountersDisplay" style="text-align:center; font-weight:bold; margin-bottom:15px; font-size:1.1rem; color:#2c3e50; background: #f1f2f6; padding: 10px; border-radius: 10px;">
-                البريك: (0/3) | الصلاة: (0/2)
+            <div id="statusCountersDisplay" style="text-align:center; font-weight:bold; margin-bottom:15px; font-size:1.3rem; color:#2c3e50; background: #f1f2f6; padding: 15px; border-radius: 10px; border:2px solid #ddd;">
+                جاري التحميل...
             </div>
             
             <div class="table-responsive">
                 <table id="monitorTable">
-                    <thead><tr><th>الموظف</th><th>الحالة والسبب</th><th>البريك (متبقي)</th><th>صلاة / متبع</th><th>ميتنج / VIP</th><th>تحكم المشرف</th></tr></thead>
+                    <thead><tr><th>الموظف والجهاز</th><th>الحالة والسبب</th><th>البريك (متبقي)</th><th>صلاة / متبع</th><th>ميتنج / VIP</th><th>تحكم المشرف</th></tr></thead>
                     <tbody id="monitorBody"></tbody>
                 </table>
             </div>
@@ -446,6 +448,18 @@
 
     const MANAGERS = ['mahmoud', 'abutamim', 'ahmed', 'admin'];
 
+    // دالة لتحديد نوع الجهاز
+    function getDeviceType() {
+        const ua = navigator.userAgent;
+        if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+            return "tablet";
+        }
+        if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) {
+            return "mobile";
+        }
+        return "desktop";
+    }
+
     const localLoadTime = Date.now();
     db.ref('refreshSignal').on('value', (snap) => {
         const signalTime = snap.val();
@@ -531,7 +545,6 @@
         if(document.getElementById('maxPrayersInput')) document.getElementById('maxPrayersInput').value = maxPrayersAllowed;
     });
 
-    // المستمع الرئيسي - هنا يتم التحديث اللحظي لجميع المشرفين
     db.ref('users').on('value', (snap) => {
         const newData = snap.val() || {};
         if (currentUser && currentUser.role === 'admin' && isLoaded && soundActive) {
@@ -557,7 +570,6 @@
                 renderAdminMeetingRequests(); 
                 renderAdminOtRequests(); 
                 renderUserManagementTable(); 
-                // هذا السطر يضمن تحديث التقرير فوراً عند حذف محمود لأي سجل
                 if(!document.getElementById('tab-reports').classList.contains('hidden')) renderUserReport(); 
                 if(currentUser.username === 'mahmoud') {
                     document.getElementById('masterDeleteBtn').classList.remove('hidden');
@@ -595,8 +607,33 @@
     }
 
     function checkSavedSession() { const s = localStorage.getItem('break_sys_user'); if (s && allUsersData[s]) { currentUser = allUsersData[s]; currentUser.role = MANAGERS.includes(s) ? 'admin' : 'employee'; if (currentUser.role === 'admin') showAdmin(); else { setupPresence(s); showEmployee(); } } }
-    function attemptLogin() { const u = document.getElementById('loginUser').value.trim().toLowerCase(), p = document.getElementById('loginPass').value.trim(); if (allUsersData[u] && allUsersData[u].password === p) { currentUser = allUsersData[u]; currentUser.role = MANAGERS.includes(u) ? 'admin' : 'employee'; localStorage.setItem('break_sys_user', u); if (currentUser.role === 'admin') showAdmin(); else { setupPresence(u); showEmployee(); } } else alert('خطأ'); }
-    function setupPresence(un) { const s = db.ref("users/" + un + "/state"); db.ref(".info/connected").on("value", snap => { if (snap.val()) s.onDisconnect().set("offline").then(() => s.set("online")); }); }
+    
+    function attemptLogin() { 
+        const u = document.getElementById('loginUser').value.trim().toLowerCase(), p = document.getElementById('loginPass').value.trim(); 
+        if (allUsersData[u] && allUsersData[u].password === p) { 
+            currentUser = allUsersData[u]; 
+            currentUser.role = MANAGERS.includes(u) ? 'admin' : 'employee'; 
+            localStorage.setItem('break_sys_user', u); 
+            if (currentUser.role === 'admin') showAdmin(); 
+            else { setupPresence(u); showEmployee(); } 
+        } else alert('خطأ'); 
+    }
+
+    function setupPresence(un) { 
+        const s = db.ref("users/" + un + "/state");
+        const deviceRef = db.ref("users/" + un + "/device");
+        
+        db.ref(".info/connected").on("value", snap => { 
+            if (snap.val()) {
+                s.onDisconnect().set("offline").then(() => {
+                    s.set("online");
+                    // حفظ نوع الجهاز عند الدخول
+                    deviceRef.set(getDeviceType());
+                }); 
+            }
+        }); 
+    }
+
     function logout() { if(currentUser && currentUser.role !== 'admin') db.ref("users/"+currentUser.username+"/state").set("offline"); localStorage.removeItem('break_sys_user'); location.reload(); }
     function showAdmin() { document.getElementById('loginSection').classList.add('hidden'); document.getElementById('adminSection').classList.remove('hidden'); document.getElementById('currentManagerDisplay').innerText = `المشرف: ${currentUser.realName || currentUser.username}`; switchAdminTab('monitor'); startGlobalTimer(); }
     
@@ -653,6 +690,7 @@
     function renderMonitorTable() {
         const tbody = document.getElementById('monitorBody'), search = document.getElementById('monitorSearch').value.toLowerCase();
         tbody.innerHTML = ''; let actB = 0, actP = 0;
+        
         Object.values(allUsersData).forEach(u => {
             if (!u || !u.username || MANAGERS.includes(u.username) || (search && !(u.realName || u.username).toLowerCase().includes(search))) return;
             let lg = u.usedSeconds||0, lp = u.prayerSeconds||0, lm = u.meetingSeconds||0, lf = u.followUpSeconds||0, lv = u.vipSeconds||0;
@@ -661,12 +699,38 @@
                 if (u.breakType === 'بريك عام' || u.breakType === 'طوارئ') { lg += elap; actB++; } 
                 else if (u.breakType === 'صلاة') { lp += elap; actP++; } else if (u.breakType === 'ميتنج') lm += elap; else if (u.breakType === 'متابع عميل') lf += elap; else if (u.breakType === 'استراحة VIP') lv += elap;
             }
-            const rem = ((u.allowance||45)*60) - lg, online = `<span class="online-dot ${u.state === 'online' ? 'dot-green' : 'dot-grey'}"></span>`, savedS = adminSelectBuffer[u.username] || 'بريك عام';
+            const rem = ((u.allowance||45)*60) - lg;
+            const online = `<span class="online-dot ${u.state === 'online' ? 'dot-green' : 'dot-grey'}"></span>`;
+            
+            // تحديد أيقونة الجهاز
+            const deviceType = u.device || 'desktop';
+            let deviceIcon = '💻'; // افتراضي لابتوب
+            if (deviceType === 'mobile') deviceIcon = '📱';
+            if (deviceType === 'tablet') deviceIcon = '📲';
+
+            const savedS = adminSelectBuffer[u.username] || 'بريك عام';
             const statusCell = u.isOnBreak ? `<span style="color:#c0392b; font-weight:bold;">${u.breakType}</span><br><small style="color:#555;">السبب: ${u.lastReason || '---'}</small>` : '<span style="color:#27ae60; font-weight:bold;">متاح ✅</span>';
             const ctrl = u.isOnBreak ? `<button onclick="adminStop('${u.username}')" class="btn btn-danger btn-sm" style="width:100%">🛑 إيقاف</button>` : `<div class="admin-table-ctrl"><div class="admin-row-top"><select id="sel_${u.username}" onchange="saveAdminSelect('${u.username}', this.value)"><option value="بريك عام" ${savedS=='بريك عام'?'selected':''}>بريك</option><option value="صلاة" ${savedS=='صلاة'?'selected':''}>صلاة</option><option value="ميتنج" ${savedS=='ميتنج'?'selected':''}>ميتنج</option><option value="متابع عميل" ${savedS=='متابع عميل'?'selected':''}>متابع</option><option value="استراحة VIP" ${savedS=='استراحة VIP'?'selected':''}>VIP</option></select><button onclick="adminStart('${u.username}')" class="btn btn-success btn-sm">▶</button></div><input type="text" id="inp_${u.username}" placeholder="السبب..." oninput="saveAdminTyping('${u.username}', this.value)"></div>`;
-            tbody.innerHTML += `<tr class="${u.isOnBreak && u.breakType==='بريك عام' && rem < 300 && rem > 0?'صف-تحذير':''}"><td>${u.realName || u.username} ${online}</td><td>${statusCell}</td><td><span id="rem_${u.username}">${rem>=0?formatTime(rem):'<span style="color:red; font-weight:bold;">-'+formatTime(Math.abs(rem))+'</span>'}</span></td><td><span id="pray_${u.username}">${formatTime(lp)}</span><br><small>متبع: <span id="follow_${u.username}">${formatTime(lf)}</span></small></td><td><span id="meet_${u.username}">${formatTime(lm)}</span><br><small>VIP: <span id="vip_${u.username}">${formatTime(lv)}</span></small></td><td>${ctrl}</td></tr>`;
+            
+            tbody.innerHTML += `<tr class="${u.isOnBreak && u.breakType==='بريك عام' && rem < 300 && rem > 0?'صف-تحذير':''}">
+                <td style="font-weight:bold;">${u.realName || u.username} ${online} <span class="device-icon" title="${deviceType}">${deviceIcon}</span></td>
+                <td>${statusCell}</td>
+                <td><span id="rem_${u.username}">${rem>=0?formatTime(rem):'<span style="color:red; font-weight:bold;">-'+formatTime(Math.abs(rem))+'</span>'}</span></td>
+                <td><span id="pray_${u.username}">${formatTime(lp)}</span><br><small>متبع: <span id="follow_${u.username}">${formatTime(lf)}</span></small></td>
+                <td><span id="meet_${u.username}">${formatTime(lm)}</span><br><small>VIP: <span id="vip_${u.username}">${formatTime(lv)}</span></small></td>
+                <td>${ctrl}</td>
+            </tr>`;
         });
-        document.getElementById('statusCountersDisplay').innerText = `البريك: (${actB}/${maxBreaksAllowed}) | الصلاة: (${actP}/${maxPrayersAllowed})`;
+
+        // تحديث العدادات بألوان توضيحية
+        const breakColor = actB >= maxBreaksAllowed ? 'red' : 'green';
+        const prayerColor = actP >= maxPrayersAllowed ? 'red' : 'green';
+        
+        document.getElementById('statusCountersDisplay').innerHTML = `
+            <span style="margin: 0 15px;">🍔 فاتحين بريك: <span style="color:${breakColor}; font-size:1.5rem;">(${actB}/${maxBreaksAllowed})</span></span>
+            <span style="border-left: 2px solid #ccc; margin: 0 10px;"></span>
+            <span style="margin: 0 15px;">🕌 فاتحين صلاة: <span style="color:${prayerColor}; font-size:1.5rem;">(${actP}/${maxPrayersAllowed})</span></span>
+        `;
     }
 
     function updateMonitorValuesOnly() {
@@ -722,14 +786,10 @@
         document.getElementById('monthTotalOvertime').innerText = tOt + " س";
     }
 
-    // دالة حذف الجلسة - تضمن التزامن مع الكل
     window.deleteSession = (un, sessionKey) => {
         if(!confirm("هل أنت متأكد من حذف هذا السجل نهائياً؟")) return;
-        // الحذف من قاعدة البيانات سيؤدي تلقائياً لتحديث شاشات جميع المشرفين عبر المستمع الرئيسي
         db.ref(`users/${un}/sessions/${sessionKey}`).remove().then(() => {
             alert("تم الحذف بنجاح");
-            // لا حاجة لاستدعاء renderUserReport هنا يدوياً لأن المستمع الرئيسي سيقوم بذلك
-            // لكن يمكن تركها لتحسين سرعة الاستجابة للمستخدم الحالي
             renderUserReport(); 
         });
     };
@@ -818,7 +878,6 @@
     function renderAdminEmRequests() { const tb = document.getElementById('adminEmBody'); tb.innerHTML = ''; let count = 0; Object.values(allUsersData).forEach(u => { if(u.emRequest && u.emRequest.status === 'قيد الانتظار') { count++; tb.innerHTML += `<tr><td>${u.realName || u.username}</td><td>${u.emRequest.reason}</td><td>${new Date(u.emRequest.timestamp).toLocaleTimeString()}</td><td><button onclick="handleEm('${u.username}', true)" class="btn btn-success btn-sm">✔</button><button onclick="handleEm('${u.username}', false)" class="btn btn-danger btn-sm">✖</button></td></tr>`; } }); document.getElementById('emBadge').innerText = count; count > 0 ? document.getElementById('emBadge').classList.remove('hidden') : document.getElementById('emBadge').classList.add('hidden'); }
     window.handleEm = (un, app) => { db.ref(`users/${un}/emRequest`).update({ status: app ? 'تم القبول' : 'رُفض' }).then(() => triggerGlobalRefresh()); }
     
-    // Meeting Requests Logic
     function sendMeetingRequest() { const r = document.getElementById('breakReason').value.trim(); if(!r) return alert("اكتب سبب الاجتماع"); db.ref('users/'+currentUser.username+'/meetingRequest').set({ reason: r, status: 'قيد الانتظار', timestamp: getServerTime() }); }
     function updateMeetingStatus() { const el = document.getElementById('meetingStatusArea'); if(!currentUser.meetingRequest) return el.innerHTML = `<button onclick="sendMeetingRequest()" class="btn btn-warning" style="width:100%">طلب ميتنج</button>`; if(currentUser.meetingRequest.status === 'قيد الانتظار') el.innerHTML = `<span style="color:orange; font-size:0.8rem;">⏳ انتظار...</span>`; else if(currentUser.meetingRequest.status === 'تم القبول') el.innerHTML = `<button onclick="startMyBreak('ميتنج')" class="btn btn-success btn-sm" style="width:100%">ابدأ</button>`; else el.innerHTML = `<span style="color:red; font-size:0.7rem;">✖ رُفض</span>`; }
     function renderAdminMeetingRequests() { const tb = document.getElementById('adminMeetBody'); tb.innerHTML = ''; let count = 0; Object.values(allUsersData).forEach(u => { if(u.meetingRequest && u.meetingRequest.status === 'قيد الانتظار') { count++; tb.innerHTML += `<tr><td>${u.realName || u.username}</td><td>${u.meetingRequest.reason}</td><td>${new Date(u.meetingRequest.timestamp).toLocaleTimeString()}</td><td><button onclick="handleMeeting('${u.username}', true)" class="btn btn-success btn-sm">✔</button><button onclick="handleMeeting('${u.username}', false)" class="btn btn-danger btn-sm">✖</button></td></tr>`; } }); document.getElementById('meetBadge').innerText = count; count > 0 ? document.getElementById('meetBadge').classList.remove('hidden') : document.getElementById('meetBadge').classList.add('hidden'); }
@@ -879,7 +938,6 @@
         });
 
         alert("تمت عملية الحذف للفترة المحددة بنجاح ✅");
-        // triggerGlobalRefresh() يجبر الموظفين على عمل ريلود، بينما المشرفون يحدث عندهم التقرير تلقائياً عبر المستمع
         triggerGlobalRefresh();
     }
 </script>
