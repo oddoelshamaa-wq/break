@@ -36,8 +36,8 @@
         .btn { padding: 10px 15px; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; font-family: 'Cairo', sans-serif; color: white; transition: all 0.3s ease; margin: 3px; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
         .btn-primary { background: #2980b9; } .btn-danger { background: #c0392b; } .btn-success { background: #27ae60; } .btn-warning { background: #f39c12; } .btn-info { background: #8e44ad; } .btn-dark { background: #2d3436; } .btn-purple { background: #8e44ad; } .btn-followup { background: var(--followup-color); } .btn-vip { background: linear-gradient(45deg, #d4af37, #f1c40f); border: 1px solid #b8860b; color: #000; }
         
-        input, select { padding: 10px; border: 2px solid #e0e0e0; border-radius: 10px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-family: 'Cairo', sans-serif; font-size: 0.95rem; }
-        input:focus { outline: none; border-color: var(--primary-color); background: #fff; }
+        input, select, textarea { padding: 10px; border: 2px solid #e0e0e0; border-radius: 10px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-family: 'Cairo', sans-serif; font-size: 0.95rem; }
+        input:focus, textarea:focus { outline: none; border-color: var(--primary-color); background: #fff; }
 
         .table-responsive { width: 100%; overflow-x: auto; margin-top: 15px; border-radius: 10px; }
         table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; min-width: 850px; }
@@ -91,6 +91,24 @@
         .clock-date { font-size: 0.75rem; color: #bdc3c7; font-weight: bold; }
         .server-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; color: #e74c3c; }
 
+        /* Broadcast Panel Admin */
+        .broadcast-panel {
+            background: #fffafa;
+            border: 2px solid #e74c3c;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(231, 76, 60, 0.08);
+        }
+        .broadcast-grid { display: grid; grid-template-columns: 200px 1fr; gap: 15px; align-items: stretch; }
+        @media (max-width: 768px) { .broadcast-grid { grid-template-columns: 1fr; } }
+        .broadcast-label { font-size: 0.85rem; font-weight: bold; color: #c0392b; margin-bottom: 5px; display: block; }
+        #broadcastTarget { height: 120px; padding: 8px; border: 1px solid #fab1a0; background-color: #fff; overflow-y: auto; border-radius: 10px; }
+        #broadcastTarget option { padding: 8px 5px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 0.9rem; }
+        #broadcastTarget option:checked { background-color: #ff7675; color: white; }
+        #broadcastInput { width: 100%; height: 120px; resize: none; border: 2px solid #fab1a0; padding: 12px; border-radius: 10px; font-family: 'Cairo', sans-serif; font-size: 1rem; transition: all 0.3s; }
+        #broadcastInput:focus { border-color: #c0392b; box-shadow: 0 0 10px rgba(231, 76, 60, 0.2); }
+
         #broadcastOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.95);
@@ -134,14 +152,73 @@
         }
         #bottomToast.show { bottom: 30px; }
 
+        /* --- تحسين شكل سجل الإشعارات للموظف --- */
         .notification-log {
-            margin-top: 20px; background: #fff; border-radius: 15px;
-            border: 1px solid #eee; overflow: hidden; text-align: right;
+            margin-top: 25px;
+            background: #ffffff;
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
-        .log-header { background: #f8f9fa; padding: 10px 15px; border-bottom: 1px solid #eee; font-weight: bold; display: flex; justify-content: space-between; }
-        .log-body { max-height: 200px; overflow-y: auto; padding: 10px; }
-        .log-item { padding: 8px; border-bottom: 1px solid #f9f9f9; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; }
-        .log-time { color: #999; font-size: 0.7rem; }
+        .log-header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 15px 20px;
+            border-bottom: none;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+        }
+        .log-body {
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 15px;
+            background: #fdfdfd;
+        }
+        .log-item-card {
+            background: white;
+            border-right: 5px solid #e74c3c;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.03);
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            transition: transform 0.2s ease;
+            animation: slideIn 0.4s ease-out;
+        }
+        .log-item-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+        .log-icon-circle {
+            background: #ffe6e6;
+            color: #c0392b;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        .log-content-wrapper { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+        .log-msg-text { font-size: 0.95rem; font-weight: 700; color: #2c3e50; line-height: 1.4; }
+        .log-time-badge { font-size: 0.75rem; color: #7f8c8d; display: flex; align-items: center; gap: 4px; }
+        
+        .empty-log {
+            text-align: center;
+            padding: 30px;
+            color: #bdc3c7;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .empty-log-icon { font-size: 3rem; opacity: 0.5; }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .device-icon { font-size: 1.1rem; margin-right: 5px; }
     </style>
@@ -211,13 +288,27 @@
             <button onclick="logout()" class="btn btn-dark btn-sm">خروج</button>
         </div>
 
-        <div style="background: #fff3f3; border: 3px solid #c0392b; padding: 15px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(192, 57, 43, 0.1);">
-            <h4 style="color: #c0392b; margin-top: 0;">📢 إرسال رسالة عاجلة لجميع الموظفين</h4>
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <input type="text" id="broadcastInput" placeholder="اكتب الرسالة التحذيرية هنا..." style="margin:0; border-color: #c0392b; height: 50px;">
-                <button onclick="sendBroadcast()" class="btn btn-danger" style="flex-shrink: 0; padding: 0 30px;">بث للكل 🚀</button>
+        <div class="broadcast-panel">
+            <h4 style="color: #c0392b; margin-top: 0; text-align:right;">📢 إرسال رسالة عاجلة</h4>
+            
+            <div class="broadcast-grid">
+                <!-- Select List -->
+                <div>
+                    <label class="broadcast-label">1. حدد المستلمين (Ctrl+Click):</label>
+                    <select id="broadcastTarget" multiple>
+                        <option value="all">📣 للجميع</option>
+                    </select>
+                </div>
+                
+                <!-- Text Area & Button -->
+                <div style="display: flex; flex-direction: column;">
+                    <label class="broadcast-label">2. اكتب محتوى الرسالة:</label>
+                    <textarea id="broadcastInput" placeholder="اكتب الرسالة التحذيرية هنا... (مثلاً: اجتماع عاجل، تنبيه بخصوص البريك، الخ)"></textarea>
+                    <button onclick="sendBroadcast()" class="btn btn-danger" style="margin-top: 10px; width: 100%; font-size:1.1rem; padding: 12px;">إرسال التنبيه الآن 🚀</button>
+                </div>
             </div>
-            <div style="background: white; padding: 10px; border-radius: 10px; max-height: 150px; overflow-y: auto;">
+
+            <div style="background: white; padding: 10px; border-radius: 10px; max-height: 120px; overflow-y: auto; margin-top:15px; border:1px solid #eee;">
                 <h5 style="margin:0 0 10px 0; font-size: 0.8rem; color: #666;">سجل التنبيهات المرسلة (يمكنك الحذف من هنا):</h5>
                 <div id="adminBroadcastLog"></div>
             </div>
@@ -379,15 +470,14 @@
 
             <div class="notification-log">
                 <div class="log-header">
-                    <span>📑 سجل التنبيهات الإدارية</span>
-                    <span style="font-size: 0.7rem; color: #7f8c8d;">آخر الرسائل</span>
+                    <span style="display:flex; align-items:center; gap:8px;">📣 لوحة التنبيهات الإدارية</span>
                 </div>
                 <div class="log-body" id="employeeBroadcastLog">
-                    <p style="text-align: center; color: #ccc; padding: 10px;">لا يوجد تنبيهات حالياً</p>
+                    <!-- سيتم ملء هذا الجزء بواسطة الجافا سكربت -->
                 </div>
             </div>
 
-            <div id="breakLimitAlert" style="background:#fff3cd; padding:15px; border-radius:10px; margin-bottom:15px; font-weight:bold; display:none; color:#856404; border:1px solid #ffeeba; line-height:1.5;">
+            <div id="breakLimitAlert" style="background:#fff3cd; padding:15px; border-radius:10px; margin-bottom:15px; font-weight:bold; display:none; color:#856404; border:1px solid #ffeeba; line-height:1.5; margin-top:20px;">
             </div>
 
             <div id="controlsArea" style="margin-top: 15px;">
@@ -479,24 +569,17 @@
     }
 
     function activateSystemAndSound() {
-        // حفظ أن المستخدم قام بالتفعيل في هذه الجلسة
         sessionStorage.setItem('systemActive', 'true');
-
         const audios = ['alarmSound', 'notifySound', 'requestRing', 'broadcastSound'];
         audios.forEach(id => {
             const s = document.getElementById(id);
             s.volume = 0; 
             s.play().then(() => {
-                s.pause();
-                s.currentTime = 0;
-                s.volume = 1;
+                s.pause(); s.currentTime = 0; s.volume = 1;
             }).catch(e => console.log("Audio block", e));
         });
-
         soundActive = true;
-        if ("Notification" in window) {
-            Notification.requestPermission();
-        }
+        if ("Notification" in window) Notification.requestPermission();
         document.getElementById('forceSoundOverlay').style.display = 'none';
         const btn = document.getElementById('notifBtn');
         if(btn) { btn.innerText = "🔊 الصوت مفعل"; btn.style.background = "#27ae60"; }
@@ -506,26 +589,117 @@
     db.ref('broadcasts').on('value', (snap) => {
         const data = snap.val() || {}, employeeLog = document.getElementById('employeeBroadcastLog'), adminLog = document.getElementById('adminBroadcastLog');
         if(employeeLog) employeeLog.innerHTML = ""; if(adminLog) adminLog.innerHTML = "";
+        
         const keys = Object.keys(data).sort((a, b) => data[b].timestamp - data[a].timestamp);
-        if (keys.length === 0 && employeeLog) employeeLog.innerHTML = `<p style="text-align: center; color: #ccc; padding: 10px;">لا يوجد تنبيهات حالياً</p>`;
+        let empMsgCount = 0;
+
         keys.forEach(key => {
             const b = data[key], timeStr = new Date(b.timestamp).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'});
-            if (adminLog) adminLog.innerHTML += `<div class="log-item"><span><b>[${timeStr}]</b> ${b.message}</span><button onclick="deleteBroadcast('${key}')" class="btn btn-danger btn-sm" style="padding:2px 5px; font-size:0.6rem;">حذف</button></div>`;
-            if (employeeLog) employeeLog.innerHTML += `<div class="log-item"><span>${b.message}</span><span class="log-time">${timeStr}</span></div>`;
+            
+            // For Admin Log
+            if (adminLog) {
+                let targetDisplay = "الجميع";
+                if(b.target && b.target !== 'all') {
+                    let targets = [];
+                    if (Array.isArray(b.target)) {
+                        targets = b.target;
+                    } else if (typeof b.target === 'object' && b.target !== null) {
+                        targets = Object.values(b.target);
+                    } else {
+                        targets = [b.target];
+                    }
+
+                    targetDisplay = targets.map(u => {
+                        return allUsersData[u] ? (allUsersData[u].realName || allUsersData[u].username) : u;
+                    }).join('، ');
+                }
+                adminLog.innerHTML += `<div class="log-item"><span><b>[${timeStr}]</b> <span style="color:#d35400; font-size:0.75rem;">(إلى: ${targetDisplay})</span> ${b.message}</span><button onclick="deleteBroadcast('${key}')" class="btn btn-danger btn-sm" style="padding:2px 5px; font-size:0.6rem;">حذف</button></div>`;
+            }
+
+            // For Employee Log
+            if (employeeLog && currentUser) {
+                let isForMe = false;
+                if (!b.target || b.target === 'all') {
+                    isForMe = true;
+                } else {
+                    let targets = [];
+                    if (Array.isArray(b.target)) targets = b.target;
+                    else if (typeof b.target === 'object' && b.target !== null) targets = Object.values(b.target);
+                    else targets = [b.target];
+                    
+                    if (targets.includes(currentUser.username)) isForMe = true;
+                }
+
+                if(isForMe) {
+                    // تصميم الكارد الجديد للموظف
+                    employeeLog.innerHTML += `
+                        <div class="log-item-card">
+                            <div class="log-icon-circle">📢</div>
+                            <div class="log-content-wrapper">
+                                <div class="log-msg-text">${b.message}</div>
+                                <div class="log-time-badge">🕒 ${timeStr}</div>
+                            </div>
+                        </div>
+                    `;
+                    empMsgCount++;
+                }
+            }
         });
+
+        if (employeeLog && empMsgCount === 0) {
+            employeeLog.innerHTML = `
+                <div class="empty-log">
+                    <div class="empty-log-icon">📭</div>
+                    <div>لا توجد تنبيهات حالياً</div>
+                    <div style="font-size:0.75rem; color:#ccc;">أي رسالة من الإدارة ستظهر هنا فوراً</div>
+                </div>
+            `;
+        }
+
         if (keys.length > 0) {
             const latestKey = keys[0];
+            const b = data[latestKey];
             if (latestKey !== lastReceivedBroadcastID) {
                 lastReceivedBroadcastID = latestKey; localStorage.setItem('last_broadcast_id', latestKey);
-                if (currentUser && currentUser.role !== 'admin') { showBroadcastOverlay(data[latestKey].message); showToast(data[latestKey].message); }
+                if (currentUser && currentUser.role !== 'admin') {
+                    let isForMe = false;
+                    if (!b.target || b.target === 'all') {
+                        isForMe = true;
+                    } else {
+                        let targets = [];
+                        if (Array.isArray(b.target)) targets = b.target;
+                        else if (typeof b.target === 'object' && b.target !== null) targets = Object.values(b.target);
+                        else targets = [b.target];
+                        
+                        if (targets.includes(currentUser.username)) isForMe = true;
+                    }
+                    
+                    if(isForMe) {
+                        showBroadcastOverlay(b.message); 
+                        showToast(b.message); 
+                    }
+                }
             }
         }
     });
 
     function sendBroadcast() {
         const msg = document.getElementById('broadcastInput').value.trim();
+        const select = document.getElementById('broadcastTarget');
+        
+        let selectedValues = Array.from(select.selectedOptions).map(option => option.value);
+        if (selectedValues.length === 0) selectedValues = ['all'];
+        
+        const target = selectedValues.includes('all') ? 'all' : selectedValues;
+
         if (!msg) return alert("اكتب رسالة أولاً");
-        db.ref('broadcasts').push({ message: msg, timestamp: getServerTime(), sender: currentUser.username });
+        
+        db.ref('broadcasts').push({ 
+            message: msg, 
+            timestamp: getServerTime(), 
+            sender: currentUser.username,
+            target: target 
+        });
         document.getElementById('broadcastInput').value = "";
     }
 
@@ -571,7 +745,8 @@
                 renderAdminEmRequests();
                 renderAdminMeetingRequests(); 
                 renderAdminOtRequests(); 
-                renderUserManagementTable(); 
+                renderUserManagementTable();
+                updateBroadcastTargets(); 
                 if(!document.getElementById('tab-reports').classList.contains('hidden')) renderUserReport(); 
                 if(currentUser.username === 'mahmoud') {
                     document.getElementById('masterDeleteBtn').classList.remove('hidden');
@@ -629,7 +804,6 @@
             if (snap.val()) {
                 s.onDisconnect().set("offline").then(() => {
                     s.set("online");
-                    // حفظ نوع الجهاز عند الدخول
                     deviceRef.set(getDeviceType());
                 }); 
             }
@@ -638,10 +812,8 @@
 
     function logout() { 
         if(currentUser && currentUser.role !== 'admin') db.ref("users/"+currentUser.username+"/state").set("offline"); 
-        
         localStorage.removeItem('break_sys_user'); 
-        sessionStorage.removeItem('systemActive'); // مسح حالة التفعيل عند الخروج
-        
+        sessionStorage.removeItem('systemActive');
         location.reload(); 
     }
 
@@ -652,7 +824,6 @@
         document.getElementById('employeeSection').classList.remove('hidden'); 
         document.getElementById('welcomeMsg').innerText = `أهلاً، ${currentUser.realName || currentUser.username}`; 
         
-        // التحقق مما إذا كان قد تم التفعيل سابقاً في هذه الجلسة
         if (sessionStorage.getItem('systemActive') === 'true') {
              document.getElementById('forceSoundOverlay').style.display = 'none';
              soundActive = true;
@@ -891,6 +1062,29 @@
     function saveAdminSelect(u, v) { adminSelectBuffer[u] = v; }
     function updateReportSelect() { const sel = document.getElementById('reportUserSelect'); sel.innerHTML = '<option value="">-- اختر موظف --</option>'; Object.values(allUsersData).forEach(u => { if(u.username && !MANAGERS.includes(u.username)) sel.innerHTML += `<option value="${u.username}">${u.realName || u.username}</option>`; }); }
     
+    function updateBroadcastTargets() {
+        const sel = document.getElementById('broadcastTarget');
+        const oldSelection = Array.from(sel.selectedOptions).map(o => o.value);
+        
+        let html = '<option value="all">📣 للجميع</option>';
+        Object.values(allUsersData).forEach(u => {
+            if(u.username && !MANAGERS.includes(u.username)) {
+                html += `<option value="${u.username}">👤 ${u.realName || u.username}</option>`;
+            }
+        });
+        
+        if (sel.innerHTML !== html) {
+            sel.innerHTML = html;
+            if (oldSelection.length > 0) {
+                Array.from(sel.options).forEach(opt => {
+                    if (oldSelection.includes(opt.value)) opt.selected = true;
+                });
+            } else {
+                sel.value = 'all';
+            }
+        }
+    }
+
     function sendEmRequest() { const r = document.getElementById('breakReason').value.trim(); if(!r) return alert("اكتب السبب"); db.ref('users/'+currentUser.username+'/emRequest').set({ reason: r, status: 'قيد الانتظار', timestamp: getServerTime() }); }
     function updateEmStatus() { const el = document.getElementById('emStatusArea'); if(!currentUser.emRequest) return el.innerHTML = `<button onclick="sendEmRequest()" class="btn btn-dark btn-sm" style="width:100%">طلب خروج</button>`; if(currentUser.emRequest.status === 'قيد الانتظار') el.innerHTML = `<span style="color:orange; font-size:0.8rem;">⏳ انتظار...</span>`; else if(currentUser.emRequest.status === 'تم القبول') el.innerHTML = `<button onclick="startMyBreak('طوارئ')" class="btn btn-danger btn-sm" style="width:100%">ابدأ</button>`; else el.innerHTML = `<span style="color:red; font-size:0.7rem;">✖ رُفض</span>`; }
     function renderAdminEmRequests() { const tb = document.getElementById('adminEmBody'); tb.innerHTML = ''; let count = 0; Object.values(allUsersData).forEach(u => { if(u.emRequest && u.emRequest.status === 'قيد الانتظار') { count++; tb.innerHTML += `<tr><td>${u.realName || u.username}</td><td>${u.emRequest.reason}</td><td>${new Date(u.emRequest.timestamp).toLocaleTimeString()}</td><td><button onclick="handleEm('${u.username}', true)" class="btn btn-success btn-sm">✔</button><button onclick="handleEm('${u.username}', false)" class="btn btn-danger btn-sm">✖</button></td></tr>`; } }); document.getElementById('emBadge').innerText = count; count > 0 ? document.getElementById('emBadge').classList.remove('hidden') : document.getElementById('emBadge').classList.add('hidden'); }
