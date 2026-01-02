@@ -230,7 +230,11 @@
                     <span class="clock-time" id="adminServerTime">00:00:00 AM</span>
                     <span id="adminServerDate" style="font-size: 0.8rem; opacity: 0.8;">--/--/----</span>
                 </div>
-                <button onclick="logout()" class="btn btn-danger btn-sm">خروج</button>
+                <div>
+                    <!-- زر تفعيل الصوت للمشرف كما طلب -->
+                    <button onclick="activateAdminSound()" class="btn btn-primary btn-sm" style="background:#8e44ad; margin-left: 5px;">🔊 تفعيل التنبيهات</button>
+                    <button onclick="logout()" class="btn btn-danger btn-sm">خروج</button>
+                </div>
             </div>
 
             <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 25px; padding: 20px; margin-bottom: 25px;">
@@ -451,6 +455,21 @@
             if ("Notification" in window) Notification.requestPermission();
             document.getElementById('forceSoundOverlay').style.display = 'none';
             startGlobalTimer();
+        }
+
+        // دالة تفعيل الصوت اليدوية للمشرف (الجديدة)
+        function activateAdminSound() {
+            ['alarmSound', 'notifySound', 'requestRing', 'broadcastSound'].forEach(id => {
+                const s = document.getElementById(id);
+                s.volume = 0;
+                s.play().then(() => {
+                    s.pause(); s.currentTime = 0; s.volume = 1;
+                }).catch(e => console.log(e));
+            });
+            soundActive = true;
+            sessionStorage.setItem('systemActive', 'true');
+            if ("Notification" in window) Notification.requestPermission();
+            alert("تم تفعيل التنبيهات الصوتية بنجاح 🔊");
         }
 
         db.ref('broadcasts').on('value', (snap) => {
