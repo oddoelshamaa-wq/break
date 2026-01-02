@@ -150,6 +150,21 @@
 
             .hidden { display: none !important; }
             .badge-count { background: var(--danger); color: white; padding: 2px 7px; border-radius: 50%; font-size: 0.7rem; margin-right: 5px; }
+            
+            /* ستايل اللقب المميز */
+            .fun-title-badge {
+                display: inline-block;
+                background: var(--vip-gold);
+                color: #000;
+                padding: 5px 15px;
+                border-radius: 20px;
+                font-weight: 900;
+                font-size: 1rem;
+                margin-top: 5px;
+                box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+                animation: pulseTitle 2s infinite;
+            }
+            @keyframes pulseTitle { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
             @media (max-width: 768px) {
                 .employee-hero-grid { grid-template-columns: 1fr; }
@@ -297,6 +312,7 @@
                         <input type="text" id="newUsername" placeholder="Username">
                         <input type="text" id="newPassword" placeholder="Password">
                         <input type="number" id="newAllowance" value="45">
+                        <input type="text" id="newFunTitle" placeholder="اللقب (مثلاً: أشطر كتكوت)" style="border-color: var(--vip-gold);">
                     </div>
                     <div style="margin: 15px 0; display: flex; gap: 20px;">
                         <label style="color:#ffd700"><input type="checkbox" id="isVIPUser"> ⭐ VIP</label>
@@ -304,7 +320,7 @@
                     </div>
                     <button onclick="saveUser()" id="saveUserBtn" class="btn btn-success" style="width:100%">حفظ</button>
                 </div>
-                <div class="table-responsive"><table><thead><tr><th>الاسم</th><th>User</th><th>Pass</th><th>المدة</th><th>المزايا</th><th>إجراء</th></tr></thead><tbody id="usersManagementBody"></tbody></table></div>
+                <div class="table-responsive"><table><thead><tr><th>الاسم</th><th>User</th><th>Pass</th><th>المدة</th><th>اللقب/الدلع</th><th>إجراء</th></tr></thead><tbody id="usersManagementBody"></tbody></table></div>
             </div>
         </div>
 
@@ -313,6 +329,7 @@
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
                 <div>
                     <h2 id="welcomeMsg" style="margin:0;"></h2>
+                    <div id="userFunTitleDisplay"></div> <!-- هنا مكان اللقب -->
                     <div class="server-clock-box" style="margin-top: 10px; padding: 5px 15px; display: inline-block;">
                         <span class="clock-time" id="userServerTime" style="font-size: 1.1rem;">00:00:00 AM</span>
                     </div>
@@ -556,6 +573,15 @@
         function showEmployee() { 
             document.getElementById('loginSection').classList.add('hidden'); document.getElementById('employeeSection').classList.remove('hidden'); 
             document.getElementById('welcomeMsg').innerText = `أهلاً، ${currentUser.realName || currentUser.username}`; 
+            
+            // عرض اللقب المميز إن وجد
+            const titleBox = document.getElementById('userFunTitleDisplay');
+            if(currentUser.funTitle) {
+                titleBox.innerHTML = `<div class="fun-title-badge">✨ ${currentUser.funTitle} ✨</div>`;
+            } else {
+                titleBox.innerHTML = "";
+            }
+
             if (sessionStorage.getItem('systemActive') === 'true') { document.getElementById('forceSoundOverlay').style.display = 'none'; soundActive = true; startGlobalTimer(); } 
             else { document.getElementById('forceSoundOverlay').style.display = 'flex'; }
         }
@@ -629,7 +655,6 @@
                     if ((start && cD < start) || (end && cD > end)) return;
                     if(!grouped[s.date]) grouped[s.date] = { acts: [], total: 0, prayer: 0, follow: 0, vip: 0 };
                     const dur = parseInt(s.duration) || 0;
-                    // تم التعديل هنا لإضافة زر الحذف لكل حركة
                     grouped[s.date].acts.push(`
                         <div style="font-size:0.75rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; background:rgba(255,255,255,0.02); padding:3px; border-radius:4px;">
                             <span>${s.type}: ${Math.round(dur/60)}د (${s.reason||'--'})</span>
@@ -650,7 +675,6 @@
             document.getElementById('monthTotalVIP').innerText = Math.round(tVi/60) + " د";
         }
 
-        // دالة جديدة لحذف سجل محدد
         window.deleteSpecificSession = (un, key) => {
             if(confirm("هل أنت متأكد من حذف هذا السجل نهائياً؟")) {
                 db.ref(`users/${un}/sessions/${key}`).remove().then(() => { 
@@ -677,25 +701,18 @@
 
         function startMyBreak(t) { 
             if(currentUser.isOnBreak) return; 
-            
-            // 1. حساب عدد المصلين الحاليين
             const currentPrayingCount = Object.values(allUsersData).filter(u => u.isOnBreak && u.breakType === 'صلاة').length;
-
-            // 2. إذا كان الموظف يريد الصلاة
             if(t === 'صلاة') {
                 if(currentPrayingCount >= maxPrayersAllowed) {
                     return alert("حد الصلاة مكتمل حالياً، انتظر زملائك.");
                 }
             }
-
-            // 3. التحقق من "حد البريك" والرسالة التحفيزية
             if (t === 'بريك عام' || t === 'طوارئ' || t === 'ميتنج' || t === 'متابع عميل' || t === 'استراحة VIP') {
                 const currentActiveBreaks = Object.values(allUsersData).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
                 if (currentActiveBreaks >= maxBreaksAllowed) {
                     return alert("يا بطل، زمايلك كلهم في البريك دلوقتي. استنى دقايق لحد ما حد يرجع عشان نفضل شغالين.. أول ما حد يرجع الطريق هيكون مفتوح ليك! 💪");
                 }
             }
-            
             let r = document.getElementById('breakReason').value.trim(); 
             if(t === 'طوارئ' && currentUser.emRequest) r = currentUser.emRequest.reason;
             if(t === 'ميتنج' && currentUser.meetingRequest) r = currentUser.meetingRequest.reason; 
@@ -736,11 +753,13 @@
                 const rem = allowTotal - (u.usedSeconds||0); timerText.innerText = rem >= 0 ? formatTime(rem) : "00:00"; timerText.style.color = "white"; lbl.innerText = "رصيد البريك"; msg.innerText = "متاح للعمل ✅";
                 let pct = (rem / allowTotal); if (pct < 0) pct = 0; circle.style.strokeDashoffset = circ - (pct * circ); circle.style.stroke = "var(--primary)";
                 if (u.lastEndedTime && (Math.floor((getServerTime() - u.lastEndedTime) / 1000) < 300)) {
+                    // هنا التعديل الجديد بناء على طلبك
+                    const userTitle = u.funTitle || 'يا بطل';
                     let backMsg = "";
                     if(u.lastEndedType === 'صلاة') {
-                        backMsg = `تقبل الله يا بطل 🕌 | رجعت منذ ${formatTime(Math.floor((getServerTime() - u.lastEndedTime)/1000))}`;
+                        backMsg = `تقبل الله يا ${userTitle} 🕌 | رجعت منذ ${formatTime(Math.floor((getServerTime() - u.lastEndedTime)/1000))}`;
                     } else {
-                        backMsg = `حمدالله على السلامة يا بطل ❤️ | رجعت من (${u.lastEndedType}) منذ ${formatTime(Math.floor((getServerTime() - u.lastEndedTime)/1000))}`;
+                        backMsg = `أحلى ${userTitle} في الدنيا ❤️ | رجعت من (${u.lastEndedType}) منذ ${formatTime(Math.floor((getServerTime() - u.lastEndedTime)/1000))}`;
                     }
                     welcomeArea.innerHTML = `<div class="welcome-back-msg">${backMsg}</div>`;
                 } else welcomeArea.innerHTML = "";
@@ -794,19 +813,42 @@
             Object.values(allUsersData).forEach(u => {
                 if(!u || !u.username || MANAGERS.includes(u.username)) return;
                 const vip = u.isVIP ? '⭐ VIP' : 'عادي', fol = u.canFollowUp ? '📞 متابعة' : '---';
-                tb.innerHTML += `<tr><td>${u.realName || u.username}</td><td>${u.username}</td><td>${u.password}</td><td>${u.allowance}د</td><td>${vip}|${fol}</td><td><button onclick="editUser('${u.username}')" class="btn btn-warning btn-sm">✎</button><button onclick="deleteUser('${u.username}')" class="btn btn-danger btn-sm">🗑</button></td></tr>`;
+                tb.innerHTML += `<tr><td>${u.realName || u.username}</td><td>${u.username}</td><td>${u.password}</td><td>${u.allowance}د</td><td><span style="color:#ffd700">${u.funTitle || '---'}</span></td><td><button onclick="editUser('${u.username}')" class="btn btn-warning btn-sm">✎</button><button onclick="deleteUser('${u.username}')" class="btn btn-danger btn-sm">🗑</button></td></tr>`;
             });
         }
 
         window.saveUser = () => {
             const un = document.getElementById('newUsername').value.trim().toLowerCase(), pass = document.getElementById('newPassword').value, name = document.getElementById('newRealName').value, allow = parseInt(document.getElementById('newAllowance').value), isVIP = document.getElementById('isVIPUser').checked, follow = document.getElementById('canFollowUp').checked;
+            const funTitle = document.getElementById('newFunTitle').value.trim();
+
             if(!un || !pass || !name) return alert("أكمل البيانات");
-            const data = { realName: name, password: pass, allowance: allow, isVIP: isVIP, canFollowUp: follow };
+            const data = { realName: name, password: pass, allowance: allow, isVIP: isVIP, canFollowUp: follow, funTitle: funTitle };
             if (editingUserKey) { db.ref('users/' + editingUserKey).update(data).then(() => { triggerGlobalRefresh(); alert("تم"); resetUserForm(); }); }
             else { db.ref('users/' + un).set({...data, username: un, role: 'employee', usedSeconds: 0, prayerSeconds: 0, meetingSeconds: 0, followUpSeconds: 0, vipSeconds: 0, isOnBreak: false}).then(() => { triggerGlobalRefresh(); alert("تم"); resetUserForm(); }); }
         };
-        window.editUser = (un) => { const u = allUsersData[un]; editingUserKey = un; document.getElementById('newUsername').value = u.username; document.getElementById('newUsername').disabled = true; document.getElementById('newRealName').value = u.realName; document.getElementById('newPassword').value = u.password; document.getElementById('newAllowance').value = u.allowance; document.getElementById('isVIPUser').checked = !!u.isVIP; document.getElementById('canFollowUp').checked = !!u.canFollowUp; };
-        function resetUserForm() { editingUserKey = null; document.getElementById('newUsername').disabled = false; document.getElementById('newUsername').value = ''; document.getElementById('newRealName').value = ''; document.getElementById('newPassword').value = ''; document.getElementById('newAllowance').value = '45'; }
+        
+        window.editUser = (un) => { 
+            const u = allUsersData[un]; 
+            editingUserKey = un; 
+            document.getElementById('newUsername').value = u.username; 
+            document.getElementById('newUsername').disabled = true; 
+            document.getElementById('newRealName').value = u.realName; 
+            document.getElementById('newPassword').value = u.password; 
+            document.getElementById('newAllowance').value = u.allowance; 
+            document.getElementById('newFunTitle').value = u.funTitle || '';
+            document.getElementById('isVIPUser').checked = !!u.isVIP; 
+            document.getElementById('canFollowUp').checked = !!u.canFollowUp; 
+        };
+        
+        function resetUserForm() { 
+            editingUserKey = null; 
+            document.getElementById('newUsername').disabled = false; 
+            document.getElementById('newUsername').value = ''; 
+            document.getElementById('newRealName').value = ''; 
+            document.getElementById('newPassword').value = ''; 
+            document.getElementById('newAllowance').value = '45'; 
+            document.getElementById('newFunTitle').value = '';
+        }
         function deleteUser(un) { if(confirm("حذف؟")) db.ref('users/'+un).remove().then(() => triggerGlobalRefresh()); }
     </script>
     </body>
