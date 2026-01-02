@@ -629,7 +629,13 @@
                     if ((start && cD < start) || (end && cD > end)) return;
                     if(!grouped[s.date]) grouped[s.date] = { acts: [], total: 0, prayer: 0, follow: 0, vip: 0 };
                     const dur = parseInt(s.duration) || 0;
-                    grouped[s.date].acts.push(`<div style="font-size:0.75rem;">${s.type}: ${Math.round(dur/60)}د (${s.reason||'--'})</div>`);
+                    // تم التعديل هنا لإضافة زر الحذف لكل حركة
+                    grouped[s.date].acts.push(`
+                        <div style="font-size:0.75rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; background:rgba(255,255,255,0.02); padding:3px; border-radius:4px;">
+                            <span>${s.type}: ${Math.round(dur/60)}د (${s.reason||'--'})</span>
+                            <button onclick="deleteSpecificSession('${un}', '${k}')" style="background:var(--danger); border:none; color:white; border-radius:5px; padding:2px 6px; cursor:pointer; font-size:0.7rem; margin-right:5px;">حذف</button>
+                        </div>
+                    `);
                     if(s.type === 'بريك عام' || s.type === 'طوارئ') grouped[s.date].total += dur;
                     else if(s.type === 'صلاة') grouped[s.date].prayer += dur; else if(s.type === 'متابع عميل') grouped[s.date].follow += dur; else if(s.type === 'استراحة VIP') grouped[s.date].vip += dur;
                 });
@@ -643,6 +649,15 @@
             document.getElementById('monthTotalFollowUp').innerText = Math.round(tFo/60) + " د";
             document.getElementById('monthTotalVIP').innerText = Math.round(tVi/60) + " د";
         }
+
+        // دالة جديدة لحذف سجل محدد
+        window.deleteSpecificSession = (un, key) => {
+            if(confirm("هل أنت متأكد من حذف هذا السجل نهائياً؟")) {
+                db.ref(`users/${un}/sessions/${key}`).remove().then(() => { 
+                    renderUserReport(); 
+                });
+            }
+        };
 
         window.adminStart = (un) => { 
             const type = adminSelectBuffer[un] || 'بريك عام', r = adminTypingBuffer[un] || 'بدء إداري';
