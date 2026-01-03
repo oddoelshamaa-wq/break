@@ -673,6 +673,7 @@
         const u = allUsersData[un], sB = document.getElementById('sessionsReportBody'), mS = document.getElementById('monthlySummary'), start = document.getElementById('filterStartDate').value, end = document.getElementById('filterEndDate').value;
         sB.innerHTML = ''; mS.classList.remove('hidden');
         let tOx=0, tPr=0, tFo=0, tVi=0; const allowS = (u.allowance||45)*60;
+        
         if (u.sessions) {
             const grouped = {};
             Object.keys(u.sessions).forEach(k => {
@@ -680,10 +681,17 @@
                 if ((start && cD < start) || (end && cD > end)) return;
                 if(!grouped[s.date]) grouped[s.date] = { acts: [], total: 0, prayer: 0, follow: 0, vip: 0 };
                 const dur = parseInt(s.duration) || 0;
+                
+                // هنا التعديل: إظهار زر الحذف لمحمود فقط
+                let deleteBtnHTML = "";
+                if(currentUser.username === 'mahmoud') {
+                    deleteBtnHTML = `<button onclick="deleteSpecificSession('${un}', '${k}')" style="background:var(--danger); border:none; color:white; border-radius:5px; padding:2px 6px; cursor:pointer; font-size:0.7rem; margin-right:5px;">حذف</button>`;
+                }
+
                 grouped[s.date].acts.push(`
                     <div style="font-size:0.75rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; background:rgba(255,255,255,0.02); padding:3px; border-radius:4px;">
                         <span>${s.type}: ${Math.round(dur/60)}د (${s.reason||'--'})</span>
-                        <button onclick="deleteSpecificSession('${un}', '${k}')" style="background:var(--danger); border:none; color:white; border-radius:5px; padding:2px 6px; cursor:pointer; font-size:0.7rem; margin-right:5px;">حذف</button>
+                        ${deleteBtnHTML}
                     </div>
                 `);
                 if(s.type === 'بريك عام' || s.type === 'طوارئ') grouped[s.date].total += dur;
@@ -701,6 +709,9 @@
     }
 
     window.deleteSpecificSession = (un, key) => {
+        // حماية إضافية: التحقق من اسم المستخدم عند الضغط على زر الحذف الفردي
+        if(currentUser.username !== 'mahmoud') return alert("عذراً، هذا الإجراء خاص بالمشرف محمود فقط.");
+
         if(confirm("هل أنت متأكد من حذف هذا السجل نهائياً؟")) {
             db.ref(`users/${un}/sessions/${key}`).remove().then(() => { 
                 renderUserReport(); 
@@ -823,9 +834,7 @@
     
     // الدوال الخاصة بالتصفير والحذف (تم تأمينها لمحمود فقط)
     function deleteAllReports() { 
-        // حماية إضافية: إذا لم يكن المستخدم محمود، نرفض العملية
         if(currentUser.username !== 'mahmoud') return alert("عذراً، هذا الإجراء خاص بالمشرف محمود فقط.");
-
         if(confirm("حذف كل الأرشيف؟")) { 
             Object.keys(allUsersData).forEach(u => { db.ref(`users/${u}/sessions`).remove(); db.ref(`users/${u}/overtimeHistory`).remove(); }); 
             triggerGlobalRefresh(); 
@@ -833,9 +842,7 @@
     }
     
     function deleteReportsInRange() {
-        // حماية إضافية: إذا لم يكن المستخدم محمود، نرفض العملية
         if(currentUser.username !== 'mahmoud') return alert("عذراً، هذا الإجراء خاص بالمشرف محمود فقط.");
-
         const un = document.getElementById('reportUserSelect').value, start = document.getElementById('filterStartDate').value, end = document.getElementById('filterEndDate').value;
         if (!start || !end) return alert("حدد التاريخ");
         if (!confirm("حذف السجلات؟")) return;
