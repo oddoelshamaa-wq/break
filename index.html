@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام الإدارة الذكي 2026 - النسخة الـ 3D (VIP Unlocked)</title>
+    <title>نظام الإدارة الذكي 2026 - النسخة الصارمة (Strict Mode)</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -58,6 +58,7 @@
         }
         .btn:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 12px 20px rgba(0,0,0,0.3); }
         .btn:active { transform: translateY(2px); }
+        .btn-disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
         .btn-primary { background: linear-gradient(135deg, #0ea5e9, #2563eb); }
         .btn-success { background: linear-gradient(135deg, #10b981, #059669); }
         .btn-danger { background: linear-gradient(135deg, #ef4444, #b91c1c); }
@@ -151,7 +152,6 @@
         .hidden { display: none !important; }
         .badge-count { background: var(--danger); color: white; padding: 2px 7px; border-radius: 50%; font-size: 0.7rem; margin-right: 5px; }
         
-        /* ستايل اللقب المميز */
         .fun-title-badge {
             display: inline-block;
             background: var(--vip-gold);
@@ -547,7 +547,6 @@
             if(updatedMe) { const r = currentUser.role; currentUser = updatedMe; currentUser.role = r; }
             if (currentUser.role === 'admin') { 
                 renderMonitorTable(); renderAdminEmRequests(); renderAdminMeetingRequests(); renderAdminOtRequests(); renderUserManagementTable(); updateBroadcastTargets(); 
-                if(!document.getElementById('tab-reports').classList.contains('hidden')) renderUserReport(); 
                 
                 if(currentUser.username === 'mahmoud') { 
                     document.getElementById('masterDeleteBtn').classList.remove('hidden'); 
@@ -556,6 +555,7 @@
                     document.getElementById('masterDeleteBtn').classList.add('hidden'); 
                     document.getElementById('rangeDeleteBtn').classList.add('hidden');
                 }
+                if(!document.getElementById('tab-reports').classList.contains('hidden')) renderUserReport(); 
             }
             else { updateUserUI(); updateEmStatus(); updateMeetingStatus(); updateOtStatus(); checkBreakLimit(); }
         }
@@ -568,7 +568,6 @@
 
     function checkBreakLimit() {
         if(!currentUser || currentUser.role === 'admin') return;
-        // إذا كان المستخدم VIP، لا تظهر له رسالة التحذير
         if(currentUser.isVIP) {
              document.getElementById('breakLimitAlert').style.display = 'none';
              return;
@@ -737,32 +736,58 @@
         db.ref('users/'+un).update(up).then(() => triggerGlobalRefresh()); 
     };
 
+    // --- الدالة المعدلة للتحقق الصارم من السيرفر ---
     function startMyBreak(t) { 
         if(currentUser.isOnBreak) return; 
-        
-        // التحقق من صلاحية VIP
-        // إذا لم يكن المستخدم VIP، نقوم بتنفيذ الشروط والقيود
-        if (!currentUser.isVIP) {
-            const currentPrayingCount = Object.values(allUsersData).filter(u => u.isOnBreak && u.breakType === 'صلاة').length;
-            if(t === 'صلاة') {
-                if(currentPrayingCount >= maxPrayersAllowed) {
-                    return alert("حد الصلاة مكتمل حالياً، انتظر زملائك.");
-                }
-            }
-            if (t === 'بريك عام' || t === 'طوارئ' || t === 'ميتنج' || t === 'متابع عميل' || t === 'استراحة VIP') {
-                const currentActiveBreaks = Object.values(allUsersData).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
-                if (currentActiveBreaks >= maxBreaksAllowed) {
-                    return alert("يا بطل، زمايلك كلهم في البريك دلوقتي. استنى دقايق لحد ما حد يرجع عشان نفضل شغالين.. أول ما حد يرجع الطريق هيكون مفتوح ليك! 💪");
-                }
-            }
-        }
-        // إذا كان VIP يتجاوز الشروط أعلاه مباشرة
 
-        let r = document.getElementById('breakReason').value.trim(); 
-        if(t === 'طوارئ' && currentUser.emRequest) r = currentUser.emRequest.reason;
-        if(t === 'ميتنج' && currentUser.meetingRequest) r = currentUser.meetingRequest.reason; 
-        if((t==='بريك عام' || t==='طوارئ' || t==='ميتنج' || t==='متابع عميل') && !r) return alert("اكتب السبب أولاً!"); 
-        db.ref('users/'+currentUser.username).update({ isOnBreak: true, breakType: t, lastStartTime: getServerTime(), lastReason: r || t }); 
+        // تعطيل الزر مؤقتاً لتجنب التكرار
+        const btn = event ? event.target : null;
+        let originalText = "";
+        if(btn) { originalText = btn.innerText; btn.innerText = "⏳..."; btn.disabled = true; }
+
+        // التحقق من السيرفر مباشرة
+        db.ref('users').get().then((snapshot) => {
+            const latestUsers = snapshot.val() || {};
+            
+            // حساب العدد الحالي من السيرفر وليس المتصفح
+            const currentActiveBreaks = Object.values(latestUsers).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
+            const currentPrayingCount = Object.values(latestUsers).filter(u => u.isOnBreak && u.breakType === 'صلاة').length;
+
+            if (!currentUser.isVIP) {
+                if(t === 'صلاة') {
+                    if(currentPrayingCount >= maxPrayersAllowed) {
+                        if(btn) { btn.innerText = originalText; btn.disabled = false; }
+                        return alert(`⛔ حد الصلاة مكتمل حالياً (${currentPrayingCount}/${maxPrayersAllowed})`);
+                    }
+                }
+                if (t === 'بريك عام' || t === 'طوارئ' || t === 'ميتنج' || t === 'متابع عميل' || t === 'استراحة VIP') {
+                    if (currentActiveBreaks >= maxBreaksAllowed) {
+                        if(btn) { btn.innerText = originalText; btn.disabled = false; }
+                        return alert(`⛔ لا يوجد مكان في البريك! العدد (${currentActiveBreaks}/${maxBreaksAllowed})`);
+                    }
+                }
+            }
+
+            // إذا نجح التحقق
+            let r = document.getElementById('breakReason').value.trim(); 
+            if(t === 'طوارئ' && currentUser.emRequest) r = currentUser.emRequest.reason;
+            if(t === 'ميتنج' && currentUser.meetingRequest) r = currentUser.meetingRequest.reason; 
+            if((t==='بريك عام' || t==='طوارئ' || t==='ميتنج' || t==='متابع عميل') && !r) {
+                if(btn) { btn.innerText = originalText; btn.disabled = false; }
+                return alert("اكتب السبب أولاً!"); 
+            }
+
+            db.ref('users/'+currentUser.username).update({ 
+                isOnBreak: true, breakType: t, lastStartTime: getServerTime(), lastReason: r || t 
+            }).then(() => {
+                if(btn) { btn.innerText = originalText; btn.disabled = false; }
+            });
+
+        }).catch((err) => {
+            console.error(err);
+            if(btn) { btn.innerText = originalText; btn.disabled = false; }
+            alert("حدث خطأ في الاتصال، حاول مرة أخرى.");
+        });
     }
 
     function stopMyBreak() { 
