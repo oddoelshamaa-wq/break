@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام الإدارة الذكي 2026 - النسخة الصارمة (Strict Mode)</title>
+    <title>نظام الإدارة الذكي 2026 - النسخة الاحترافية</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -293,7 +293,6 @@
                     <button onclick="renderUserReport()" class="btn btn-primary">🔍 بحث</button>
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
-                    <!-- الأزرار مخفية افتراضياً وتظهر فقط لمحمود عبر الكود -->
                     <button id="rangeDeleteBtn" onclick="deleteReportsInRange()" class="btn btn-warning btn-sm hidden">🗑 حذف الفترة (محمود)</button>
                     <button id="masterDeleteBtn" onclick="deleteAllReports()" class="btn btn-danger btn-sm hidden">⚠️ تصفير الكل (محمود)</button>
                 </div>
@@ -568,13 +567,11 @@
 
     function checkBreakLimit() {
         if(!currentUser || currentUser.role === 'admin') return;
-        if(currentUser.isVIP) {
-             document.getElementById('breakLimitAlert').style.display = 'none';
-             return;
-        }
-
+        
         const currentActive = Object.values(allUsersData).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
         const box = document.getElementById('breakLimitAlert');
+        
+        // إذا كان البريك العام ممتلئ، نظهر الرسالة للجميع (حتى الـ VIP ليعرف أن العام ممتلئ)
         if(currentActive >= maxBreaksAllowed) { 
             box.style.display = 'block'; 
             box.innerHTML = `يا بطل، زمايلك كلهم في البريك دلوقتي. استنى دقايق لحد ما حد يرجع عشان نفضل شغالين.. أول ما حد يرجع الطريق هيكون مفتوح ليك! 💪`; 
@@ -736,7 +733,7 @@
         db.ref('users/'+un).update(up).then(() => triggerGlobalRefresh()); 
     };
 
-    // --- الدالة المعدلة للتحقق الصارم من السيرفر ---
+    // --- الدالة المعدلة: VIP فقط هو من يتخطى الانتظار عبر زره الخاص ---
     function startMyBreak(t) { 
         if(currentUser.isOnBreak) return; 
 
@@ -753,20 +750,25 @@
             const currentActiveBreaks = Object.values(latestUsers).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
             const currentPrayingCount = Object.values(latestUsers).filter(u => u.isOnBreak && u.breakType === 'صلاة').length;
 
-            if (!currentUser.isVIP) {
-                if(t === 'صلاة') {
-                    if(currentPrayingCount >= maxPrayersAllowed) {
-                        if(btn) { btn.innerText = originalText; btn.disabled = false; }
-                        return alert(`⛔ حد الصلاة مكتمل حالياً (${currentPrayingCount}/${maxPrayersAllowed})`);
-                    }
-                }
-                if (t === 'بريك عام' || t === 'طوارئ' || t === 'ميتنج' || t === 'متابع عميل' || t === 'استراحة VIP') {
-                    if (currentActiveBreaks >= maxBreaksAllowed) {
-                        if(btn) { btn.innerText = originalText; btn.disabled = false; }
-                        return alert(`⛔ لا يوجد مكان في البريك! العدد (${currentActiveBreaks}/${maxBreaksAllowed})`);
-                    }
+            // 1. التحقق من الصلاة (يطبق على الجميع دائماً)
+            if(t === 'صلاة') {
+                if(currentPrayingCount >= maxPrayersAllowed) {
+                    if(btn) { btn.innerText = originalText; btn.disabled = false; }
+                    return alert(`⛔ حد الصلاة مكتمل حالياً (${currentPrayingCount}/${maxPrayersAllowed})`);
                 }
             }
+            
+            // 2. التحقق من البريك العام (يطبق على أي شخص يضغط "بريك عام" حتى لو كان VIP)
+            // الموظف الـ VIP لو ضغط زر البريك الأخضر العادي، سينطبق عليه الشرط
+            if (t === 'بريك عام' || t === 'طوارئ' || t === 'ميتنج' || t === 'متابع عميل') {
+                if (currentActiveBreaks >= maxBreaksAllowed) {
+                    if(btn) { btn.innerText = originalText; btn.disabled = false; }
+                    // الرسالة الطويلة التي طلبتها
+                    return alert(`يا بطل، زمايلك كلهم في البريك دلوقتي. استنى دقايق لحد ما حد يرجع عشان نفضل شغالين.. أول ما حد يرجع الطريق هيكون مفتوح ليك! 💪`);
+                }
+            }
+
+            // 3. "استراحة VIP" (الزر الذهبي) لا يوجد له شرط هنا، فيمر مباشرة
 
             // إذا نجح التحقق
             let r = document.getElementById('breakReason').value.trim(); 
