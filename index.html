@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام الإدارة الذكي 2026 - النسخة الـ 3D المطورة</title>
+    <title>نظام الإدارة الذكي 2026 - النسخة الـ 3D (VIP Unlocked)</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -549,7 +549,6 @@
                 renderMonitorTable(); renderAdminEmRequests(); renderAdminMeetingRequests(); renderAdminOtRequests(); renderUserManagementTable(); updateBroadcastTargets(); 
                 if(!document.getElementById('tab-reports').classList.contains('hidden')) renderUserReport(); 
                 
-                // هنا الجزء المهم: إظهار الأزرار لمحمود فقط
                 if(currentUser.username === 'mahmoud') { 
                     document.getElementById('masterDeleteBtn').classList.remove('hidden'); 
                     document.getElementById('rangeDeleteBtn').classList.remove('hidden'); 
@@ -569,6 +568,12 @@
 
     function checkBreakLimit() {
         if(!currentUser || currentUser.role === 'admin') return;
+        // إذا كان المستخدم VIP، لا تظهر له رسالة التحذير
+        if(currentUser.isVIP) {
+             document.getElementById('breakLimitAlert').style.display = 'none';
+             return;
+        }
+
         const currentActive = Object.values(allUsersData).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
         const box = document.getElementById('breakLimitAlert');
         if(currentActive >= maxBreaksAllowed) { 
@@ -641,7 +646,7 @@
             const statusCell = u.isOnBreak ? `<span style="color:var(--danger); font-weight:bold;">${u.breakType}</span>` : '<span style="color:var(--success);">متاح ✅</span>';
             const ctrl = u.isOnBreak ? `<button onclick="adminStop('${u.username}')" class="btn btn-danger btn-sm">🛑 إيقاف</button>` : `<div class="admin-table-ctrl"><div class="admin-row-top"><select id="sel_${u.username}" onchange="saveAdminSelect('${u.username}', this.value)"><option value="بريك عام" ${savedS=='بريك عام'?'selected':''}>بريك</option><option value="صلاة" ${savedS=='صلاة'?'selected':''}>صلاة</option><option value="ميتنج" ${savedS=='ميتنج'?'selected':''}>ميتنج</option><option value="متابع عميل" ${savedS=='متابع عميل'?'selected':''}>متابع</option><option value="استراحة VIP" ${savedS=='استراحة VIP'?'selected':''}>VIP</option></select><button onclick="adminStart('${u.username}')" class="btn btn-success btn-sm">▶</button></div><input type="text" id="inp_${u.username}" placeholder="السبب..." oninput="saveAdminTyping('${u.username}', this.value)"></div>`;
             tbody.innerHTML += `<tr class="${u.isOnBreak && u.breakType==='بريك عام' && rem < 300 && rem > 0?'وضع-التنبيه':''}">
-                <td>${u.realName || u.username} ${online} ${deviceIcon}</td>
+                <td>${u.realName || u.username} ${online} ${deviceIcon} ${u.isVIP ? '⭐' : ''}</td>
                 <td>${statusCell}<br><small>${u.lastReason || ''}</small></td>
                 <td><span id="rem_${u.username}">${rem>=0?formatTime(rem):'<span style="color:var(--danger)">-'+formatTime(Math.abs(rem))+'</span>'}</span></td>
                 <td><span id="pray_${u.username}">${formatTime(lp)}</span><br><small>متبع: <span id="follow_${u.username}">${formatTime(lf)}</span></small></td>
@@ -682,7 +687,6 @@
                 if(!grouped[s.date]) grouped[s.date] = { acts: [], total: 0, prayer: 0, follow: 0, vip: 0 };
                 const dur = parseInt(s.duration) || 0;
                 
-                // هنا التعديل: إظهار زر الحذف لمحمود فقط
                 let deleteBtnHTML = "";
                 if(currentUser.username === 'mahmoud') {
                     deleteBtnHTML = `<button onclick="deleteSpecificSession('${un}', '${k}')" style="background:var(--danger); border:none; color:white; border-radius:5px; padding:2px 6px; cursor:pointer; font-size:0.7rem; margin-right:5px;">حذف</button>`;
@@ -709,9 +713,7 @@
     }
 
     window.deleteSpecificSession = (un, key) => {
-        // حماية إضافية: التحقق من اسم المستخدم عند الضغط على زر الحذف الفردي
         if(currentUser.username !== 'mahmoud') return alert("عذراً، هذا الإجراء خاص بالمشرف محمود فقط.");
-
         if(confirm("هل أنت متأكد من حذف هذا السجل نهائياً؟")) {
             db.ref(`users/${un}/sessions/${key}`).remove().then(() => { 
                 renderUserReport(); 
@@ -737,18 +739,25 @@
 
     function startMyBreak(t) { 
         if(currentUser.isOnBreak) return; 
-        const currentPrayingCount = Object.values(allUsersData).filter(u => u.isOnBreak && u.breakType === 'صلاة').length;
-        if(t === 'صلاة') {
-            if(currentPrayingCount >= maxPrayersAllowed) {
-                return alert("حد الصلاة مكتمل حالياً، انتظر زملائك.");
+        
+        // التحقق من صلاحية VIP
+        // إذا لم يكن المستخدم VIP، نقوم بتنفيذ الشروط والقيود
+        if (!currentUser.isVIP) {
+            const currentPrayingCount = Object.values(allUsersData).filter(u => u.isOnBreak && u.breakType === 'صلاة').length;
+            if(t === 'صلاة') {
+                if(currentPrayingCount >= maxPrayersAllowed) {
+                    return alert("حد الصلاة مكتمل حالياً، انتظر زملائك.");
+                }
+            }
+            if (t === 'بريك عام' || t === 'طوارئ' || t === 'ميتنج' || t === 'متابع عميل' || t === 'استراحة VIP') {
+                const currentActiveBreaks = Object.values(allUsersData).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
+                if (currentActiveBreaks >= maxBreaksAllowed) {
+                    return alert("يا بطل، زمايلك كلهم في البريك دلوقتي. استنى دقايق لحد ما حد يرجع عشان نفضل شغالين.. أول ما حد يرجع الطريق هيكون مفتوح ليك! 💪");
+                }
             }
         }
-        if (t === 'بريك عام' || t === 'طوارئ' || t === 'ميتنج' || t === 'متابع عميل' || t === 'استراحة VIP') {
-            const currentActiveBreaks = Object.values(allUsersData).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
-            if (currentActiveBreaks >= maxBreaksAllowed) {
-                return alert("يا بطل، زمايلك كلهم في البريك دلوقتي. استنى دقايق لحد ما حد يرجع عشان نفضل شغالين.. أول ما حد يرجع الطريق هيكون مفتوح ليك! 💪");
-            }
-        }
+        // إذا كان VIP يتجاوز الشروط أعلاه مباشرة
+
         let r = document.getElementById('breakReason').value.trim(); 
         if(t === 'طوارئ' && currentUser.emRequest) r = currentUser.emRequest.reason;
         if(t === 'ميتنج' && currentUser.meetingRequest) r = currentUser.meetingRequest.reason; 
@@ -832,7 +841,6 @@
 
     function endDay() { if(confirm("تصفير اليوم للجميع؟")) { Object.keys(allUsersData).forEach(un => { if(!MANAGERS.includes(un)) db.ref('users/'+un).update({ usedSeconds: 0, prayerSeconds: 0, meetingSeconds: 0, followUpSeconds: 0, vipSeconds: 0, isOnBreak: false, lastStartTime: null, otRequest: null, emRequest: null, meetingRequest: null, lastEndedTime: null, lastEndedType: null }); }); triggerGlobalRefresh(); } }
     
-    // الدوال الخاصة بالتصفير والحذف (تم تأمينها لمحمود فقط)
     function deleteAllReports() { 
         if(currentUser.username !== 'mahmoud') return alert("عذراً، هذا الإجراء خاص بالمشرف محمود فقط.");
         if(confirm("حذف كل الأرشيف؟")) { 
