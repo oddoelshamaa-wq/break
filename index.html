@@ -851,15 +851,77 @@
     }
 
     function sendEmRequest() { const r = document.getElementById('breakReason').value.trim(); if(!r) return alert("اكتب السبب"); db.ref('users/'+currentUser.username+'/emRequest').set({ reason: r, status: 'قيد الانتظار', timestamp: getServerTime() }); }
-    function updateEmStatus() { const el = document.getElementById('emStatusArea'); if(!currentUser.emRequest) return el.innerHTML = `<button onclick="sendEmRequest()" class="btn btn-danger" style="width:100%">طلب</button>`; if(currentUser.emRequest.status === 'قيد الانتظار') el.innerHTML = `<span style="color:orange;">⏳...</span>`; else if(currentUser.emRequest.status === 'تم القبول') el.innerHTML = `<button onclick="startMyBreak('طوارئ')" class="btn btn-success btn-sm" style="width:100%">ابدأ</button>`; else el.innerHTML = `<span style="color:red;">✖</span>`; }
+    
+    function updateEmStatus() { 
+        const el = document.getElementById('emStatusArea'); 
+        if(!currentUser.emRequest) {
+            el.innerHTML = `<button onclick="sendEmRequest()" class="btn btn-danger" style="width:100%">طلب</button>`;
+            return;
+        }
+        if(currentUser.emRequest.status === 'قيد الانتظار') {
+            el.innerHTML = `<span style="color:orange;">⏳...</span>`;
+        } else if(currentUser.emRequest.status === 'تم القبول') {
+            el.innerHTML = `<button onclick="startMyBreak('طوارئ')" class="btn btn-success btn-sm" style="width:100%">ابدأ</button>`;
+        } else {
+            el.innerHTML = `<span style="color:red; font-weight:bold;">❌ تم الرفض</span>`;
+            setTimeout(() => {
+                if(currentUser.emRequest && (currentUser.emRequest.status === 'رُفض' || currentUser.emRequest.status.includes('رفض'))) {
+                    db.ref('users/'+currentUser.username+'/emRequest').remove();
+                }
+            }, 4000);
+        }
+    }
+
     function renderAdminEmRequests() { const tb = document.getElementById('adminEmBody'); tb.innerHTML = ''; let c = 0; Object.values(allUsersData).forEach(u => { if(u.emRequest && u.emRequest.status === 'قيد الانتظار') { c++; tb.innerHTML += `<tr><td>${u.realName}</td><td>${u.emRequest.reason}</td><td>${new Date(u.emRequest.timestamp).toLocaleTimeString()}</td><td><button onclick="handleEm('${u.username}', true)" class="btn btn-success btn-sm">✔</button><button onclick="handleEm('${u.username}', false)" class="btn btn-danger btn-sm">✖</button></td></tr>`; } }); document.getElementById('emBadge').innerText = c; c > 0 ? document.getElementById('emBadge').classList.remove('hidden') : document.getElementById('emBadge').classList.add('hidden'); }
     window.handleEm = (un, app) => { if(app) db.ref('users/'+un).update({ isOnBreak: true, breakType: 'طوارئ', lastStartTime: getServerTime(), lastReason: allUsersData[un].emRequest.reason, 'emRequest/status': 'تم القبول' }); else db.ref(`users/${un}/emRequest`).update({ status: 'رُفض' }); triggerGlobalRefresh(); };
+    
     function sendMeetingRequest() { const r = document.getElementById('breakReason').value.trim(); if(!r) return alert("اكتب السبب"); db.ref('users/'+currentUser.username+'/meetingRequest').set({ reason: r, status: 'قيد الانتظار', timestamp: getServerTime() }); }
-    function updateMeetingStatus() { const el = document.getElementById('meetingStatusArea'); if(!currentUser.meetingRequest) return el.innerHTML = `<button onclick="sendMeetingRequest()" class="btn btn-warning" style="width:100%">طلب</button>`; if(currentUser.meetingRequest.status === 'قيد الانتظار') el.innerHTML = `<span style="color:orange;">⏳...</span>`; else if(currentUser.meetingRequest.status === 'تم القبول') el.innerHTML = `<button onclick="startMyBreak('ميتنج')" class="btn btn-success btn-sm" style="width:100%">ابدأ</button>`; else el.innerHTML = `<span style="color:red;">✖</span>`; }
+    
+    function updateMeetingStatus() { 
+        const el = document.getElementById('meetingStatusArea'); 
+        if(!currentUser.meetingRequest) {
+            el.innerHTML = `<button onclick="sendMeetingRequest()" class="btn btn-warning" style="width:100%">طلب</button>`;
+            return;
+        }
+        if(currentUser.meetingRequest.status === 'قيد الانتظار') {
+            el.innerHTML = `<span style="color:orange;">⏳...</span>`;
+        } else if(currentUser.meetingRequest.status === 'تم القبول') {
+            el.innerHTML = `<button onclick="startMyBreak('ميتنج')" class="btn btn-success btn-sm" style="width:100%">ابدأ</button>`;
+        } else {
+            el.innerHTML = `<span style="color:red; font-weight:bold;">❌ تم الرفض</span>`;
+            setTimeout(() => {
+                if(currentUser.meetingRequest && (currentUser.meetingRequest.status === 'رُفض' || currentUser.meetingRequest.status.includes('رفض'))) {
+                    db.ref('users/'+currentUser.username+'/meetingRequest').remove();
+                }
+            }, 4000);
+        }
+    }
+
     function renderAdminMeetingRequests() { const tb = document.getElementById('adminMeetBody'); tb.innerHTML = ''; let c = 0; Object.values(allUsersData).forEach(u => { if(u.meetingRequest && u.meetingRequest.status === 'قيد الانتظار') { c++; tb.innerHTML += `<tr><td>${u.realName}</td><td>${u.meetingRequest.reason}</td><td>${new Date(u.meetingRequest.timestamp).toLocaleTimeString()}</td><td><button onclick="handleMeeting('${u.username}', true)" class="btn btn-success btn-sm">✔</button><button onclick="handleMeeting('${u.username}', false)" class="btn btn-danger btn-sm">✖</button></td></tr>`; } }); document.getElementById('meetBadge').innerText = c; c > 0 ? document.getElementById('meetBadge').classList.remove('hidden') : document.getElementById('meetBadge').classList.add('hidden'); }
     window.handleMeeting = (un, app) => { if(app) db.ref('users/'+un).update({ isOnBreak: true, breakType: 'ميتنج', lastStartTime: getServerTime(), lastReason: allUsersData[un].meetingRequest.reason, 'meetingRequest/status': 'تم القبول' }); else db.ref(`users/${un}/meetingRequest`).update({ status: 'رُفض' }); triggerGlobalRefresh(); };
+    
     function sendOtRequest() { const h = document.getElementById('otHoursInput').value; if(!h) return; db.ref('users/'+currentUser.username+'/otRequest').set({ hours: h, status: 'قيد الانتظار', timestamp: getServerTime() }); }
-    function updateOtStatus() { const el = document.getElementById('otStatusDisplay'); if(!currentUser.otRequest) return; el.innerText = currentUser.otRequest.status === 'قيد الانتظار' ? "⏳ قيد الانتظار" : (currentUser.otRequest.status === 'تم القبول' ? "✅ تم القبول" : "❌ تم الرفض"); }
+    
+    function updateOtStatus() { 
+        const el = document.getElementById('otStatusDisplay'); 
+        if(!currentUser.otRequest) {
+            el.innerText = "";
+            return;
+        }
+        if (currentUser.otRequest.status === 'قيد الانتظار') {
+            el.innerText = "⏳ قيد الانتظار";
+        } else if (currentUser.otRequest.status === 'تم القبول') {
+            el.innerText = "✅ تم القبول";
+        } else {
+            el.innerText = "❌ تم الرفض";
+            setTimeout(() => {
+                if(currentUser.otRequest && (currentUser.otRequest.status === 'رُفض' || currentUser.otRequest.status.includes('رفض'))) {
+                    db.ref('users/'+currentUser.username+'/otRequest').remove();
+                }
+            }, 4000);
+        }
+    }
+
     function renderAdminOtRequests() { const tb = document.getElementById('adminOtBody'); tb.innerHTML = ''; let c=0; Object.values(allUsersData).forEach(u => { if(u.otRequest && u.otRequest.status === 'قيد الانتظار') { c++; tb.innerHTML += `<tr><td>${u.realName}</td><td>${u.otRequest.hours}س</td><td>${new Date(u.otRequest.timestamp).toLocaleTimeString()}</td><td><button onclick="handleOt('${u.username}', true)" class="btn btn-success btn-sm">✔</button><button onclick="handleOt('${u.username}', false)" class="btn btn-danger btn-sm">✖</button></td></tr>`; } }); document.getElementById('otBadge').innerText = c; c > 0 ? document.getElementById('otBadge').classList.remove('hidden') : document.getElementById('otBadge').classList.add('hidden'); }
     window.handleOt = (un, app) => { if(app) db.ref(`users/${un}/overtimeHistory/${getServerTime()}`).set({ date: getServerDateString(), hours: allUsersData[un].otRequest.hours, approvedBy: currentUser.username }); db.ref(`users/${un}/otRequest`).update({ status: app ? 'تم القبول' : 'رُفض' }).then(() => triggerGlobalRefresh()); };
     function endDay() { if(confirm("تصفير اليوم للجميع؟")) { Object.keys(allUsersData).forEach(un => { if(!MANAGERS.includes(un)) db.ref('users/'+un).update({ usedSeconds: 0, prayerSeconds: 0, meetingSeconds: 0, followUpSeconds: 0, vipSeconds: 0, isOnBreak: false, lastStartTime: null, otRequest: null, emRequest: null, meetingRequest: null, lastEndedTime: null, lastEndedType: null }); }); triggerGlobalRefresh(); } }
