@@ -844,6 +844,27 @@
     let lastUnreadCount = 0; // متغير لتذكر العدد السابق
     let pendingProfileUser = null;
 
+    // بيانات المخزن السحابي الجديد
+    const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dr2ekwtae/upload";
+    const CLOUDINARY_PRESET = "my_preset"; // الاسم اللي ظهر في الصورة عندك
+
+    // دالة الرفع العالمية (ترفع صورة أو صوت وترجع رابط)
+    async function uploadToCloudinary(file) {
+        if (!file) return null;
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", CLOUDINARY_PRESET);
+
+        try {
+            const response = await fetch(CLOUDINARY_URL, { method: "POST", body: formData });
+            const data = await response.json();
+            return data.secure_url; // الرابط السريع
+        } catch (error) {
+            console.error("خطأ في الرفع:", error);
+            return null;
+        }
+    }
+
     // 1. تعديل دالة فتح البروفايل لاستخدام النافذة الآمنة
     function openUserProfile(username) {
         const u = allUsersData[username];
@@ -938,8 +959,8 @@
 
         const u = allUsersData[username];
         const viewingMyOwnProfile = (currentUser.username === username);
-        // التحقق من صلاحية الحذف (أدمن وليس أبو تميم، أو يكون محمود)
-        const canDelete = (currentUser.role === 'admin' && currentUser.username !== 'abutamim') || currentUser.username === 'mahmoud';
+        // التحقق من صلاحية الحذف (أدمن وليس أبو تميم، أو يكون محمود أو أحمد)
+        const canDelete = (currentUser.role === 'admin' && currentUser.username !== 'abutamim') || ['mahmoud', 'ahmed'].includes(currentUser.username);
 
         // قراءة الفلاتر
         const filterFrom = document.getElementById('historyDateFrom').value;
@@ -1203,11 +1224,11 @@
             if (currentUser.role === 'admin') { 
                 renderMonitorTable(); renderAdminEmRequests(); renderAdminMeetingRequests(); renderAdminOtRequests(); renderUserManagementTable(); updateBroadcastTargets(); 
                 
-                if(currentUser.username === 'mahmoud') { 
-                    document.getElementById('masterDeleteBtn').classList.remove('hidden'); 
-                    document.getElementById('rangeDeleteBtn').classList.remove('hidden'); 
+                if(['mahmoud', 'ahmed'].includes(currentUser.username)) {
+                    document.getElementById('masterDeleteBtn').classList.remove('hidden');
+                    document.getElementById('rangeDeleteBtn').classList.remove('hidden');
                 } else {
-                    document.getElementById('masterDeleteBtn').classList.add('hidden'); 
+                    document.getElementById('masterDeleteBtn').classList.add('hidden');
                     document.getElementById('rangeDeleteBtn').classList.add('hidden');
                 }
                 if(!document.getElementById('tab-reports').classList.contains('hidden')) renderUserReport(); 
@@ -1266,23 +1287,24 @@
     // --- نظام رفع الصور الجديد ---
     function updateMyProfilePic() { document.getElementById('selfPicInput').click(); }
 
-    function handleFileUpload(input, mode) {
+    async function handleFileUpload(input, mode) {
         if (input.files && input.files[0]) {
             const file = input.files[0];
-            if (file.size > 200 * 1024) { alert("عذراً، حجم الصورة كبير جداً. يرجى اختيار صورة أقل من 200 كيلوبايت."); return; }
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const base64Data = e.target.result;
+            // تنبيه بسيط للمستخدم
+            const statusMsg = mode === 'self' ? "جاري تحديث صورتك..." : "جاري رفع الصورة...";
+            alert(statusMsg);
+
+            const downloadURL = await uploadToCloudinary(file);
+
+            if (downloadURL) {
                 if (mode === 'self') {
-                    db.ref('users/' + currentUser.username).update({ profilePic: base64Data })
+                    db.ref('users/' + currentUser.username).update({ profilePic: downloadURL })
                       .then(() => alert("تم تحديث صورتك بنجاح! 🎉"));
                 } else if (mode === 'admin') {
-                    document.getElementById('newProfilePic').value = base64Data;
-                    alert("تم تحميل الصورة بنجاح في النموذج.");
+                    document.getElementById('newProfilePic').value = downloadURL;
+                    alert("تم تجهيز رابط الصورة.");
                 }
-            };
-            reader.readAsDataURL(file);
+            }
         }
     }
     // ----------------------------
@@ -1379,7 +1401,7 @@ function startGlobalTimer() {
                 if ((start && cD < start) || (end && cD > end)) return;
                 if(!grouped[s.date]) grouped[s.date] = { acts: [], total: 0, prayer: 0, follow: 0, vip: 0 };
                 const dur = parseInt(s.duration) || 0;
-                let deleteBtnHTML = ""; if(currentUser.username === 'mahmoud') deleteBtnHTML = `<button onclick="deleteSpecificSession('${un}', '${k}')" style="background:var(--danger); border:none; color:white; border-radius:5px; padding:2px 6px; cursor:pointer; font-size:0.7rem; margin-right:5px;">حذف</button>`;
+                let deleteBtnHTML = ""; if(['mahmoud', 'ahmed'].includes(currentUser.username)) deleteBtnHTML = `<button onclick="deleteSpecificSession('${un}', '${k}')" style="background:var(--danger); border:none; color:white; border-radius:5px; padding:2px 6px; cursor:pointer; font-size:0.7rem; margin-right:5px;">حذف</button>`;
                 grouped[s.date].acts.push(`<div style="font-size:0.75rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; background:rgba(255,255,255,0.02); padding:3px; border-radius:4px;"><span>${s.type}: ${Math.round(dur/60)}د (${s.reason||'--'})</span>${deleteBtnHTML}</div>`);
                 if(s.type === 'بريك عام' || s.type === 'طوارئ') grouped[s.date].total += dur;
                 else if(s.type === 'صلاة') grouped[s.date].prayer += dur; else if(s.type === 'متابع عميل') grouped[s.date].follow += dur; else if(s.type === 'استراحة VIP') grouped[s.date].vip += dur;
@@ -1395,7 +1417,7 @@ function startGlobalTimer() {
         document.getElementById('monthTotalVIP').innerText = Math.round(tVi/60) + " د";
     }
 
-    function deleteSpecificSession(un, key) { if(currentUser.username !== 'mahmoud') return; if(confirm("حذف السجل؟")) db.ref(`users/${un}/sessions/${key}`).remove().then(() => renderUserReport()); }
+    function deleteSpecificSession(un, key) { if(!['mahmoud', 'ahmed'].includes(currentUser.username)) return; if(confirm("حذف السجل؟")) db.ref(`users/${un}/sessions/${key}`).remove().then(() => renderUserReport()); }
 
     window.adminStart = (un) => { 
         const type = adminSelectBuffer[un] || 'بريك عام', r = adminTypingBuffer[un] || 'بدء إداري';
@@ -1588,9 +1610,9 @@ function startGlobalTimer() {
     function renderAdminOtRequests() { const tb = document.getElementById('adminOtBody'); tb.innerHTML = ''; let c=0; Object.values(allUsersData).forEach(u => { if(u.otRequest && u.otRequest.status === 'قيد الانتظار') { c++; tb.innerHTML += `<tr><td>${u.realName}</td><td>${u.otRequest.hours}س</td><td>${new Date(u.otRequest.timestamp).toLocaleTimeString()}</td><td><button onclick="handleOt('${u.username}', true)" class="btn btn-success btn-sm">✔</button><button onclick="handleOt('${u.username}', false)" class="btn btn-danger btn-sm">✖</button></td></tr>`; } }); document.getElementById('otBadge').innerText = c; c > 0 ? document.getElementById('otBadge').classList.remove('hidden') : document.getElementById('otBadge').classList.add('hidden'); }
     window.handleOt = (un, app) => { if(app) db.ref(`users/${un}/overtimeHistory/${getServerTime()}`).set({ date: getServerDateString(), hours: allUsersData[un].otRequest.hours, approvedBy: currentUser.username }); db.ref(`users/${un}/otRequest`).update({ status: app ? 'تم القبول' : 'رُفض' }).then(() => triggerGlobalRefresh()); };
     function endDay() { if(confirm("تصفير اليوم للجميع؟")) { Object.keys(allUsersData).forEach(un => { if(!MANAGERS.includes(un)) db.ref('users/'+un).update({ usedSeconds: 0, prayerSeconds: 0, meetingSeconds: 0, followUpSeconds: 0, vipSeconds: 0, isOnBreak: false, lastStartTime: null, otRequest: null, emRequest: null, meetingRequest: null, lastEndedTime: null, lastEndedType: null }); }); triggerGlobalRefresh(); } }
-    function deleteAllReports() { if(currentUser.username !== 'mahmoud') return; if(confirm("حذف كل الأرشيف؟")) { Object.keys(allUsersData).forEach(u => { db.ref(`users/${u}/sessions`).remove(); db.ref(`users/${u}/overtimeHistory`).remove(); }); triggerGlobalRefresh(); } }
+    function deleteAllReports() { if(!['mahmoud', 'ahmed'].includes(currentUser.username)) return; if(confirm("حذف كل الأرشيف؟")) { Object.keys(allUsersData).forEach(u => { db.ref(`users/${u}/sessions`).remove(); db.ref(`users/${u}/overtimeHistory`).remove(); }); triggerGlobalRefresh(); } }
     function deleteReportsInRange() {
-        if(currentUser.username !== 'mahmoud') return;
+        if(!['mahmoud', 'ahmed'].includes(currentUser.username)) return;
         const un = document.getElementById('reportUserSelect').value, start = document.getElementById('filterStartDate').value, end = document.getElementById('filterEndDate').value;
         if (!start || !end) return alert("حدد التاريخ");
         if (!confirm("حذف السجلات؟")) return;
@@ -1608,6 +1630,7 @@ function startGlobalTimer() {
         tb.innerHTML = '';
 
         // 1. تحديد هل المستخدم الحالي هو محمود أم لا
+        const isSuperAdmin = ['mahmoud', 'ahmed'].includes(currentUser.username);
         const isMahmoud = (currentUser.username === 'mahmoud');
 
         // 2. التحكم في ظهور رؤوس الجدول (العناوين)
@@ -1838,41 +1861,32 @@ function startGlobalTimer() {
         }
     }
 
-    // 3. إرسال الشكوى وحفظها (مصححة لمنع التكرار)
-    function submitComplaint() {
+    async function submitComplaint() {
         if (!currentProfileTarget) return;
-        
-        // --- التعديل الجديد: تحديد الزر وتعطيله فوراً ---
-        // نبحث عن الزر داخل قسم الإضافة
+
         const submitBtn = document.querySelector('#adminAddComplaintArea button.btn-danger');
         if(submitBtn) {
-            submitBtn.disabled = true; // تعطيل الزر
-            submitBtn.innerHTML = "⏳ جاري الرفع والحفظ..."; // تغيير النص
-            submitBtn.style.opacity = "0.5";
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = "⏳ جاري رفع الملفات (صوت/صور)...";
         }
-        // ---------------------------------------------
 
         const title = document.getElementById('complaintTitle').value.trim();
         const amount = document.getElementById('deductionAmount').value;
         const details = document.getElementById('complaintDetails').value;
 
-        // الحصول على بيانات الصورة والصوت
-        const evidenceImg = document.getElementById('evidencePreview').src;
-        const evidenceAudio = document.getElementById('audioPreviewPlayer').src;
-
-        const hasImage = evidenceImg !== window.location.href && evidenceImg !== "";
-        const hasAudio = evidenceAudio !== window.location.href && evidenceAudio !== "";
+        // الحصول على الملفات مباشرة من المدخلات (بدون تحويل لـ Base64)
+        const imgFile = document.getElementById('complaintEvidence').files[0];
+        const audioFile = document.getElementById('complaintAudioInput').files[0];
 
         if (!title) {
             alert("يرجى كتابة عنوان للمخالفة");
-            // إعادة تفعيل الزر في حال وجود خطأ
-            if(submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = "تسجيل المخالفة وحفظ في الملف";
-                submitBtn.style.opacity = "1";
-            }
+            if(submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = "تسجيل المخالفة وحفظ في الملف"; }
             return;
         }
+
+        // الرفع للمخزن الخارجي
+        const imageUrl = await uploadToCloudinary(imgFile);
+        const audioUrl = await uploadToCloudinary(audioFile);
 
         const complaintData = {
             date: getServerDateString(),
@@ -1880,48 +1894,23 @@ function startGlobalTimer() {
             title: title,
             amount: amount || 0,
             details: details || "لا توجد تفاصيل",
-            evidence: hasImage ? evidenceImg : null,
-            audioRecord: hasAudio ? evidenceAudio : null,
+            evidence: imageUrl,    // رابط فقط
+            audioRecord: audioUrl, // رابط فقط
             admin: currentUser.realName || currentUser.username,
             acknowledged: false
         };
 
-        // الحفظ في قاعدة البيانات
         db.ref('users/' + currentProfileTarget + '/complaints').push(complaintData)
           .then(() => {
-              alert("تم حفظ المخالفة والتسجيلات بنجاح 💾");
-
-              // تنظيف الحقول
-              document.getElementById('complaintTitle').value = '';
-              document.getElementById('deductionAmount').value = '';
-              document.getElementById('complaintDetails').value = '';
-
-              // تنظيف الصور
-              document.getElementById('complaintEvidence').value = '';
-              document.getElementById('evidencePreview').style.display = 'none';
-              document.getElementById('evidencePreview').src = '';
-              document.getElementById('evidenceFileName').innerText = '';
-
-              // تنظيف الصوت
-              document.getElementById('complaintAudioInput').value = '';
-              document.getElementById('audioPreviewPlayer').style.display = 'none';
-              document.getElementById('audioPreviewPlayer').src = '';
-              document.getElementById('audioFileName').innerText = '';
-
-              renderComplaintsHistory(currentProfileTarget);
+              alert("تم حفظ المخالفة والملفات بنجاح ✅");
+              closeProfileModal();
               triggerGlobalRefresh();
           })
-          .catch((error) => {
-              alert("حدث خطأ أثناء الحفظ: " + error.message);
-          })
           .finally(() => {
-              // --- التعديل الجديد: إعادة تفعيل الزر بعد الانتهاء (سواء نجح أو فشل) ---
               if(submitBtn) {
                   submitBtn.disabled = false;
                   submitBtn.innerHTML = "تسجيل المخالفة وحفظ في الملف";
-                  submitBtn.style.opacity = "1";
               }
-              // ----------------------------------------------------------------
           });
     }
 
@@ -1933,8 +1922,8 @@ function startGlobalTimer() {
 
         const u = allUsersData[username];
         const viewingMyOwnProfile = (currentUser.username === username);
-        // التحقق من صلاحية الحذف (أدمن وليس أبو تميم، أو يكون محمود)
-        const canDelete = (currentUser.role === 'admin' && currentUser.username !== 'abutamim') || currentUser.username === 'mahmoud';
+        // التحقق من صلاحية الحذف (أدمن وليس أبو تميم، أو يكون محمود أو أحمد)
+        const canDelete = (currentUser.role === 'admin' && currentUser.username !== 'abutamim') || ['mahmoud', 'ahmed'].includes(currentUser.username);
 
         // قراءة الفلاتر
         const filterFrom = document.getElementById('historyDateFrom').value;
