@@ -434,7 +434,19 @@
         </div>
 
         <!-- سجل المخالفات -->
-        <h3 style="color:var(--text-light);">📂 السجل الوظيفي (الشكاوى والخصومات)</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:15px;">
+            <h3 style="color:var(--text-light); margin:0;">📂 السجل الوظيفي</h3>
+
+            <!-- قسم الفلترة الجديد -->
+            <div style="display:flex; gap:5px; background:rgba(0,0,0,0.3); padding:5px; border-radius:10px; border:1px solid var(--glass-border);">
+                <input type="date" id="historyDateFrom" style="margin:0; padding:5px; font-size:0.8rem; width:110px;">
+                <span style="color:white; align-self:center;">:</span>
+                <input type="date" id="historyDateTo" style="margin:0; padding:5px; font-size:0.8rem; width:110px;">
+                <button onclick="renderComplaintsHistory(currentProfileTarget)" class="btn btn-primary btn-sm">🔍</button>
+                <button onclick="clearHistoryFilters()" class="btn btn-dark btn-sm">❌</button>
+            </div>
+        </div>
+
         <div class="table-responsive">
             <table>
                 <thead>
@@ -494,6 +506,21 @@
 <!-- نافذة تكبير الصورة -->
 <div id="imgZoomModal" class="hidden" onclick="this.classList.add('hidden')" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:20000; display:flex; justify-content:center; align-items:center;">
     <img id="zoomedImg" src="" style="max-width:90%; max-height:90%; border-radius:10px; box-shadow:0 0 50px rgba(255,255,255,0.2);">
+</div>
+
+<!-- نافذة إدخال باسورد فتح الملف (بديلة للـ prompt) -->
+<div id="accessFileModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:17000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
+    <div style="background:#1e293b; border:2px solid var(--primary); border-radius:20px; padding:30px; width:90%; max-width:350px; text-align:center;">
+        <h3 style="color:white; margin-bottom:20px;">🔒 هذا الملف محمي</h3>
+        <p style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">أدخل كلمة سر خصوصية الملف للمتابعة</p>
+
+        <input type="password" id="accessFilePassInput" placeholder="●●●●●●" class="form-control-glass" style="width:100%; text-align:center; font-size:1.5rem; letter-spacing: 5px;">
+
+        <div style="display:flex; gap:10px; margin-top:10px;">
+            <button onclick="confirmAccessFile()" class="btn btn-primary" style="flex:1;">فتح الملف</button>
+            <button onclick="closeAccessModal()" class="btn btn-dark" style="flex:1;">إلغاء</button>
+        </div>
+    </div>
 </div>
 
 <div class="container hidden" id="mainContainer">
@@ -796,6 +823,189 @@
     let csAudioBase64 = null;
     let csImageBase64 = null;
     let lastUnreadCount = 0; // متغير لتذكر العدد السابق
+    let pendingProfileUser = null;
+
+    // 1. تعديل دالة فتح البروفايل لاستخدام النافذة الآمنة
+    function openUserProfile(username) {
+        const u = allUsersData[username];
+        if(!u) return;
+
+        const isAdmin = MANAGERS.includes(currentUser.username);
+        const isOwner = (currentUser.username === username);
+
+        // إذا كان الموظف هو من يفتح ملفه
+        if (!isAdmin && isOwner) {
+            // إذا لم يكن لديه باسورد بعد
+            if (!u.filePassword) {
+                alert("🔒 لم تقم بتعيين كلمة سر لخصوصية ملفك بعد. يرجى تعيينها الآن.");
+                openFilePassModal(true);
+                return;
+            }
+
+            // بدلاً من prompt، نفتح النافذة الآمنة
+            pendingProfileUser = username;
+            document.getElementById('accessFilePassInput').value = ''; // تصفير الحقل
+            document.getElementById('accessFileModal').classList.remove('hidden');
+            document.getElementById('accessFilePassInput').focus();
+            return;
+        }
+
+        // لو أدمن، يفتح علطول
+        loadProfileData(username);
+    }
+
+    // دالة التحقق من الباسورد في النافذة الجديدة
+    function confirmAccessFile() {
+        const inputPass = document.getElementById('accessFilePassInput').value;
+        const u = allUsersData[pendingProfileUser];
+
+        if (inputPass === u.filePassword) {
+            document.getElementById('accessFileModal').classList.add('hidden');
+            loadProfileData(pendingProfileUser); // فتح الملف
+        } else {
+            alert("❌ كلمة السر غير صحيحة!");
+            document.getElementById('accessFilePassInput').value = '';
+        }
+    }
+
+    function closeAccessModal() {
+        document.getElementById('accessFileModal').classList.add('hidden');
+        pendingProfileUser = null;
+    }
+
+    // دالة تحميل البيانات (فصلناها لتسهيل الاستدعاء)
+    function loadProfileData(username) {
+        currentProfileTarget = username;
+        const u = allUsersData[username];
+        const isAdmin = MANAGERS.includes(currentUser.username);
+
+        document.getElementById('profileModal').classList.remove('hidden');
+        document.getElementById('modalRealName').innerText = u.realName || username;
+        document.getElementById('modalUserName').innerText = `@${u.username}`;
+        document.getElementById('modalProfilePic').src = u.profilePic || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+
+        if (isAdmin) {
+            document.getElementById('adminAddComplaintArea').classList.remove('hidden');
+        } else {
+            document.getElementById('adminAddComplaintArea').classList.add('hidden');
+            // تحديث حالة المشاهدة
+            if (u.complaints) {
+                Object.keys(u.complaints).forEach(key => {
+                    if (!u.complaints[key].seen && !u.complaints[key].acknowledged) {
+                        db.ref(`users/${username}/complaints/${key}`).update({ seen: true });
+                    }
+                });
+            }
+        }
+
+        // تصفير الفلاتر عند الفتح
+        clearHistoryFilters(false);
+        renderComplaintsHistory(username);
+    }
+
+    // دالة تصفير الفلاتر
+    function clearHistoryFilters(reload = true) {
+        document.getElementById('historyDateFrom').value = '';
+        document.getElementById('historyDateTo').value = '';
+        if(reload && currentProfileTarget) renderComplaintsHistory(currentProfileTarget);
+    }
+
+    // 2. تعديل دالة عرض الشكاوى (لإضافة الفلترة + إخفاء الحذف عن abutamim)
+    function renderComplaintsHistory(username) {
+        const tbody = document.getElementById('complaintsHistoryBody');
+        tbody.innerHTML = '';
+
+        if (!allUsersData[username]) return;
+
+        const u = allUsersData[username];
+        const viewingMyOwnProfile = (currentUser.username === username);
+        // التحقق من صلاحية الحذف (أدمن وليس أبو تميم، أو يكون محمود)
+        const canDelete = (currentUser.role === 'admin' && currentUser.username !== 'abutamim') || currentUser.username === 'mahmoud';
+
+        // قراءة الفلاتر
+        const filterFrom = document.getElementById('historyDateFrom').value;
+        const filterTo = document.getElementById('historyDateTo').value;
+
+        if (u.complaints) {
+            const keys = Object.keys(u.complaints).reverse();
+
+            keys.forEach(key => {
+                const c = u.complaints[key];
+
+                // منطق الفلترة بالتاريخ
+                if (filterFrom || filterTo) {
+                    // تحويل تاريخ الشكوى من DD/MM/YYYY إلى YYYY-MM-DD للمقارنة
+                    const parts = c.date.split('/');
+                    const cDateISO = `${parts[2]}-${parts[1]}-${parts[0]}`;
+
+                    if (filterFrom && cDateISO < filterFrom) return; // تخطي
+                    if (filterTo && cDateISO > filterTo) return; // تخطي
+                }
+
+                let actionCell = '';
+
+                // منطق الحالات
+                if (c.acknowledged) {
+                    actionCell += `<div style="color:#10b981; font-weight:bold; font-size:0.9rem;">✔ تم التأكيد</div>`;
+                } else if (c.seen) {
+                    if (currentUser.role === 'admin') {
+                        actionCell += `<div style="color:#3b82f6; font-size:0.85rem;">👁️ شاهدها</div>`;
+                    } else if (viewingMyOwnProfile) {
+                        actionCell += `<button onclick="acknowledgeComplaint('${key}')" class="btn btn-vip btn-sm" style="animation: pulse 2s infinite;">✍ موافق</button>`;
+                    }
+                } else {
+                    if (currentUser.role === 'admin') {
+                        actionCell += `<div style="color:#f59e0b; font-size:0.85rem;">⏳ لم يفتح</div>`;
+                    }
+                }
+
+                // زر الحذف (يظهر فقط إذا كان مسموح له)
+                if (canDelete) {
+                     actionCell += `<div style="margin-top:5px;">
+                        <button onclick="deleteComplaint('${username}', '${key}')" class="btn btn-danger btn-sm">🗑</button>
+                     </div>`;
+                }
+
+                // المرفقات
+                const evidenceBtn = c.evidence ? `<button onclick="showZoomImage('${c.evidence}')" class="btn btn-primary btn-sm">📷</button>` : '';
+                const audioPlayer = c.audioRecord ? `<div style="margin-top:5px;"><audio controls src="${c.audioRecord}" style="height:25px; width:150px;"></audio></div>` : '';
+                const proofCell = (evidenceBtn || audioPlayer) ? `<div>${evidenceBtn} ${audioPlayer}</div>` : '-';
+
+                // لون الصف
+                let rowColor = 'rgba(255,255,255,0.02)';
+                if (!c.acknowledged && !c.seen) rowColor = 'rgba(245, 158, 11, 0.08)';
+                if (!c.acknowledged && c.seen) rowColor = 'rgba(59, 130, 246, 0.08)';
+
+                tbody.innerHTML += `
+                    <tr style="background:${rowColor}; border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <td>${c.date}<br><small style="opacity:0.7">${c.time}</small></td>
+                        <td style="color:var(--primary); font-weight:bold;">${c.title}</td>
+                        <td style="font-size:0.9rem;">${c.details}</td>
+                        <td style="color:#ffd700;">${c.amount > 0 ? c.amount : '-'}</td>
+                        <td>${proofCell}</td>
+                        <td>${c.uploader || c.admin || 'System'}</td>
+                        <td style="text-align:center;">${actionCell}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">نظيف 🌟 (أو لا توجد نتائج للبحث)</td></tr>';
+        }
+    }
+
+    // 3. تأمين دالة الحذف أيضاً
+    function deleteComplaint(username, key) {
+        // حماية إضافية: لو المستخدم أبو تميم يرفض العملية
+        if (currentUser.username === 'abutamim') {
+            alert("⛔ ليس لديك صلاحية لحذف الشكاوى.");
+            return;
+        }
+
+        if(confirm("هل أنت متأكد من حذف هذه المخالفة من السجل؟")) {
+            db.ref('users/' + username + '/complaints/' + key).remove()
+            .then(() => renderComplaintsHistory(username));
+        }
+    }
 
     // دالة للتحقق من الشكاوى الجديدة في ملف الموظف
     function checkProfileNotifications(userData) {
@@ -1420,24 +1630,50 @@ function startGlobalTimer() {
 
         // إذا كان الموظف هو من يفتح ملفه
         if (!isAdmin && isOwner) {
-            // إذا كان الموظف لم يحدد باسورد للملف بعد، نطلب منه إنشاء واحد
+            // إذا لم يكن لديه باسورد بعد
             if (!u.filePassword) {
                 alert("🔒 لم تقم بتعيين كلمة سر لخصوصية ملفك بعد. يرجى تعيينها الآن.");
-                openFilePassModal(true); // وضع الإنشاء لأول مرة
+                openFilePassModal(true);
                 return;
             }
 
-            // إذا كان لديه باسورد، نطلبه منه
-            const passCheck = prompt("🔐 أدخل كلمة سر (خصوصية الملف) لعرض الشكاوى:");
-            if (passCheck === null) return;
-            if (passCheck !== u.filePassword) {
-                alert("❌ كلمة السر غير صحيحة! لا يمكن الدخول للملف.");
-                return;
-            }
+            // بدلاً من prompt، نفتح النافذة الآمنة
+            pendingProfileUser = username;
+            document.getElementById('accessFilePassInput').value = ''; // تصفير الحقل
+            document.getElementById('accessFileModal').classList.remove('hidden');
+            document.getElementById('accessFilePassInput').focus();
+            return;
         }
 
-        // إذا كان مديراً أو أدخل الباسورد الصحيح
+        // لو أدمن، يفتح علطول
+        loadProfileData(username);
+    }
+
+    // دالة التحقق من الباسورد في النافذة الجديدة
+    function confirmAccessFile() {
+        const inputPass = document.getElementById('accessFilePassInput').value;
+        const u = allUsersData[pendingProfileUser];
+
+        if (inputPass === u.filePassword) {
+            document.getElementById('accessFileModal').classList.add('hidden');
+            loadProfileData(pendingProfileUser); // فتح الملف
+        } else {
+            alert("❌ كلمة السر غير صحيحة!");
+            document.getElementById('accessFilePassInput').value = '';
+        }
+    }
+
+    function closeAccessModal() {
+        document.getElementById('accessFileModal').classList.add('hidden');
+        pendingProfileUser = null;
+    }
+
+    // دالة تحميل البيانات (فصلناها لتسهيل الاستدعاء)
+    function loadProfileData(username) {
         currentProfileTarget = username;
+        const u = allUsersData[username];
+        const isAdmin = MANAGERS.includes(currentUser.username);
+
         document.getElementById('profileModal').classList.remove('hidden');
         document.getElementById('modalRealName').innerText = u.realName || username;
         document.getElementById('modalUserName').innerText = `@${u.username}`;
@@ -1447,7 +1683,8 @@ function startGlobalTimer() {
             document.getElementById('adminAddComplaintArea').classList.remove('hidden');
         } else {
             document.getElementById('adminAddComplaintArea').classList.add('hidden');
-            if (isOwner && u.complaints) {
+            // تحديث حالة المشاهدة
+            if (u.complaints) {
                 Object.keys(u.complaints).forEach(key => {
                     if (!u.complaints[key].seen && !u.complaints[key].acknowledged) {
                         db.ref(`users/${username}/complaints/${key}`).update({ seen: true });
@@ -1455,7 +1692,17 @@ function startGlobalTimer() {
                 });
             }
         }
+
+        // تصفير الفلاتر عند الفتح
+        clearHistoryFilters(false);
         renderComplaintsHistory(username);
+    }
+
+    // دالة تصفير الفلاتر
+    function clearHistoryFilters(reload = true) {
+        document.getElementById('historyDateFrom').value = '';
+        document.getElementById('historyDateTo').value = '';
+        if(reload && currentProfileTarget) renderComplaintsHistory(currentProfileTarget);
     }
 
     function closeProfileModal() {
@@ -1588,50 +1835,48 @@ function startGlobalTimer() {
 
         const u = allUsersData[username];
         const viewingMyOwnProfile = (currentUser.username === username);
-        const isAdmin = (currentUser.role === 'admin' || currentUser.username === 'mahmoud');
+        // التحقق من صلاحية الحذف (أدمن وليس أبو تميم، أو يكون محمود)
+        const canDelete = (currentUser.role === 'admin' && currentUser.username !== 'abutamim') || currentUser.username === 'mahmoud';
+
+        // قراءة الفلاتر
+        const filterFrom = document.getElementById('historyDateFrom').value;
+        const filterTo = document.getElementById('historyDateTo').value;
 
         if (u.complaints) {
             const keys = Object.keys(u.complaints).reverse();
 
             keys.forEach(key => {
                 const c = u.complaints[key];
+
+                // منطق الفلترة بالتاريخ
+                if (filterFrom || filterTo) {
+                    // تحويل تاريخ الشكوى من DD/MM/YYYY إلى YYYY-MM-DD للمقارنة
+                    const parts = c.date.split('/');
+                    const cDateISO = `${parts[2]}-${parts[1]}-${parts[0]}`;
+
+                    if (filterFrom && cDateISO < filterFrom) return; // تخطي
+                    if (filterTo && cDateISO > filterTo) return; // تخطي
+                }
+
                 let actionCell = '';
 
-                // ====================================================
-                // منطق الحالات الجديد (3 حالات)
-                // ====================================================
-
+                // منطق الحالات
                 if (c.acknowledged) {
-                    // الحالة 3: وافق عليها
-                    actionCell += `<div style="color:#10b981; font-weight:bold; font-size:0.9rem;">
-                        ✔ تم التأكيد والموافقة
-                    </div>`;
+                    actionCell += `<div style="color:#10b981; font-weight:bold; font-size:0.9rem;">✔ تم التأكيد</div>`;
                 } else if (c.seen) {
-                    // الحالة 2: شافها بس لسه موافقش
-                    if (isAdmin) {
-                        actionCell += `<div style="color:#3b82f6; font-weight:bold; font-size:0.85rem; background:rgba(59, 130, 246, 0.1); padding:3px 8px; border-radius:10px; display:inline-block;">
-                            👁️ شاهدها (معلق)
-                        </div>`;
+                    if (currentUser.role === 'admin') {
+                        actionCell += `<div style="color:#3b82f6; font-size:0.85rem;">👁️ شاهدها</div>`;
                     } else if (viewingMyOwnProfile) {
-                        // للموظف: لسه الزرار موجود عشان يوافق
-                        actionCell += `<button onclick="acknowledgeComplaint('${key}')" class="btn btn-primary btn-sm" style="background:var(--vip-gold); color:black; font-weight:bold; animation: pulse 2s infinite;">
-                            ✍ تأكيد الموافقة
-                        </button>`;
+                        actionCell += `<button onclick="acknowledgeComplaint('${key}')" class="btn btn-vip btn-sm" style="animation: pulse 2s infinite;">✍ موافق</button>`;
                     }
                 } else {
-                    // الحالة 1: لسه مشافش حاجة
-                    if (isAdmin) {
-                        actionCell += `<div style="color:#f59e0b; font-weight:bold; font-size:0.85rem; background:rgba(245, 158, 11, 0.1); padding:3px 8px; border-radius:10px; display:inline-block;">
-                            ⏳ لم يفتح الملف
-                        </div>`;
-                    } else if (viewingMyOwnProfile) {
-                        // نادراً ما تظهر دي لأننا بنحولها لـ seen أول ما يفتح، بس احتياطي
-                        actionCell += `<button onclick="acknowledgeComplaint('${key}')" class="btn btn-primary btn-sm">موافق</button>`;
+                    if (currentUser.role === 'admin') {
+                        actionCell += `<div style="color:#f59e0b; font-size:0.85rem;">⏳ لم يفتح</div>`;
                     }
                 }
-                // ====================================================
 
-                if (isAdmin) {
+                // زر الحذف (يظهر فقط إذا كان مسموح له)
+                if (canDelete) {
                      actionCell += `<div style="margin-top:5px;">
                         <button onclick="deleteComplaint('${username}', '${key}')" class="btn btn-danger btn-sm">🗑</button>
                      </div>`;
@@ -1642,10 +1887,10 @@ function startGlobalTimer() {
                 const audioPlayer = c.audioRecord ? `<div style="margin-top:5px;"><audio controls src="${c.audioRecord}" style="height:25px; width:150px;"></audio></div>` : '';
                 const proofCell = (evidenceBtn || audioPlayer) ? `<div>${evidenceBtn} ${audioPlayer}</div>` : '-';
 
-                // لون الصف حسب الحالة
-                let rowColor = 'rgba(255,255,255,0.02)'; // الافتراضي (أخضر/تمت)
-                if (!c.acknowledged && !c.seen) rowColor = 'rgba(245, 158, 11, 0.08)'; // برتقالي (لم يشاهد)
-                if (!c.acknowledged && c.seen) rowColor = 'rgba(59, 130, 246, 0.08)'; // أزرق (شاهد)
+                // لون الصف
+                let rowColor = 'rgba(255,255,255,0.02)';
+                if (!c.acknowledged && !c.seen) rowColor = 'rgba(245, 158, 11, 0.08)';
+                if (!c.acknowledged && c.seen) rowColor = 'rgba(59, 130, 246, 0.08)';
 
                 tbody.innerHTML += `
                     <tr style="background:${rowColor}; border-bottom:1px solid rgba(255,255,255,0.05);">
@@ -1660,11 +1905,17 @@ function startGlobalTimer() {
                 `;
             });
         } else {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">نظيف 🌟</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">نظيف 🌟 (أو لا توجد نتائج للبحث)</td></tr>';
         }
     }
 
     function deleteComplaint(username, key) {
+        // حماية إضافية: لو المستخدم أبو تميم يرفض العملية
+        if (currentUser.username === 'abutamim') {
+            alert("⛔ ليس لديك صلاحية لحذف الشكاوى.");
+            return;
+        }
+
         if(confirm("هل أنت متأكد من حذف هذه المخالفة من السجل؟")) {
             db.ref('users/' + username + '/complaints/' + key).remove()
             .then(() => renderComplaintsHistory(username));
