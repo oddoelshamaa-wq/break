@@ -651,18 +651,7 @@
     </div>
                 <button onclick="saveUser()" id="saveUserBtn" class="btn btn-success" style="width:100%">حفظ</button>
             </div>
-            <div class="table-responsive"><table><thead>
-    <tr>
-        <th>الاسم</th>
-        <th>User</th>
-        <!-- تم إضافة ID لهذه الخانات للتحكم بها -->
-        <th id="headerUserPass">Pass</th>
-        <th id="headerFilePass" style="color:var(--accent)">قفل الملف</th>
-        <th>المدة</th>
-        <th>اللقب/الدلع</th>
-        <th>إجراء</th>
-    </tr>
-</thead><tbody id="usersManagementBody"></tbody></table></div>
+            <div class="table-responsive"><table><thead><tr><th>الاسم</th><th>User</th><th>Pass</th><th style="color:var(--accent)">قفل الملف</th><th>المدة</th><th>اللقب/الدلع</th><th>إجراء</th></tr></thead><tbody id="usersManagementBody"></tbody></table></div>
         </div>
     </div>
 
@@ -1595,64 +1584,16 @@ function startGlobalTimer() {
     }
 
     function renderUserManagementTable() {
-        const tb = document.getElementById('usersManagementBody');
-        if(!tb) return;
-        tb.innerHTML = '';
-
-        // 1. تحديد هل المستخدم الحالي هو محمود أم لا
-        const isMahmoud = (currentUser.username === 'mahmoud');
-
-        // 2. التحكم في ظهور رؤوس الجدول (العناوين)
-        const headerPass = document.getElementById('headerUserPass');
-        const headerFileLock = document.getElementById('headerFilePass');
-
-        if (headerPass && headerFileLock) {
-            if (isMahmoud) {
-                headerPass.style.display = 'table-cell';
-                headerFileLock.style.display = 'table-cell';
-            } else {
-                headerPass.style.display = 'none';
-                headerFileLock.style.display = 'none';
-            }
-        }
-
-        // 3. بناء الجدول
+        const tb = document.getElementById('usersManagementBody'); if(!tb) return; tb.innerHTML = '';
         Object.values(allUsersData).forEach(u => {
             if(!u || !u.username || MANAGERS.includes(u.username)) return;
 
-            // تجهيز خلية قفل الملف
-            let filePassDisplay = '';
-            if (isMahmoud) {
-                filePassDisplay = u.filePassword ?
-                    `<span style="color:var(--accent); font-weight:bold;">${u.filePassword}</span>` :
-                    `<span style="color:#666; font-size:0.7rem;">غير معين</span>`;
-            }
+            // التحقق إذا كان الموظف قد أنشأ باسورد للملف أم لا
+            const filePassDisplay = u.filePassword ?
+                `<span style="color:var(--accent); font-weight:bold;">${u.filePassword}</span>` :
+                `<span style="color:#666; font-size:0.7rem;">غير معين</span>`;
 
-            // تجهيز الخلايا الشرطية (تظهر فقط لمحمود)
-            // إذا كان محمود: نعرض الخلية بالبيانات
-            // إذا لم يكن محمود: نعرض نص فارغ '' حتى لا يتم رسم الخلية وتخرب التنسيق
-            const passCell = isMahmoud ? `<td>${u.password}</td>` : '';
-            const lockCell = isMahmoud ? `<td style="font-family:monospace;">${filePassDisplay}</td>` : '';
-
-            // اللقب
-            const funTitle = u.funTitle ? `<span style="color:#ffd700">${u.funTitle}</span>` : '---';
-
-            tb.innerHTML += `
-            <tr>
-                <td>${u.realName || u.username}</td>
-                <td>${u.username}</td>
-
-                ${passCell}  <!-- خلية الباسورد -->
-                ${lockCell}  <!-- خلية قفل الملف -->
-
-                <td>${u.allowance}د</td>
-                <td>${funTitle}</td>
-                <td>
-                    <button onclick="openUserProfile('${u.username}')" class="btn btn-dark btn-sm" title="الملف">📂</button>
-                    <button onclick="editUser('${u.username}')" class="btn btn-warning btn-sm">✎</button>
-                    <button onclick="deleteUser('${u.username}')" class="btn btn-danger btn-sm">🗑</button>
-                </td>
-            </tr>`;
+            tb.innerHTML += `<tr><td>${u.realName || u.username}</td><td>${u.username}</td><td>${u.password}</td><td style="font-family:monospace;">${filePassDisplay}</td><td>${u.allowance}د</td><td><span style="color:#ffd700">${u.funTitle || '---'}</span></td><td><button onclick="openUserProfile('${u.username}')" class="btn btn-dark btn-sm" title="الملف">📂</button><button onclick="editUser('${u.username}')" class="btn btn-warning btn-sm">✎</button><button onclick="deleteUser('${u.username}')" class="btn btn-danger btn-sm">🗑</button></td></tr>`;
         });
     }
 
