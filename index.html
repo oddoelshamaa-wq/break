@@ -203,6 +203,14 @@
             .timer-big-text { font-size: 2.5rem; }
         }
 
+        @media (max-width: 768px) {
+            .container, .hero-card, .broadcast-content {
+                backdrop-filter: none !important; /* إلغاء التغبيش */
+                background: rgba(15, 23, 42, 0.95) !important; /* لون خلفية ثابت */
+            }
+            .aura { display: none; } /* إخفاء الكرات المضيئة المتحركة في الخلفية */
+        }
+
         /* تنسيقات حقول الإدخال والقوائم الجديدة */
         .form-control-glass {
             width: 100%;
@@ -365,9 +373,9 @@
 </div>
 
 <audio id="alarmSound" loop preload="auto"><source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg"></audio>
-<audio id="notifySound" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" type="audio/mp3"></audio>
-<audio id="requestRing" loop preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/1110/1110-preview.mp3" type="audio/mp3"></audio>
-<audio id="broadcastSound" loop preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" type="audio/mp3"></audio>
+<audio id="notifySound" preload="none"><source src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" type="audio/mp3"></audio>
+<audio id="requestRing" loop preload="none"><source src="https://assets.mixkit.co/active_storage/sfx/1110/1110-preview.mp3" type="audio/mp3"></audio>
+<audio id="broadcastSound" loop preload="none"><source src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" type="audio/mp3"></audio>
 
 <!-- تأكد أن هذا الصوت موجود في الصفحة (صوت تنبيه مميز) -->
 <audio id="complaintSound" preload="auto">
@@ -1790,8 +1798,8 @@ function startGlobalTimer() {
     function previewEvidence(input) {
         if (input.files && input.files[0]) {
             const file = input.files[0];
-            if (file.size > 500 * 1024) { // حد أقصى 500 كيلوبايت للصورة عشان قاعدة البيانات
-                alert("حجم الصورة كبير جداً! يرجى اختيار صورة أقل من 500 كيلوبايت.");
+            if (file.size > 200 * 1024) { // اجعلها 200 بدلاً من 500
+                alert("حجم الصورة كبير جداً! يرجى اختيار صورة أقل من 200 كيلوبايت لضمان سرعة النظام.");
                 input.value = "";
                 return;
             }
@@ -1830,9 +1838,20 @@ function startGlobalTimer() {
         }
     }
 
-    // 3. إرسال الشكوى وحفظها
+    // 3. إرسال الشكوى وحفظها (مصححة لمنع التكرار)
     function submitComplaint() {
         if (!currentProfileTarget) return;
+        
+        // --- التعديل الجديد: تحديد الزر وتعطيله فوراً ---
+        // نبحث عن الزر داخل قسم الإضافة
+        const submitBtn = document.querySelector('#adminAddComplaintArea button.btn-danger');
+        if(submitBtn) {
+            submitBtn.disabled = true; // تعطيل الزر
+            submitBtn.innerHTML = "⏳ جاري الرفع والحفظ..."; // تغيير النص
+            submitBtn.style.opacity = "0.5";
+        }
+        // ---------------------------------------------
+
         const title = document.getElementById('complaintTitle').value.trim();
         const amount = document.getElementById('deductionAmount').value;
         const details = document.getElementById('complaintDetails').value;
@@ -1841,11 +1860,19 @@ function startGlobalTimer() {
         const evidenceImg = document.getElementById('evidencePreview').src;
         const evidenceAudio = document.getElementById('audioPreviewPlayer').src;
 
-        // التحقق هل تم رفع ملفات فعلاً أم أنها فارغة (رابط الصفحة نفسه)
         const hasImage = evidenceImg !== window.location.href && evidenceImg !== "";
         const hasAudio = evidenceAudio !== window.location.href && evidenceAudio !== "";
 
-        if (!title) return alert("يرجى كتابة عنوان للمخالفة");
+        if (!title) {
+            alert("يرجى كتابة عنوان للمخالفة");
+            // إعادة تفعيل الزر في حال وجود خطأ
+            if(submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = "تسجيل المخالفة وحفظ في الملف";
+                submitBtn.style.opacity = "1";
+            }
+            return;
+        }
 
         const complaintData = {
             date: getServerDateString(),
@@ -1853,8 +1880,8 @@ function startGlobalTimer() {
             title: title,
             amount: amount || 0,
             details: details || "لا توجد تفاصيل",
-            evidence: hasImage ? evidenceImg : null,   // رابط الصورة
-            audioRecord: hasAudio ? evidenceAudio : null, // رابط الصوت
+            evidence: hasImage ? evidenceImg : null,
+            audioRecord: hasAudio ? evidenceAudio : null,
             admin: currentUser.realName || currentUser.username,
             acknowledged: false
         };
@@ -1883,6 +1910,18 @@ function startGlobalTimer() {
 
               renderComplaintsHistory(currentProfileTarget);
               triggerGlobalRefresh();
+          })
+          .catch((error) => {
+              alert("حدث خطأ أثناء الحفظ: " + error.message);
+          })
+          .finally(() => {
+              // --- التعديل الجديد: إعادة تفعيل الزر بعد الانتهاء (سواء نجح أو فشل) ---
+              if(submitBtn) {
+                  submitBtn.disabled = false;
+                  submitBtn.innerHTML = "تسجيل المخالفة وحفظ في الملف";
+                  submitBtn.style.opacity = "1";
+              }
+              // ----------------------------------------------------------------
           });
     }
 
