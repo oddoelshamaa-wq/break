@@ -163,9 +163,22 @@
                                 @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 
                                 .welcome-back-msg {
-                                    background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(0,0,0,0.3));
-                                    border: 1px solid var(--success); padding: 12px; border-radius: 15px; margin-bottom: 15px;
-                                    font-size: 0.9rem;
+                                    background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(0, 0, 0, 0.4)) !important;
+                                    border: 1px solid var(--primary) !important;
+                                    color: white !important;
+                                    font-weight: bold;
+                                    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+                                    padding: 15px;
+                                    border-radius: 15px;
+                                    margin-bottom: 20px;
+                                    text-align: center;
+                                }
+
+                                @keyframes bounceIn {
+                                    0% { transform: scale(0.3); opacity: 0; }
+                                    50% { transform: scale(1.05); opacity: 1; }
+                                    70% { transform: scale(0.9); }
+                                    100% { transform: scale(1); }
                                 }
 
                                 .server-clock-box { background: rgba(0,0,0,0.4); padding: 10px 20px; border-radius: 20px; border: 1px solid var(--glass-border); text-align: center; }
@@ -557,6 +570,57 @@
                                     .prayer-toggle-btn { top: auto; bottom: 100px; }
                                     .prayer-toggle-btn.active { top: auto; bottom: 280px; left: 210px; }
                                 }
+
+                                /* أنيميشن الرقص لزرار الملف */
+                                @keyframes dance {
+                                    0%, 100% { transform: rotate(0deg) scale(1); }
+                                    25% { transform: rotate(5deg) scale(1.1); }
+                                    50% { transform: rotate(-5deg) scale(1.1); }
+                                    75% { transform: rotate(3deg) scale(1.1); }
+                                }
+                                .dance-alert {
+                                    animation: dance 0.5s infinite !important;
+                                    background: linear-gradient(45deg, #f472b6, #fbbf24) !important; /* لون بينك في ذهبي */
+                                    border: 2px solid white !important;
+                                }
+
+                                /* الإيموجي اللي هيطير في الشاشة */
+                                .floating-emoji {
+                                    position: fixed;
+                                    bottom: -100px;
+                                    font-size: 2rem;
+                                    z-index: 99999;
+                                    pointer-events: none;
+                                    animation: flyUp 3s linear forwards;
+                                }
+
+                                @keyframes flyUp {
+                                    to {
+                                        transform: translateY(-110vh) rotate(360deg);
+                                        opacity: 0;
+                                    }
+                                }
+
+                                /* رسالة المفاجأة */
+                                #funnyToast {
+                                    position: fixed;
+                                    top: 20px;
+                                    left: 50%;
+                                    transform: translateX(-50%) translateY(-100px);
+                                    background: rgba(255, 255, 255, 0.95);
+                                    color: #000;
+                                    padding: 15px 30px;
+                                    border-radius: 50px;
+                                    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                                    z-index: 100000;
+                                    font-weight: 900;
+                                    transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 10px;
+                                    border: 3px solid #f472b6;
+                                }
+                                #funnyToast.show { transform: translateX(-50%) translateY(20px); }
                             </style>
                         </head>
                         <body>
@@ -623,6 +687,9 @@
                                 <button onclick="acknowledgeBroadcast()" class="btn btn-danger" style="width:100%; padding:20px; font-size:1.3rem;">استلمت الرسالة (إيقاف الصوت)</button>
                             </div>
                         </div>
+
+                        <!-- رسالة المفاجأة -->
+                        <div id="funnyToast">👀 <span id="funnyToastText">أوبا! في مفاجأة نزلت في ملفك دلوقتي!</span> 😂</div>
 
                         <!-- نافذة الملف الوظيفي والشكاوى -->
                         <div id="profileModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:15000; backdrop-filter:blur(10px); overflow-y:auto;">
@@ -1361,49 +1428,73 @@
 
                             // دالة للتحقق من الشكاوى الجديدة في ملف الموظف
                             function checkProfileNotifications(userData) {
-                                console.log("Checking notifications for:", userData.username); // للتجربة
-
                                 const badge = document.getElementById('profileNotificationBadge');
                                 const btn = document.getElementById('myProfileBtn');
                                 const sound = document.getElementById('complaintSound');
 
-                                // لو مفيش شكاوى خالص
                                 if (!userData || !userData.complaints) {
                                     badge.classList.add('hidden');
-                                    btn.classList.remove('alert-mode');
-                                    btn.innerHTML = `📂 ملفي <span id="profileNotificationBadge" class="hidden" style="position:absolute; top:-10px; right:-10px; background:red; color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-size:0.8rem; border:2px solid #1e293b; font-weight:bold; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index:10;">0</span>`;
-                                    // بنعيد رسم الزر عشان العداد ميروحش
+                                    btn.classList.remove('alert-mode', 'dance-alert');
                                     return;
                                 }
 
-                                // عد الشكاوى اللي لسه صاحبها مشافهاش (acknowledged مش true)
                                 const unreadCount = Object.values(userData.complaints).filter(c => !c.acknowledged).length;
-                                console.log("Unread Count:", unreadCount); // للتجربة
 
                                 if (unreadCount > 0) {
-                                    // 1. إظهار العداد
                                     badge.innerText = unreadCount;
-                                    badge.classList.remove('hidden'); // إزالة الإخفاء
-                                    badge.style.display = 'flex'; // تأكيد الإظهار
+                                    badge.classList.remove('hidden');
+                                    badge.style.display = 'flex';
 
-                                    // 2. تشغيل الوميض
-                                    btn.classList.add('alert-mode');
+                                    // الزرار هيرقص وينور
+                                    btn.classList.add('dance-alert');
 
-                                    // 3. تشغيل الصوت (فقط لو العدد زاد عن المرة اللي فاتت)
+                                    // لو في حاجة جديدة لسه واصلة
                                     if (unreadCount > lastUnreadCount) {
-                                        console.log("New complaint detected! Playing sound...");
-                                        sound.volume = 1.0;
-                                        sound.currentTime = 0;
-                                        sound.play().catch(e => console.log("Sound play error:", e));
+                                        triggerFunnySurprise(); // شغل الحفلة
+                                        if (soundActive) {
+                                            sound.play().catch(e => console.log("Sound error"));
+                                        }
                                     }
                                 } else {
-                                    // لو مفيش جديد
                                     badge.classList.add('hidden');
-                                    badge.style.display = 'none';
-                                    btn.classList.remove('alert-mode');
+                                    btn.classList.remove('alert-mode', 'dance-alert');
+                                }
+                                lastUnreadCount = unreadCount;
+                            }
+
+                            // دالة الحفلة المضحكة
+                            function triggerFunnySurprise() {
+                                const messages = [
+                                    "أومال إيه اللي في ملفك ده يا بطل؟ 😂",
+                                    "المدير بيمسي عليك بحاجة حلوة في الملف 🎁",
+                                    "شكلك عملت مصيبة.. روح شوف ملفك بسرعة! 🏃‍♂️",
+                                    "في هدية (أو خناقة) مستنياك في الملف 👀",
+                                    "يا عيني على اللي اتكتب في السجل النهاردة! 📝"
+                                ];
+
+                                // إظهار الرسالة
+                                const toast = document.getElementById('funnyToast');
+                                document.getElementById('funnyToastText').innerText = messages[Math.floor(Math.random() * messages.length)];
+                                toast.classList.add('show');
+
+                                // طير إيموجيات في الشاشة
+                                for(let i=0; i<15; i++) {
+                                    setTimeout(() => {
+                                        const emoji = document.createElement('div');
+                                        emoji.className = 'floating-emoji';
+                                        const icons = ['🎁', '🚨', '📜', '😂', '👻', '🔥'];
+                                        emoji.innerText = icons[Math.floor(Math.random() * icons.length)];
+                                        emoji.style.left = Math.random() * 100 + "vw";
+                                        emoji.style.animationDuration = (Math.random() * 2 + 2) + "s";
+                                        document.body.appendChild(emoji);
+                                        setTimeout(() => emoji.remove(), 4000);
+                                    }, i * 200);
                                 }
 
-                                lastUnreadCount = unreadCount;
+                                // إخفاء الرسالة بعد 5 ثواني
+                                setTimeout(() => {
+                                    toast.classList.remove('show');
+                                }, 5000);
                             }
                             
                             let initialServerTime = Date.now(), initialPerformanceTime = performance.now();
@@ -2086,7 +2177,30 @@ if (currentUser.role === 'admin') {
 
                                     if (u.lastEndedTime && (Math.floor((getServerTime() - u.lastEndedTime) / 1000) < 300)) {
                                         const userTitle = u.funTitle || 'يا بطل';
-                                        welcomeArea.innerHTML = `<div class="welcome-back-msg">رجعت حميداً يا ${userTitle} ❤️</div>`;
+                                        let customMsg = "";
+
+                                        // تحديد الرسالة بناءً على نوع النشاط اللي لسه خلصان
+                                        switch (u.lastEndedType) {
+                                            case 'صلاة':
+                                                customMsg = `تقبل الله يا ${userTitle} 🕌 الحرم إن شاء الله`;
+                                                break;
+                                            case 'بريك عام':
+                                                customMsg = `حمد الله على السلامة يا ${userTitle} 🍔 نورت مكتبك`;
+                                                break;
+                                            case 'ميتنج':
+                                                customMsg = `كفارة يا ${userTitle}! مابغيت تخلص من الميتنج؟ 🤝😂`;
+                                                break;
+                                            case 'طوارئ':
+                                                customMsg = `لعله خير يا ${userTitle}.. حمد الله على سلامتك 🚨`;
+                                                break;
+                                            case 'متابع عميل':
+                                                customMsg = `عاش يا وحش المتابعة.. نورتنا تاني 📞`;
+                                                break;
+                                            default:
+                                                customMsg = `نورت مكانك يا ${userTitle} من جديد ❤️`;
+                                        }
+
+                                        welcomeArea.innerHTML = `<div class="welcome-back-msg" style="animation: bounceIn 0.8s ease;">${customMsg}</div>`;
                                     } else welcomeArea.innerHTML = "";
                                 }
                             }
