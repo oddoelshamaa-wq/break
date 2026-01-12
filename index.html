@@ -844,23 +844,40 @@
     let lastUnreadCount = 0; // متغير لتذكر العدد السابق
     let pendingProfileUser = null;
 
-    // بيانات المخزن السحابي الجديد
-    const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dr2ekwtae/upload";
-    const CLOUDINARY_PRESET = "my_preset"; // الاسم اللي ظهر في الصورة عندك
+    // إعدادات Cloudinary (تم تحديثها ببياناتك)
+    // 1. ده الاسم اللي جبته من الصورة بتاعتك
+    const CLOUD_NAME = "dr2ekwtae";
 
-    // دالة الرفع العالمية (ترفع صورة أو صوت وترجع رابط)
+    // 2. ده لازم تجيبه من الإعدادات زي ما شرحتلك فوق (تأكد إنه Unsigned)
+    const UPLOAD_PRESET = "my_preset";
+
+    // دالة الرفع السريع (بتضغط الصور عشان ماتسحبش نت)
     async function uploadToCloudinary(file) {
         if (!file) return null;
+
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("upload_preset", CLOUDINARY_PRESET);
+        formData.append("upload_preset", UPLOAD_PRESET);
+
+        // ده سطر سحري: بيخلي Cloudinary يصغر الصورة وهو بيرفعها
+        // عشان الرفع يخلص في ثانية والموقع ما يعلقش
+        if (file.type.startsWith('image')) {
+            formData.append("transformation", "w_800,q_auto:good");
+        }
 
         try {
-            const response = await fetch(CLOUDINARY_URL, { method: "POST", body: formData });
+            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {
+                method: "POST",
+                body: formData
+            });
+
+            if (!response.ok) throw new Error("فشل الاتصال بالسيرفر");
+
             const data = await response.json();
-            return data.secure_url; // الرابط السريع
+            return data.secure_url; // بيرجع رابط خفيف جداً
         } catch (error) {
-            console.error("خطأ في الرفع:", error);
+            console.error("Upload Error:", error);
+            alert("حدث خطأ في النت أثناء رفع الملف، حاول تاني.");
             return null;
         }
     }
@@ -1861,57 +1878,71 @@ function startGlobalTimer() {
         }
     }
 
+    // ==========================================
+    // 2. دالة حفظ الشكوى (بخاصية منع التعليق)
+    // ==========================================
     async function submitComplaint() {
         if (!currentProfileTarget) return;
 
+        // بنمسك الزرار عشان نتحكم فيه
         const submitBtn = document.querySelector('#adminAddComplaintArea button.btn-danger');
-        if(submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = "⏳ جاري رفع الملفات (صوت/صور)...";
-        }
+        const originalBtnText = submitBtn ? submitBtn.innerText : "تسجيل المخالفة";
 
         const title = document.getElementById('complaintTitle').value.trim();
         const amount = document.getElementById('deductionAmount').value;
         const details = document.getElementById('complaintDetails').value;
-
-        // الحصول على الملفات مباشرة من المدخلات (بدون تحويل لـ Base64)
         const imgFile = document.getElementById('complaintEvidence').files[0];
         const audioFile = document.getElementById('complaintAudioInput').files[0];
 
-        if (!title) {
-            alert("يرجى كتابة عنوان للمخالفة");
-            if(submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = "تسجيل المخالفة وحفظ في الملف"; }
-            return;
+        if (!title) return alert("اكتب عنوان المخالفة الأول!");
+
+        // ---[ هنا الحماية من التعليق ]---
+        if(submitBtn) {
+            submitBtn.disabled = true; // بنقفل الزرار خالص
+            submitBtn.style.opacity = "0.5"; // بنخفف لونه
+            submitBtn.innerHTML = "⏳ لحظة.. جاري رفع الملفات..."; // بنطمن المستخدم
         }
 
-        // الرفع للمخزن الخارجي
-        const imageUrl = await uploadToCloudinary(imgFile);
-        const audioUrl = await uploadToCloudinary(audioFile);
+        try {
+            // الرفع بيحصل هنا في الخلفية
+            let imageUrl = "";
+            let audioUrl = "";
 
-        const complaintData = {
-            date: getServerDateString(),
-            time: getServerTimeString(),
-            title: title,
-            amount: amount || 0,
-            details: details || "لا توجد تفاصيل",
-            evidence: imageUrl,    // رابط فقط
-            audioRecord: audioUrl, // رابط فقط
-            admin: currentUser.realName || currentUser.username,
-            acknowledged: false
-        };
+            if (imgFile) imageUrl = await uploadToCloudinary(imgFile);
+            if (audioFile) audioUrl = await uploadToCloudinary(audioFile);
 
-        db.ref('users/' + currentProfileTarget + '/complaints').push(complaintData)
-          .then(() => {
-              alert("تم حفظ المخالفة والملفات بنجاح ✅");
-              closeProfileModal();
-              triggerGlobalRefresh();
-          })
-          .finally(() => {
-              if(submitBtn) {
-                  submitBtn.disabled = false;
-                  submitBtn.innerHTML = "تسجيل المخالفة وحفظ في الملف";
-              }
-          });
+            // بعد ما الملفات تترفع، بنحفظ البيانات كنص خفيف
+            if(submitBtn) submitBtn.innerHTML = "💾 جاري الحفظ...";
+
+            const complaintData = {
+                date: getServerDateString(),
+                time: getServerTimeString(),
+                title: title,
+                amount: amount || 0,
+                details: details || "لا توجد تفاصيل",
+                evidence: imageUrl,    // رابط خفيف
+                audioRecord: audioUrl, // رابط خفيف
+                admin: currentUser.realName || currentUser.username,
+                acknowledged: false
+            };
+
+            await db.ref('users/' + currentProfileTarget + '/complaints').push(complaintData);
+
+            alert("تم الحفظ بنجاح والسرعة تمام! 🚀");
+            closeProfileModal();
+            triggerGlobalRefresh();
+
+        } catch (e) {
+            console.error(e);
+            alert("حصلت مشكلة صغيرة، جرب تاني.");
+        } finally {
+            // بنرجع الزرار يشتغل تاني في الآخر
+            if(submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.style.opacity = "1";
+            }
+        }
     }
 
     function renderComplaintsHistory(username) {
