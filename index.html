@@ -621,6 +621,27 @@
                                     border: 3px solid #f472b6;
                                 }
                                 #funnyToast.show { transform: translateX(-50%) translateY(20px); }
+                            /* تنسيق التنبيه القوي - ضعه في نهاية الـ CSS */
+                            @keyframes flash-red {
+                                0% { background-color: #1e293b; box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); border-color: #334155; }
+                                50% { background-color: #7f1d1d; box-shadow: 0 0 20px 10px rgba(220, 38, 38, 0); border-color: #ff0000; transform: scale(1.05); }
+                                100% { background-color: #1e293b; box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); border-color: #334155; }
+                            }
+
+                            .file-alert-glow {
+                                animation: flash-red 1s infinite !important; /* سرعة النبض */
+                                color: white !important;
+                                font-weight: bold !important;
+                                z-index: 100;
+                            }
+
+                            /* تنسيق البادج الأحمر (الرقم) */
+                            #profileNotificationBadge {
+                                background: #ef4444 !important;
+                                border: 2px solid white;
+                                box-shadow: 0 0 5px rgba(0,0,0,0.5);
+                                animation: bounceIn 1s infinite;
+                            }
                             </style>
                         </head>
                         <body>
@@ -1059,6 +1080,7 @@
                                             <!-- زر 2: ملف الشكاوى (الخاص بالموظف) -->
                                             <button id="myProfileBtn" onclick="openMyProfile()" class="btn btn-dark btn-sm" style="margin-top:8px; position:relative; border:1px solid var(--glass-border);">
                                                 📂 ملفي والشكاوى
+                                                <!-- ده العنصر اللي كان ناقص وعامل المشكلة 👇 -->
                                                 <span id="profileNotificationBadge" class="hidden" style="position:absolute; top:-8px; left:-8px; background:red; color:white; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">0</span>
                                             </button>
 
@@ -1083,6 +1105,10 @@
                                             </svg>
                                         </button>
                                     </div>
+                                </div>
+
+                                <!-- صندوق تنبيه اكتمال العدد (كان مفقود) -->
+                                <div id="breakLimitAlert" style="display:none; background:rgba(239,68,68,0.2); border:1px solid var(--danger); color:white; padding:15px; border-radius:15px; margin:15px 0; text-align:center; font-weight:bold; animation: pulse 2s infinite;">
                                 </div>
 
                                 <!-- قسم العدادات والرسائل -->
@@ -1426,39 +1452,42 @@
                                 }
                             }
 
-                            // دالة للتحقق من الشكاوى الجديدة في ملف الموظف
                             function checkProfileNotifications(userData) {
                                 const badge = document.getElementById('profileNotificationBadge');
                                 const btn = document.getElementById('myProfileBtn');
                                 const sound = document.getElementById('complaintSound');
 
+                                // حماية: لو العناصر مش موجودة في الصفحة، اخرج فوراً ومتعملش Error
+                                if (!btn || !badge) return;
+
                                 if (!userData || !userData.complaints) {
                                     badge.classList.add('hidden');
-                                    btn.classList.remove('alert-mode', 'dance-alert');
+                                    btn.classList.remove('file-alert-glow');
                                     return;
                                 }
 
                                 const unreadCount = Object.values(userData.complaints).filter(c => !c.acknowledged).length;
 
                                 if (unreadCount > 0) {
+                                    // تحديث الرقم
                                     badge.innerText = unreadCount;
+
+                                    // إظهار العداد (هنا كان بيحصل الخطأ لو العنصر مش موجود)
                                     badge.classList.remove('hidden');
                                     badge.style.display = 'flex';
 
-                                    // الزرار هيرقص وينور
-                                    btn.classList.add('dance-alert');
+                                    // تشغيل التوهج
+                                    btn.classList.add('file-alert-glow');
 
-                                    // لو في حاجة جديدة لسه واصلة
+                                    // تشغيل الصوت لو في جديد
                                     if (unreadCount > lastUnreadCount) {
-                                        triggerFunnySurprise(); // شغل الحفلة
-                                        if (soundActive) {
-                                            sound.play().catch(e => console.log("Sound error"));
-                                        }
+                                        if(sound) sound.play().catch(e => {});
                                     }
                                 } else {
                                     badge.classList.add('hidden');
-                                    btn.classList.remove('alert-mode', 'dance-alert');
+                                    btn.classList.remove('file-alert-glow');
                                 }
+
                                 lastUnreadCount = unreadCount;
                             }
 
@@ -1745,14 +1774,25 @@ if (currentUser.role === 'admin') {
                             }
 
                             function checkBreakLimit() {
+                                // لو مفيش مستخدم أو أدمن، اخرج
                                 if(!currentUser || currentUser.role === 'admin') return;
+
                                 const currentActive = Object.values(allUsersData).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
+
+                                // العنصر اللي كان عامل المشكلة
                                 const box = document.getElementById('breakLimitAlert');
-                                if(currentActive >= maxBreaksAllowed) { 
-                                    box.style.display = 'block'; 
-                                    box.innerHTML = `يا بطل، زمايلك كلهم في البريك دلوقتي. استنى دقايق لحد ما حد يرجع عشان نفضل شغالين.. أول ما حد يرجع الطريق هيكون مفتوح ليك! 💪`; 
-                                } 
-                                else box.style.display = 'none';
+
+                                // ---[ ده التعديل المهم: الحماية ]---
+                                // لو الصندوق مش موجود في الصفحة، وقف الدالة ومتعملش Error
+                                if (!box) return;
+
+                                if(currentActive >= maxBreaksAllowed) {
+                                    box.style.display = 'block';
+                                    box.innerHTML = `يا بطل، زمايلك كلهم في البريك دلوقتي. استنى دقايق لحد ما حد يرجع عشان نفضل شغالين.. أول ما حد يرجع الطريق هيكون مفتوح ليك! 💪`;
+                                }
+                                else {
+                                    box.style.display = 'none';
+                                }
                             }
 
                             function checkSavedSession() { const s = localStorage.getItem('break_sys_user'); if (s && allUsersData[s]) { currentUser = allUsersData[s]; currentUser.role = MANAGERS.includes(s) ? 'admin' : 'employee'; if (currentUser.role === 'admin') showAdmin(); else { setupPresence(s); showEmployee(); } } }
@@ -2061,19 +2101,31 @@ if (currentUser.role === 'admin') {
                                 const stopArea = document.getElementById('stopArea');
 
                                 if (u.isCS) {
-                                    // الموظف CS Agent: نخفي أزرار الميتنج والطوارئ والإضافي
-                                    normalControls.classList.add('hidden');
-
+                                    // لو الموظف خدمة عملاء (CS)
                                     if (!u.isOnBreak) {
+                                        // وهو شغال (مش في بريك):
+                                        // 1. اظهر لوحة التقييم والجودة
                                         csDashboard.classList.remove('hidden');
+
+                                        // 2. اظهر أزرار البريك العادية (ده التعديل اللي انت محتاجه) ✅
+                                        normalControls.classList.remove('hidden');
+
+                                        // 3. اخفي زر الإيقاف الأحمر الكبير
                                         stopArea.classList.add('hidden');
-                                        populateCsEmployeeList(); // تحديث القائمة بأسماء الموظفين
+
+                                        // تحديث قائمة الموظفين
+                                        populateCsEmployeeList();
                                     } else {
+                                        // وهو في بريك:
+                                        // اخفي لوحة الجودة وأزرار البريك
                                         csDashboard.classList.add('hidden');
+                                        normalControls.classList.add('hidden');
+
+                                        // اظهر زر إنهاء البريك
                                         stopArea.classList.remove('hidden');
                                     }
                                 } else {
-                                    // موظف عادي
+                                    // ... (باقي الكود للموظف العادي زي ما هو ماتغيروش) ...
                                     csDashboard.classList.add('hidden');
                                     if (u.isOnBreak) {
                                         normalControls.classList.add('hidden');
@@ -2978,22 +3030,30 @@ if (currentUser.role === 'admin') {
     }
 
     // 1. دالة ملء قائمة الموظفين (يتم استدعاؤها عند تحديث البيانات)
+    // دالة ملء قائمة الموظفين (تم تحسينها لمنع القائمة من الغلق أثناء الاختيار)
     function populateCsEmployeeList() {
         const select = document.getElementById('csTargetUser');
         if (!select) return;
 
-        // حفظ القيمة المختارة حالياً عشان القائمة متعملش ريست كل شوية
-        const currentVal = select.value;
+        // هام: لو الموظف فاتح القائمة وبيختار، نوقف التحديث عشان القائمة متقفلش في وشه
+        if (document.activeElement === select) return;
 
-        select.innerHTML = '<option value="">-- اختر الموظف --</option>';
+        const currentVal = select.value;
+        let newHTML = '<option value="">-- اختر الموظف --</option>';
+        let hasChanges = false;
 
         Object.values(allUsersData).forEach(u => {
             // نستبعد المديرين ونعرض الموظفين فقط
             if (u.username && !MANAGERS.includes(u.username)) {
-                select.innerHTML += `<option value="${u.username}">👤 ${u.realName || u.username}</option>`;
+                newHTML += `<option value="${u.username}">👤 ${u.realName || u.username}</option>`;
             }
         });
-        if (currentVal) select.value = currentVal;
+
+        // تحديث القائمة فقط لو المحتوى اتغير (عشان الأداء)
+        if (select.innerHTML !== newHTML) {
+            select.innerHTML = newHTML;
+            if (currentVal) select.value = currentVal;
+        }
     }
 
     async function archiveOldComplaints() {
@@ -3237,7 +3297,7 @@ if (currentUser.role === 'admin') {
         prayerInterval = setInterval(() => {
             if (!prayerTimesData) return;
 
-            const now = new Date();
+         const now = new Date();
             const pNames = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
             const arNames = ['الفجر', 'الظهر', 'العصر', 'المغرب', 'العشاء'];
 
