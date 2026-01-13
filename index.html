@@ -1621,66 +1621,52 @@
                             }
 
                             function setPrayerWindow(status) {
-    // تحديث قاعدة البيانات فقط
+    // تحديث حالة الفتح والغلق في قاعدة البيانات فقط
+    // تم إزالة تصفير العدادات وتم إزالة إرسال البرودكاست (التنبيه الصارخ)
     db.ref('settings/prayerOpen').set(status).then(() => {
-        // إذا تم الفتح، نقوم بتصفير عداد الصلاة وعدد المرات عند كل الموظفين ليبدأوا من جديد
-        if (status === true) {
-            Object.keys(allUsersData).forEach(un => {
-                if (!MANAGERS.includes(un)) {
-                    db.ref(`users/${un}`).update({
-                        prayerSeconds: 0,
-                        prayerCountToday: 0
-                    });
-                }
-            });
-        }
-        // تم حذف كود إرسال الـ Broadcast ليكون التغيير صامتاً تماماً
-        console.log(status ? "تم فتح وقت الصلاة صامتاً" : "تم إغلاق وقت الصلاة صامتاً");
+        const msg = status ? "تم إتاحة زر الصلاة للموظفين ✅" : "تم حجب زر الصلاة عن الموظفين 🛑";
+        alert(msg); // التنبيه يظهر للمدير فقط للتأكيد
     });
 }
 
                             function addPrayerTimeGlobal() {
-                                if(!confirm("إضافة 15 دقيقة رصيد صلاة للجميع؟")) return;
+    if(!confirm("إضافة 15 دقيقة رصيد صلاة للجميع؟")) return;
 
-                                db.ref('users').once('value', (snapshot) => {
-                                    const users = snapshot.val();
-                                    if (!users) return;
+    db.ref('users').once('value', (snapshot) => {
+        const users = snapshot.val();
+        if (!users) return;
 
-                                    const updates = {};
-                                    const maxLimit = 2700; // 45 دقيقة بالثواني (45 * 60)
+        const updates = {};
+        const maxLimit = 2700; // حد أقصى 45 دقيقة
 
-                                    Object.keys(users).forEach(key => {
-                                        if (!MANAGERS.includes(key)) {
-                                            let currentLimit = parseInt(users[key].prayerLimit || 0);
+        Object.keys(users).forEach(key => {
+            if (!MANAGERS.includes(key)) {
+                let currentLimit = parseInt(users[key].prayerLimit || 0);
+                if (currentLimit < maxLimit) {
+                    let newLimit = currentLimit + 900; // إضافة 15 دقيقة
+                    if (newLimit > maxLimit) newLimit = maxLimit;
+                    updates[`users/${key}/prayerLimit`] = newLimit;
+                }
+            }
+        });
 
-                                            // لو الرصيد الحالي أقل من 45 دقيقة، زود 15
-                                            if (currentLimit < maxLimit) {
-                                                let newLimit = currentLimit + 900;
+        // تشغيل الزر تلقائياً عند توزيع الوقت
+        updates['settings/prayerOpen'] = true;
 
-                                                // تأكيد إننا منعديش الـ 45
-                                                if (newLimit > maxLimit) newLimit = maxLimit;
+        // إرسال رسالة بسيطة (اختياري: إذا أردت أن تكون صامتة تماماً احذف السطور التالية)
+        const bKey = db.ref('broadcasts').push().key;
+        updates[`broadcasts/${bKey}`] = {
+            message: "تم تحديث رصيد الصلاة (إضافة 15 دقيقة) 🕌",
+            timestamp: getServerTime(),
+            sender: currentUser.username,
+            target: 'all'
+        };
 
-                                                updates[`users/${key}/prayerLimit`] = newLimit;
-                                            }
-                                        }
-                                    });
-
-                                    updates['settings/prayerOpen'] = true;
-
-                                    // رسالة تأكيد
-                                    const bKey = db.ref('broadcasts').push().key;
-                                    updates[`broadcasts/${bKey}`] = {
-                                        message: "تم إضافة 15 دقيقة لرصيد الصلاة 🕌",
-                                        timestamp: getServerTime(),
-                                        sender: currentUser.username,
-                                        target: 'all'
-                                    };
-
-                                    db.ref().update(updates).then(() => {
-                                        alert("تم التوزيع بنجاح (بحد أقصى 45 دقيقة لليوم) ✅");
-                                    });
-                                });
-                            }
+        db.ref().update(updates).then(() => {
+            alert("تم التوزيع بنجاح ✅");
+        });
+    });
+}
 
                             function deleteBroadcast(key) {
     if(confirm("هل تريد حذف هذا التنبيه؟ (سيختفي من السجل ولن يصل إشعار للموظفين)")) {
