@@ -863,23 +863,36 @@
 
                             <!-- لوحة المشرف -->
                             <div id="adminSection" class="hidden">
-                                <div>
-                                    <h2 style="margin:0; text-align:right; color:var(--primary); display:inline-block;">لوحة الإدارة 🚀</h2>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+                                    <div>
+                                        <h2 style="margin:0; text-align:right; color:var(--primary); display:inline-block;">لوحة الإدارة 🚀</h2>
 
-                                    <!-- اسم المشرف -->
-                                    <span id="currentManagerDisplay" style="font-weight: bold; opacity: 0.7; margin-right: 10px;"></span>
+                                        <!-- اسم المشرف -->
+                                        <span id="currentManagerDisplay" style="font-weight: bold; opacity: 0.7; margin-right: 10px;"></span>
 
-                                    <!-- (تم الحذف) تم إخفاء زر السلة 🗑️ بناء على طلبك -->
-                                    <span id="secretResetBtn" onclick="endDay()" class="hidden" style="display:none !important;"></span>
+                                        <!-- الزر السري (يظهر لمحمود فقط) -->
+                                        <span id="secretResetBtn" onclick="endDay()" class="hidden"
+                                            style="cursor: pointer; font-size: 0.8rem; opacity: 0.3; margin-right: 5px; transition:0.3s;"
+                                            title="تصفير اليوم (سري)"
+                                            onmouseover="this.style.opacity='1'; this.style.transform='scale(1.2)'"
+                                            onmouseout="this.style.opacity='0.3'; this.style.transform='scale(1)'">
+                                            🗑️
+                                        </span>
 
-                                    <!-- (تم التعديل) زر الأرشيف أصبح إيموجي فقط بجانب الاسم -->
-                                    <span id="secretArchiveBtn" onclick="openSecretArchive()" class="hidden" 
-                                          style="cursor: pointer; font-size: 1.5rem; margin-right: 10px; vertical-align: middle; transition: 0.3s; filter: drop-shadow(0 0 5px gold);"
-                                          title="الأرشيف السري"
-                                          onmouseover="this.style.transform='scale(1.2)'" 
-                                          onmouseout="this.style.transform='scale(1)'">
-                                        🕵️
-                                    </span>
+                                        <!-- زر الأرشيف السري (هيظهر لمحمود بس) -->
+                                        <button id="secretArchiveBtn" onclick="openSecretArchive()" class="hidden btn btn-vip btn-sm" style="background: linear-gradient(45deg, #000, #333); border: 1px solid gold; color: gold; margin-right: 10px;">
+                                            🕵️ أرشيف الحذف
+                                        </button>
+                                    </div>
+                                    <div class="server-clock-box">
+                                        <span style="font-size: 0.7rem; opacity: 0.6;">توقيت النظام (12H)</span>
+                                        <span class="clock-time" id="adminServerTime">00:00:00 AM</span>
+                                        <span id="adminServerDate" style="font-size: 0.8rem; opacity: 0.8;">--/--/----</span>
+                                    </div>
+                                    <div>
+                                        <button onclick="activateAdminSound()" class="btn btn-primary btn-sm" style="background:#8e44ad; margin-left: 5px;">🔊 تفعيل التنبيهات</button>
+                                        <button onclick="logout()" class="btn btn-danger btn-sm">خروج</button>
+                                    </div>
                                 </div>
 
                                 <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 25px; padding: 20px; margin-bottom: 25px;">
