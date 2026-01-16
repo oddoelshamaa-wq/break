@@ -10,6 +10,7 @@
                             <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
                             <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
                             <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+                            <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
                             <style>
                                 :root {
@@ -692,28 +693,68 @@
                         <!-- رسالة المفاجأة -->
                         <div id="funnyToast">👀 <span id="funnyToastText">أوبا! في مفاجأة نزلت في ملفك دلوقتي!</span> 😂</div>
 
-                        <!-- نافذة عرض الأرشيف -->
-                        <div id="archiveModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:20000; padding:40px; overflow-y:auto;">
-                            <div style="max-width:1000px; margin:auto; background:#1e293b; border:1px solid gold; border-radius:20px; padding:30px;">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                                    <h2 style="color:gold; margin:0;">🕵️ سجل رقابة المشرفين</h2>
-                                    <button onclick="document.getElementById('archiveModal').classList.add('hidden')" class="btn btn-danger">إغلاق</button>
+                        <!-- نافذة عرض الأرشيف المتطورة -->
+                        <div id="archiveModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:20000; padding:20px; overflow-y:auto; backdrop-filter: blur(5px);">
+                            <div style="max-width:1100px; margin:30px auto; background:#1e293b; border:1px solid gold; border-radius:20px; padding:30px; box-shadow: 0 0 50px rgba(255, 215, 0, 0.1);">
+
+                                <!-- الهيدر -->
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
+                                    <h2 style="color:gold; margin:0; display:flex; align-items:center; gap:10px;">
+                                        🕵️ سجل رقابة المشرفين (الأرشيف)
+                                    </h2>
+                                    <div style="display:flex; gap:10px;">
+                                        <button onclick="clearAllArchiveLogs()" class="btn btn-danger" style="background:#dc2626;">🗑️ مسح الكل</button>
+                                        <button onclick="document.getElementById('archiveModal').classList.add('hidden')" class="btn btn-dark">إغلاق ✖</button>
+                                    </div>
                                 </div>
 
-                                <div class="table-responsive">
-                                    <table>
-                                        <thead>
+                                <!-- أدوات البحث والفلترة -->
+                                <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:15px; border:1px solid rgba(255,255,255,0.1); margin-bottom:20px;">
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end;">
+
+                                        <!-- بحث بالاسم -->
+                                        <div>
+                                            <label style="color:#aaa; font-size:0.9rem; margin-bottom:5px; display:block;">🔍 بحث (مشرف أو موظف)</label>
+                                            <input type="text" id="archiveSearchInput" placeholder="اكتب الاسم هنا..." class="form-control-glass" style="margin:0; border-color: gold;" onkeyup="filterArchiveTable()">
+                                        </div>
+
+                                        <!-- من تاريخ -->
+                                        <div>
+                                            <label style="color:#aaa; font-size:0.9rem; margin-bottom:5px; display:block;">📅 من تاريخ</label>
+                                            <input type="date" id="archiveDateFrom" class="form-control-glass" style="margin:0;" onchange="filterArchiveTable()">
+                                        </div>
+
+                                        <!-- إلى تاريخ -->
+                                        <div>
+                                            <label style="color:#aaa; font-size:0.9rem; margin-bottom:5px; display:block;">📅 إلى تاريخ</label>
+                                            <input type="date" id="archiveDateTo" class="form-control-glass" style="margin:0;" onchange="filterArchiveTable()">
+                                        </div>
+
+                                        <!-- زر إعادة تعيين -->
+                                        <div>
+                                            <button onclick="resetArchiveFilters()" class="btn btn-dark" style="width:100%; border:1px solid #666;">↺ إعادة تعيين</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- الجدول -->
+                                <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                                    <table style="width:100%;">
+                                        <thead style="position: sticky; top: 0; background: #1e293b; z-index: 1;">
                                             <tr>
-                                                <th style="color:gold">المشرف (الفاعل)</th>
-                                                <th>نوع الحذف</th>
-                                                <th>الضحية (الموظف)</th>
-                                                <th>التفاصيل</th>
-                                                <th>التوقيت</th>
+                                                <th style="color:gold; border-bottom: 2px solid gold;">المشرف (الفاعل)</th>
+                                                <th style="border-bottom: 2px solid gold;">نوع الإجراء</th>
+                                                <th style="border-bottom: 2px solid gold;">الضحية (الموظف)</th>
+                                                <th style="border-bottom: 2px solid gold;">التفاصيل</th>
+                                                <th style="border-bottom: 2px solid gold;">التوقيت</th>
+                                                <th style="border-bottom: 2px solid gold; color:var(--danger)">تحكم</th> <!-- الخانة الجديدة -->
                                             </tr>
                                         </thead>
                                         <tbody id="archiveBody"></tbody>
                                     </table>
                                 </div>
+
+                                <div id="archiveCountBadge" style="text-align: left; margin-top: 10px; color: #888; font-size: 0.9rem;"></div>
                             </div>
                         </div>
 
@@ -875,15 +916,23 @@
                                         <button id="secretResetBtn" class="hidden btn btn-danger btn-sm" onclick="endDay()">تصفير اليوم</button>
                                     </div>
 
-                                    <!-- زر تسجيل الخروج للمشرفين -->
-                                    <button onclick="logout()" class="btn btn-danger btn-sm" style="padding: 8px 20px; border-radius: 12px; display: flex; align-items: center; gap: 8px;">
-                                        <span>تسجيل خروج</span>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                            <polyline points="16 17 21 12 16 7"></polyline>
-                                            <line x1="21" y1="12" x2="9" y2="12"></line>
-                                        </svg>
-                                    </button>
+                                    <!-- أزرار التحكم الإضافية -->
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <!-- زر تبديل الصوت -->
+                                        <button id="adminSoundToggle" onclick="toggleAdminSound()" class="btn btn-success btn-sm" style="padding: 8px 15px; border-radius: 12px; display: flex; align-items: center; gap: 5px;" title="تبديل التنبيهات الصوتية">
+                                            <span>🔊 الصوت: مفعل</span>
+                                        </button>
+
+                                        <!-- زر تسجيل الخروج للمشرفين -->
+                                        <button onclick="logout()" class="btn btn-danger btn-sm" style="padding: 8px 20px; border-radius: 12px; display: flex; align-items: center; gap: 8px;">
+                                            <span>تسجيل خروج</span>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                                <polyline points="16 17 21 12 16 7"></polyline>
+                                                <line x1="21" y1="12" x2="9" y2="12"></line>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 25px; padding: 20px; margin-bottom: 25px;">
@@ -903,6 +952,7 @@
                                     <button onclick="switchAdminTab('emergency')" class="btn btn-danger btn-sm">🚨 طوارئ <span id="emBadge" class="badge-count hidden">0</span></button>
                                     <button onclick="switchAdminTab('meetings')" class="btn btn-warning btn-sm">🤝 اجتماع <span id="meetBadge" class="badge-count hidden">0</span></button>
                                     <button onclick="switchAdminTab('overtime')" class="btn btn-primary btn-sm" style="background:#8e44ad">🕒 الإضافي <span id="otBadge" class="badge-count hidden">0</span></button>
+                                    <button onclick="switchAdminTab('permissions')" class="btn btn-primary btn-sm" style="background:#6b21a8">🚪 أذونات <span id="permBadge" class="badge-count hidden">0</span></button>
                                     <button onclick="switchAdminTab('reports')" class="btn btn-success btn-sm">📊 التقارير</button>
                                     <button onclick="switchAdminTab('users')" class="btn btn-dark btn-sm">⚙️ الموظفين</button>
                                 </div>
@@ -962,6 +1012,24 @@
                                 <div id="tab-emergency" class="hidden"><h3>🚨 طلبات الطوارئ</h3><div class="table-responsive"><table><thead><tr><th>الموظف</th><th>السبب</th><th>الوقت</th><th>القرار</th></tr></thead><tbody id="adminEmBody"></tbody></table></div></div>
                                 <div id="tab-meetings" class="hidden"><h3>🤝 طلبات الاجتماعات</h3><div class="table-responsive"><table><thead><tr><th>الموظف</th><th>السبب</th><th>الوقت</th><th>القرار</th></tr></thead><tbody id="adminMeetBody"></tbody></table></div></div>
                                 <div id="tab-overtime" class="hidden"><h3>🕒 طلبات الإضافي</h3><div class="table-responsive"><table><thead><tr><th>الموظف</th><th>الساعات</th><th>الوقت</th><th>القرار</th></tr></thead><tbody id="adminOtBody"></tbody></table></div></div>
+
+                                <div id="tab-permissions" class="hidden">
+                                    <h3 style="color:#a855f7">🚪 طلبات الاستأذان والمغادرة</h3>
+                                    <div class="table-responsive">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>الموظف</th>
+                                                    <th>عدد الساعات</th>
+                                                    <th>السبب</th>
+                                                    <th>وقت الطلب</th>
+                                                    <th>القرار</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="adminPermBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
 
                                 <div id="tab-reports" class="hidden">
                                     <!-- أدوات البحث والتصدير (زي ما هي) -->
@@ -1198,6 +1266,20 @@
                                             </div>
                                             <p id="otStatusDisplay"></p>
                                         </div>
+
+                                        <!-- قسم طلب الاستأذان (يوضع تحت قسم الإضافي في لوحة الموظف) -->
+                                        <div style="margin-top: 15px; padding: 20px; background: rgba(168, 85, 247, 0.1); border-radius: 25px; border: 1px solid #a855f7; max-width: 500px; margin: 15px auto;">
+                                            <h4 style="margin:0 0 10px 0; color:#c084fc">🚪 طلب استأذان / مغادرة</h4>
+
+                                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                                <input type="number" id="permHoursInput" placeholder="عدد الساعات" class="form-control-glass" style="margin:0; flex:1">
+                                                <input type="text" id="permReasonInput" placeholder="سبب الاستأذان..." class="form-control-glass" style="margin:0; flex:2">
+                                            </div>
+
+                                            <div id="permStatusArea">
+                                                <button onclick="sendPermRequest()" class="btn btn-primary" style="background: linear-gradient(135deg, #a855f7, #7e22ce); width: 100%;">إرسال الطلب</button>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <!-- زر الإيقاف -->
@@ -1239,6 +1321,7 @@
                             let lastUnreadCount = 0; // متغير لتذكر العدد السابق
                             let pendingProfileUser = null;
                             let isPrayerWindowOpen = false;
+                            let cachedArchiveData = []; // متغير عالمي لتخزين بيانات الأرشيف مؤقتاً لتسريع البحث
 
                             // إعدادات Cloudinary (تم تحديثها ببياناتك)
                             // 1. ده الاسم اللي جبته من الصورة بتاعتك
@@ -1371,8 +1454,9 @@
 
                                 const u = allUsersData[username];
                                 const viewingMyOwnProfile = (currentUser.username === username);
-                                // التحقق من صلاحية الحذف (أدمن وليس أبو تميم، أو يكون محمود أو أحمد)
-                                const canDelete = (currentUser.role === 'admin' && currentUser.username !== 'abutamim') || ['mahmoud', 'ahmed'].includes(currentUser.username);
+
+                                // التعديل هنا: السماح بالحذف لأي شخص رتبته admin بدون استثناءات
+                                const canDelete = currentUser.role === 'admin';
 
                                 // قراءة الفلاتر
                                 const filterFrom = document.getElementById('historyDateFrom').value;
@@ -1446,19 +1530,46 @@
                             }
 
                             // 3. تأمين دالة الحذف أيضاً
-                            function deleteComplaint(username, key) {
-                                // حماية إضافية: لو المستخدم أبو تميم يرفض العملية
-                                if (currentUser.username === 'abutamim') {
-                                    alert("⛔ ليس لديك صلاحية لحذف الشكاوى.");
-                                    return;
-                                }
+                            // دالة حذف الشكوى (متاحة لجميع المشرفين مع الرقابة الصارمة)
+function deleteComplaint(username, key) {
+    // 1. التأكد أن المستخدم مشرف
+    if (currentUser.role !== 'admin') {
+        alert("⛔ عذراً، الحذف للمشرفين فقط.");
+        return;
+    }
 
-                                if(confirm("هل أنت متأكد من حذف هذه المخالفة من السجل؟")) {
-                                    logDeletionAction("حذف مخالفة/شكوى", username, "تم حذف مخالفة من سجل الموظف");
-                                    db.ref('users/' + username + '/complaints/' + key).remove()
-                                    .then(() => renderComplaintsHistory(username));
-                                }
-                            }
+    // 2. رسالة تحذير
+    if(!confirm("⚠️ هل أنت متأكد من حذف هذه المخالفة؟\n\nسيتم تسجيل العملية في سجل الرقابة (الأرشيف) مع اسمك وتفاصيل المحذوف.")) return;
+
+    const complaintRef = db.ref('users/' + username + '/complaints/' + key);
+
+    // 3. قراءة البيانات قبل الحذف لتسجيلها
+    complaintRef.once('value', (snapshot) => {
+        const data = snapshot.val();
+        
+        if (data) {
+            // تجهيز نص الأرشيف
+            const deletedDetails = `قام (${currentUser.realName || currentUser.username}) بحذف مخالفة للموظف (${username}). تفاصيل المخالفة المحذوفة: [العنوان: ${data.title}] - [الخصم: ${data.amount || 0}] - [السبب: ${data.details}] - [تاريخ المخالفة: ${data.date}]`;
+
+            // 4. التسجيل في الأرشيف (admin_logs)
+            // نستخدم دالة logDeletionAction الموجودة عندك بالفعل
+            logDeletionAction("حذف مخالفة من الملف", username, deletedDetails);
+
+            // 5. تنفيذ الحذف الآن
+            complaintRef.remove()
+                .then(() => {
+                    alert("✅ تم الحذف وتم تسجيل العملية في الأرشيف للمراجعة.");
+                    renderComplaintsHistory(username); // تحديث الجدول فوراً
+                })
+                .catch((error) => {
+                    alert("حدث خطأ: " + error.message);
+                });
+        } else {
+            alert("المخالفة غير موجودة أو تم حذفها مسبقاً.");
+            renderComplaintsHistory(username);
+        }
+    });
+}
 
                             // دالة للتحقق من الشكاوى الجديدة في ملف الموظف
                             function checkProfileNotifications(userData) {
@@ -1607,6 +1718,44 @@
                                 alert("تم تفعيل التنبيهات الصوتية بنجاح 🔊");
                             }
 
+                            // دالة تبديل الصوت للمشرفين
+                            function toggleAdminSound() {
+                                // عكس الحالة الحالية
+                                soundActive = !soundActive;
+
+                                const soundBtn = document.getElementById('adminSoundToggle');
+                                const ringAudio = document.getElementById('requestRing');
+
+                                if (soundActive) {
+                                    // حالة التفعيل
+                                    soundBtn.innerHTML = "🔊 الصوت: مفعل";
+                                    soundBtn.classList.remove('btn-danger');
+                                    soundBtn.classList.add('btn-success');
+
+                                    // محاولة تشغيل صامت لفك حظر المتصفح للصوت
+                                    ['notifySound', 'requestRing'].forEach(id => {
+                                        const s = document.getElementById(id);
+                                        s.volume = 0;
+                                        s.play().then(() => { s.pause(); s.currentTime = 0; s.volume = 1; }).catch(e => {});
+                                    });
+
+                                    alert("🔊 تم تفعيل التنبيهات الصوتية");
+                                } else {
+                                    // حالة الكتم
+                                    soundBtn.innerHTML = "🔇 الصوت: مكتوم";
+                                    soundBtn.classList.remove('btn-success');
+                                    soundBtn.classList.add('btn-danger');
+
+                                    // إيقاف الجرس فوراً إذا كان يعمل
+                                    if (ringAudio) {
+                                        ringAudio.pause();
+                                        ringAudio.currentTime = 0;
+                                    }
+
+                                    alert("🔇 تم كتم جميع التنبيهات الصوتية");
+                                }
+                            }
+
                             db.ref('broadcasts').on('value', (snap) => {
                                 const data = snap.val() || {}, employeeLog = document.getElementById('employeeBroadcastLog'), adminLog = document.getElementById('adminBroadcastLog');
                                 if(employeeLog) employeeLog.innerHTML = ""; if(adminLog) adminLog.innerHTML = "";
@@ -1752,7 +1901,14 @@
                                     Object.keys(newData).forEach(un => {
                                         if (MANAGERS.includes(un)) return;
                                         if (newData[un].isOnBreak && (!allUsersData[un] || !allUsersData[un].isOnBreak)) document.getElementById('notifySound').play().catch(e=>{});
-                                        if ((newData[un].otRequest && newData[un].otRequest.status === 'قيد الانتظار') || (newData[un].emRequest && newData[un].emRequest.status === 'قيد الانتظار') || (newData[un].meetingRequest && newData[un].meetingRequest.status === 'قيد الانتظار')) pending = true;
+                                        if (
+                                            (newData[un].otRequest && newData[un].otRequest.status === 'قيد الانتظار') ||
+                                            (newData[un].emRequest && newData[un].emRequest.status === 'قيد الانتظار') ||
+                                            (newData[un].meetingRequest && newData[un].meetingRequest.status === 'قيد الانتظار') ||
+                                            (newData[un].permRequest && newData[un].permRequest.status === 'قيد الانتظار')
+                                        ) {
+                                            pending = true;
+                                        }
                                     });
                                     const ring = document.getElementById('requestRing');
                                     if (pending) { if (ring.paused) ring.play().catch(e=>{}); } else { ring.pause(); ring.currentTime = 0; }
@@ -1762,16 +1918,16 @@
                                 if (currentUser) {
                                     const updatedMe = allUsersData[currentUser.username];
                                     if(updatedMe) { const r = currentUser.role; currentUser = updatedMe; currentUser.role = r; }
-                                    if (currentUser.role === 'admin') {
-                                        renderMonitorTable(); renderAdminEmRequests(); renderAdminMeetingRequests(); renderAdminOtRequests(); renderUserManagementTable(); updateBroadcastTargets();
+        if (currentUser.role === 'admin') {
+            renderMonitorTable(); renderAdminEmRequests(); renderAdminMeetingRequests(); renderAdminOtRequests(); renderAdminPermRequests(); renderUserManagementTable(); updateBroadcastTargets();
 
-                                        if(['mahmoud', 'ahmed'].includes(currentUser.username)) {
-                                            document.getElementById('masterDeleteBtn').classList.remove('hidden');
-                                            document.getElementById('rangeDeleteBtn').classList.remove('hidden');
-                                        } else {
-                                            document.getElementById('masterDeleteBtn').classList.add('hidden');
-                                            document.getElementById('rangeDeleteBtn').classList.add('hidden');
-                                        }
+            if(['mahmoud', 'ahmed'].includes(currentUser.username)) {
+                document.getElementById('masterDeleteBtn').classList.remove('hidden');
+                document.getElementById('rangeDeleteBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('masterDeleteBtn').classList.add('hidden');
+                document.getElementById('rangeDeleteBtn').classList.add('hidden');
+            }
 
 if (currentUser.role === 'admin') {
     // قائمة المسموح لهم
@@ -1791,9 +1947,9 @@ if (currentUser.role === 'admin') {
     }
 }
 
-                                        if(!document.getElementById('tab-reports').classList.contains('hidden')) renderUserReport();
-                                    }
-                                    else { updateUserUI(); updateEmStatus(); updateMeetingStatus(); updateOtStatus(); checkBreakLimit(); checkProfileNotifications(currentUser); }
+            if(!document.getElementById('tab-reports').classList.contains('hidden')) renderUserReport();
+        }
+        else { updateUserUI(); updateEmStatus(); updateMeetingStatus(); updateOtStatus(); updatePermStatus(); checkBreakLimit(); checkProfileNotifications(currentUser); }
                                 }
                             });
 
@@ -1899,7 +2055,27 @@ if (currentUser.role === 'admin') {
                             }
                             // ----------------------------
 
-                            function switchAdminTab(t) { ['tab-monitor','tab-reports','tab-users','tab-overtime','tab-emergency','tab-meetings'].forEach(id => document.getElementById(id).classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); if(t==='reports') updateReportSelect(); }
+                            function switchAdminTab(t) {
+    // أخفي كل التبويبات القديمة والجديدة
+    const tabs = ['tab-monitor', 'tab-reports', 'tab-users', 'tab-overtime', 'tab-emergency', 'tab-meetings', 'tab-permissions'];
+
+    tabs.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.classList.add('hidden');
+    });
+
+    // أظهر التبويب المطلوب
+    const target = document.getElementById('tab-' + t);
+    if (target) {
+        target.classList.remove('hidden');
+    }
+
+    // تحديث القائمة المنسدلة لو فتحنا التقارير
+    if(t === 'reports') updateReportSelect();
+
+    // تحديث جدول الاستأذان لو فتحنا التبويب
+    if (t === 'permissions') renderAdminPermRequests();
+}
                             
                         function startGlobalTimer() {
                             if(timerInterval) clearInterval(timerInterval);
@@ -1934,33 +2110,119 @@ if (currentUser.role === 'admin') {
                             }, 1000);
                         }
 
-                            function renderMonitorTable() {
-                                const tbody = document.getElementById('monitorBody'), search = document.getElementById('monitorSearch').value.toLowerCase();
-                                tbody.innerHTML = ''; let actB = 0, actP = 0;
-                                Object.values(allUsersData).forEach(u => {
-                                    if (!u || !u.username || MANAGERS.includes(u.username) || (search && !(u.realName || u.username).toLowerCase().includes(search))) return;
-                                    let lg = u.usedSeconds||0, lp = u.prayerSeconds||0, lm = u.meetingSeconds||0, lf = u.followUpSeconds||0, lv = u.vipSeconds||0;
-                                    if (u.isOnBreak && u.lastStartTime) {
-                                        let elap = Math.floor((getServerTime() - u.lastStartTime) / 1000);
-                                        if (u.breakType === 'بريك عام' || u.breakType === 'طوارئ') { lg += elap; actB++; } else if (u.breakType === 'صلاة') { lp += elap; actP++; } else if (u.breakType === 'ميتنج') lm += elap; else if (u.breakType === 'متابع عميل') lf += elap; else if (u.breakType === 'استراحة VIP') lv += elap;
-                                    }
-                                    const rem = ((u.allowance||45)*60) - lg, online = `<span class="online-dot" style="color:${u.state === 'online' ? '#10b981' : '#64748b'}"></span>`;
-                                    const deviceIcon = u.device === 'mobile' ? '📱' : (u.device === 'tablet' ? '📲' : '💻');
-                                    const pPic = u.profilePic || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
-                                    const imgTag = `<img src="${pPic}" class="profile-img">`;
-                                    const savedS = adminSelectBuffer[u.username] || 'بريك عام';
-                                    const statusCell = u.isOnBreak ? `<span style="color:var(--danger); font-weight:bold;">${u.breakType}</span>` : '<span style="color:var(--success);">متاح ✅</span>';
-                                    const ctrl = u.isOnBreak ? `<button onclick="adminStop('${u.username}')" class="btn btn-danger btn-sm">🛑 إيقاف</button> <button onclick="openUserProfile('${u.username}')" class="btn btn-dark btn-sm" title="الملف والشكاوى">📂</button>` : `<div class="admin-table-ctrl"><div class="admin-row-top"><select id="sel_${u.username}" onchange="saveAdminSelect('${u.username}', this.value)"><option value="بريك عام" ${savedS=='بريك عام'?'selected':''}>بريك</option><option value="صلاة" ${savedS=='صلاة'?'selected':''}>صلاة</option><option value="ميتنج" ${savedS=='ميتنج'?'selected':''}>ميتنج</option><option value="متابع عميل" ${savedS=='متابع عميل'?'selected':''}>متابع</option><option value="استراحة VIP" ${savedS=='استراحة VIP'?'selected':''}>VIP</option></select><button onclick="adminStart('${u.username}')" class="btn btn-success btn-sm">▶</button><button onclick="openUserProfile('${u.username}')" class="btn btn-dark btn-sm" title="الملف والشكاوى">📂</button></div><input type="text" id="inp_${u.username}" placeholder="السبب..." oninput="saveAdminTyping('${u.username}', this.value)"></div>`;
-                                    tbody.innerHTML += `<tr class="${u.isOnBreak && u.breakType==='بريك عام' && rem < 300 && rem > 0?'وضع-التنبيه':''}">
-                                        <td style="text-align:right;">${imgTag} ${u.realName || u.username} ${online} ${deviceIcon} ${u.isVIP ? '⭐' : ''}</td>
-                                        <td>${statusCell}<br><small>${u.lastReason || ''}</small></td>
-                                        <td><span id="rem_${u.username}">${rem>=0?formatTime(rem):'<span style="color:var(--danger)">-'+formatTime(Math.abs(rem))+'</span>'}</span></td>
-                                        <td><span id="pray_${u.username}">${formatTime(lp)}</span><br><small>متبع: <span id="follow_${u.username}">${formatTime(lf)}</span></small></td>
-                                        <td><span id="meet_${u.username}">${formatTime(lm)}</span><br><small>VIP: <span id="vip_${u.username}">${formatTime(lv)}</span></small></td>
-                                        <td>${ctrl}</td></tr>`;
-                                });
-                                document.getElementById('statusCountersDisplay').innerText = `🍔 بريك: (${actB}/${maxBreaksAllowed}) | 🕌 صلاة: (${actP}/${maxPrayersAllowed})`;
-                            }
+function renderMonitorTable() {
+    const tbody = document.getElementById('monitorBody');
+    const search = document.getElementById('monitorSearch').value.toLowerCase();
+
+    tbody.innerHTML = '';
+
+    // عدادات للحالة العامة
+    let actB = 0, actP = 0; // بريك وصلاة
+    let onlineCount = 0; // عدد الفاتحين
+    let totalCount = 0;  // إجمالي الموظفين
+
+    // 1. تحويل البيانات لمصفوفة عشان نقدر نرتبها
+    let usersList = Object.values(allUsersData).filter(u => {
+        // استبعاد المديرين واستبعاد الغير موجودين في البحث
+        if (!u || !u.username || MANAGERS.includes(u.username)) return false;
+        if (search && !(u.realName || u.username).toLowerCase().includes(search)) return false;
+        return true;
+    });
+
+    // 2. الترتيب الذكي (المتواجدين أولاً)
+    usersList.sort((a, b) => {
+        // الأولوية الأولى: الحالة (online يجي قبل offline)
+        const stateA = (a.state === 'online') ? 1 : 0;
+        const stateB = (b.state === 'online') ? 1 : 0;
+        if (stateA !== stateB) return stateB - stateA; // الكبير (1) يجي الأول
+
+        // الأولوية الثانية: اللي في بريك يجي فوق (اختياري)
+        // const breakA = a.isOnBreak ? 1 : 0;
+        // const breakB = b.isOnBreak ? 1 : 0;
+        // if (breakA !== breakB) return breakB - breakA;
+
+        // الأولوية الثالثة: ترتيب أبجدي بالاسم
+        const nameA = a.realName || a.username;
+        const nameB = b.realName || b.username;
+        return nameA.localeCompare(nameB);
+    });
+
+    // 3. رسم الجدول
+    usersList.forEach(u => {
+        totalCount++;
+        const isOnline = u.state === 'online';
+        if (isOnline) onlineCount++;
+
+        let lg = u.usedSeconds||0, lp = u.prayerSeconds||0, lm = u.meetingSeconds||0, lf = u.followUpSeconds||0, lv = u.vipSeconds||0;
+
+        // حساب الوقت المباشر لو هو في بريك حالياً
+        if (u.isOnBreak && u.lastStartTime) {
+            let elap = Math.floor((getServerTime() - u.lastStartTime) / 1000);
+            if (u.breakType === 'بريك عام' || u.breakType === 'طوارئ') { lg += elap; actB++; }
+            else if (u.breakType === 'صلاة') { lp += elap; actP++; }
+            else if (u.breakType === 'ميتنج') lm += elap;
+            else if (u.breakType === 'متابع عميل') lf += elap;
+            else if (u.breakType === 'استراحة VIP') lv += elap;
+        }
+
+        const rem = ((u.allowance||45)*60) - lg;
+
+        // تنسيق حالة الاتصال
+        const onlineDot = isOnline
+            ? `<span style="display:inline-block; width:10px; height:10px; background:#10b981; border-radius:50%; margin-right:5px; box-shadow:0 0 5px #10b981;"></span> <span style="color:#10b981; font-size:0.8rem;">متصل</span>`
+            : `<span style="display:inline-block; width:10px; height:10px; background:#64748b; border-radius:50%; margin-right:5px;"></span> <span style="color:#64748b; font-size:0.8rem;">غير متصل</span>`;
+
+        const deviceIcon = u.device === 'mobile' ? '📱' : (u.device === 'tablet' ? '📲' : '💻');
+        const pPic = u.profilePic || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+        const imgTag = `<img src="${pPic}" class="profile-img">`;
+
+        // القيمة المحفوظة في القائمة المنسدلة
+        const savedS = adminSelectBuffer[u.username] || 'بريك عام';
+
+        const statusCell = u.isOnBreak
+            ? `<span style="color:var(--danger); font-weight:bold; animation: pulse 2s infinite;">${u.breakType}</span>`
+            : '<span style="color:var(--success);">متاح ✅</span>';
+
+        const ctrl = u.isOnBreak
+            ? `<button onclick="adminStop('${u.username}')" class="btn btn-danger btn-sm">🛑 إيقاف</button> <button onclick="openUserProfile('${u.username}')" class="btn btn-dark btn-sm" title="الملف والشكاوى">📂</button>`
+            : `<div class="admin-table-ctrl"><div class="admin-row-top"><select id="sel_${u.username}" onchange="saveAdminSelect('${u.username}', this.value)" style="width:80px;"><option value="بريك عام" ${savedS=='بريك عام'?'selected':''}>بريك</option><option value="صلاة" ${savedS=='صلاة'?'selected':''}>صلاة</option><option value="ميتنج" ${savedS=='ميتنج'?'selected':''}>ميتنج</option><option value="متابع عميل" ${savedS=='متابع عميل'?'selected':''}>متابع</option><option value="استراحة VIP" ${savedS=='استراحة VIP'?'selected':''}>VIP</option></select><button onclick="adminStart('${u.username}')" class="btn btn-success btn-sm">▶</button><button onclick="openUserProfile('${u.username}')" class="btn btn-dark btn-sm" title="الملف والشكاوى">📂</button></div></div>`;
+
+        // تظليل الصف لو غير متصل (باهت)
+        const rowStyle = isOnline ? '' : 'opacity: 0.5; filter: grayscale(0.8);';
+
+        // تنبيه الأكسدة
+        const alertClass = (u.isOnBreak && u.breakType==='بريك عام' && rem < 300 && rem > 0) ? 'وضع-التنبيه' : '';
+
+        tbody.innerHTML += `
+            <tr class="${alertClass}" style="${rowStyle}">
+                <td style="text-align:right;">
+                    <div style="display:flex; align-items:center;">
+                        ${imgTag}
+                        <div>
+                            <div style="font-weight:bold;">${u.realName || u.username} ${u.isVIP ? '⭐' : ''}</div>
+                            <div style="font-size:0.75rem;">${onlineDot} | ${deviceIcon}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>${statusCell}<br><small>${u.lastReason || ''}</small></td>
+                <td><span id="rem_${u.username}" style="font-weight:bold; font-size:1.1rem; color:${rem>=0?'white':'var(--danger)'}">${rem>=0?formatTime(rem):'-'+formatTime(Math.abs(rem))}</span></td>
+                <td><span id="pray_${u.username}">${formatTime(lp)}</span><br><small>متبع: <span id="follow_${u.username}">${formatTime(lf)}</span></small></td>
+                <td><span id="meet_${u.username}">${formatTime(lm)}</span><br><small>VIP: <span id="vip_${u.username}">${formatTime(lv)}</span></small></td>
+                <td>${ctrl}</td>
+            </tr>`;
+    });
+
+    // تحديث شريط الحالة العلوي
+    const statusDisplay = document.getElementById('statusCountersDisplay');
+    if(statusDisplay) {
+        statusDisplay.innerHTML = `
+            <span style="color:#10b981; margin-left:15px;">🟢 متواجد: ${onlineCount}</span>
+            <span style="color:#64748b; margin-left:15px;">⚫ غير متصل: ${totalCount - onlineCount}</span>
+            <span style="border-right:2px solid #555; padding-right:15px;">🍔 بريك: (${actB}/${maxBreaksAllowed})</span>
+            <span>🕌 صلاة: (${actP}/${maxPrayersAllowed})</span>
+        `;
+    }
+}
 
                             function updateMonitorValuesOnly() {
                                 Object.values(allUsersData).forEach(u => {
@@ -2275,9 +2537,9 @@ if (currentUser.role === 'admin') {
                             }
 
                             function sendEmRequest() { const r = document.getElementById('breakReason').value.trim(); if(!r) return alert("اكتب السبب"); db.ref('users/'+currentUser.username+'/emRequest').set({ reason: r, status: 'قيد الانتظار', timestamp: getServerTime() }); }
-                            
-                            function updateEmStatus() { 
-                                const el = document.getElementById('emStatusArea'); 
+
+                            function updateEmStatus() {
+                                const el = document.getElementById('emStatusArea');
                                 if(!currentUser.emRequest) {
                                     el.innerHTML = `<button onclick="sendEmRequest()" class="btn btn-danger" style="width:100%">طلب</button>`;
                                     return;
@@ -2298,6 +2560,73 @@ if (currentUser.role === 'admin') {
 
                             function renderAdminEmRequests() { const tb = document.getElementById('adminEmBody'); tb.innerHTML = ''; let c = 0; Object.values(allUsersData).forEach(u => { if(u.emRequest && u.emRequest.status === 'قيد الانتظار') { c++; tb.innerHTML += `<tr><td>${u.realName}</td><td>${u.emRequest.reason}</td><td>${new Date(u.emRequest.timestamp).toLocaleTimeString()}</td><td><button onclick="handleEm('${u.username}', true)" class="btn btn-success btn-sm">✔</button><button onclick="handleEm('${u.username}', false)" class="btn btn-danger btn-sm">✖</button></td></tr>`; } }); document.getElementById('emBadge').innerText = c; c > 0 ? document.getElementById('emBadge').classList.remove('hidden') : document.getElementById('emBadge').classList.add('hidden'); }
                             window.handleEm = (un, app) => { if(app) db.ref('users/'+un).update({ isOnBreak: true, breakType: 'طوارئ', lastStartTime: getServerTime(), lastReason: allUsersData[un].emRequest.reason, 'emRequest/status': 'تم القبول' }); else db.ref(`users/${un}/emRequest`).update({ status: 'رُفض' }); triggerGlobalRefresh(); };
+
+                            // دالة إرسال طلب الاستأذان (معدلة)
+                            function sendPermRequest() {
+                                console.log("تم الضغط على زر الاستأذان..."); // للتأكد إن الزر شغال
+
+                                // 1. التأكد من وجود الخانات
+                                const hoursInput = document.getElementById('permHoursInput');
+                                const reasonInput = document.getElementById('permReasonInput');
+
+                                if (!hoursInput || !reasonInput) {
+                                    alert("خطأ برمجي: لم يتم العثور على خانات الإدخال (تأكد من الـ IDs)");
+                                    return;
+                                }
+
+                                const h = hoursInput.value;
+                                const r = reasonInput.value;
+
+                                // 2. التحقق من البيانات
+                                if(!h || !r) {
+                                    alert("⚠️ يا بطل، لازم تكتب عدد الساعات والسبب!");
+                                    return;
+                                }
+
+                                if (!currentUser) {
+                                    alert("خطأ: لم يتم التعرف على المستخدم الحالي.");
+                                    return;
+                                }
+
+                                // 3. الإرسال للداتابيز
+                                db.ref('users/'+currentUser.username+'/permRequest').set({
+                                    hours: h,
+                                    reason: r,
+                                    status: 'قيد الانتظار',
+                                    timestamp: getServerTime()
+                                }).then(() => {
+                                    alert("تم إرسال الطلب للمشرف بنجاح ✅");
+                                    // تصفير الخانات
+                                    document.getElementById('permHoursInput').value = '';
+                                    document.getElementById('permReasonInput').value = '';
+                                }).catch((error) => {
+                                    console.error(error);
+                                    alert("حدث خطأ أثناء الإرسال: " + error.message);
+                                });
+                            }
+
+                            function updatePermStatus() {
+                                const el = document.getElementById('permStatusArea');
+                                if(!currentUser.permRequest) {
+                                    el.innerHTML = `<button onclick="sendPermRequest()" class="btn btn-primary" style="background: linear-gradient(135deg, #a855f7, #7e22ce); width: 100%;">إرسال الطلب</button>`;
+                                    return;
+                                }
+                                if(currentUser.permRequest.status === 'قيد الانتظار') {
+                                    el.innerHTML = `<span style="color:orange;">⏳...</span>`;
+                                } else if(currentUser.permRequest.status === 'تم القبول') {
+                                    el.innerHTML = `<span style="color:green; font-weight:bold;">✅ تم القبول</span>`;
+                                } else {
+                                    el.innerHTML = `<span style="color:red; font-weight:bold;">❌ تم الرفض</span>`;
+                                    setTimeout(() => {
+                                        if(currentUser.permRequest && (currentUser.permRequest.status === 'رُفض' || currentUser.permRequest.status.includes('رفض'))) {
+                                            db.ref('users/'+currentUser.username+'/permRequest').remove();
+                                        }
+                                    }, 4000);
+                                }
+                            }
+
+                            function renderAdminPermRequests() { const tb = document.getElementById('adminPermBody'); tb.innerHTML = ''; let c = 0; Object.values(allUsersData).forEach(u => { if(u.permRequest && u.permRequest.status === 'قيد الانتظار') { c++; tb.innerHTML += `<tr><td>${u.realName}</td><td>${u.permRequest.hours} ساعة</td><td>${u.permRequest.reason}</td><td>${new Date(u.permRequest.timestamp).toLocaleTimeString()}</td><td><button onclick="handlePerm('${u.username}', true)" class="btn btn-success btn-sm">✔</button><button onclick="handlePerm('${u.username}', false)" class="btn btn-danger btn-sm">✖</button></td></tr>`; } }); document.getElementById('permBadge').innerText = c; c > 0 ? document.getElementById('permBadge').classList.remove('hidden') : document.getElementById('permBadge').classList.add('hidden'); }
+                            window.handlePerm = (un, app) => { db.ref(`users/${un}/permRequest`).update({ status: app ? 'تم القبول' : 'رُفض' }).then(() => triggerGlobalRefresh()); };
                             
                             function sendMeetingRequest() { const r = document.getElementById('breakReason').value.trim(); if(!r) return alert("اكتب السبب"); db.ref('users/'+currentUser.username+'/meetingRequest').set({ reason: r, status: 'قيد الانتظار', timestamp: getServerTime() }); }
                             
@@ -2348,6 +2677,41 @@ if (currentUser.role === 'admin') {
 
                             function renderAdminOtRequests() { const tb = document.getElementById('adminOtBody'); tb.innerHTML = ''; let c=0; Object.values(allUsersData).forEach(u => { if(u.otRequest && u.otRequest.status === 'قيد الانتظار') { c++; tb.innerHTML += `<tr><td>${u.realName}</td><td>${u.otRequest.hours}س</td><td>${new Date(u.otRequest.timestamp).toLocaleTimeString()}</td><td><button onclick="handleOt('${u.username}', true)" class="btn btn-success btn-sm">✔</button><button onclick="handleOt('${u.username}', false)" class="btn btn-danger btn-sm">✖</button></td></tr>`; } }); document.getElementById('otBadge').innerText = c; c > 0 ? document.getElementById('otBadge').classList.remove('hidden') : document.getElementById('otBadge').classList.add('hidden'); }
                             window.handleOt = (un, app) => { if(app) db.ref(`users/${un}/overtimeHistory/${getServerTime()}`).set({ date: getServerDateString(), hours: allUsersData[un].otRequest.hours, approvedBy: currentUser.username }); db.ref(`users/${un}/otRequest`).update({ status: app ? 'تم القبول' : 'رُفض' }).then(() => triggerGlobalRefresh()); };
+
+                            function renderAdminPermRequests() {
+                                const tb = document.getElementById('adminPermBody');
+
+                                // تأكد إن الجدول موجود في HTML عشان الكود مايضربش
+                                if(!tb) return;
+
+                                tb.innerHTML = '';
+                                let c = 0;
+
+                                Object.values(allUsersData).forEach(u => {
+                                    // الشرط: لازم يكون فيه طلب، وحالته "قيد الانتظار"
+                                    if(u.permRequest && u.permRequest.status === 'قيد الانتظار') {
+                                        c++;
+                                        tb.innerHTML += `
+                                            <tr>
+                                                <td style="font-weight:bold; color:var(--primary);">${u.realName || u.username}</td>
+                                                <td style="font-weight:bold;">${u.permRequest.hours} ساعة</td>
+                                                <td>${u.permRequest.reason}</td>
+                                                <td style="direction:ltr; font-size:0.8rem; color:#aaa;">${new Date(u.permRequest.timestamp).toLocaleTimeString()}</td>
+                                                <td>
+                                                    <button onclick="handlePerm('${u.username}', true)" class="btn btn-success btn-sm">✔ موافق</button>
+                                                    <button onclick="handlePerm('${u.username}', false)" class="btn btn-danger btn-sm">✖ رفض</button>
+                                                </td>
+                                            </tr>`;
+                                    }
+                                });
+
+                                // تحديث العداد الأحمر فوق الزرار
+                                const badge = document.getElementById('permBadge');
+                                if(badge) {
+                                    badge.innerText = c;
+                                    c > 0 ? badge.classList.remove('hidden') : badge.classList.add('hidden');
+                                }
+                            }
                             function endDay() {
     // التحقق من أن المستخدم مشرف (أي مشرف في القائمة)
     if (!MANAGERS.includes(currentUser.username)) {
@@ -2732,8 +3096,8 @@ if (currentUser.role === 'admin') {
 
                                 const u = allUsersData[username];
                                 const viewingMyOwnProfile = (currentUser.username === username);
-                                // التحقق من صلاحية الحذف (أدمن وليس أبو تميم، أو يكون محمود أو أحمد)
-                                const canDelete = (currentUser.role === 'admin' && currentUser.username !== 'abutamim') || ['mahmoud', 'ahmed'].includes(currentUser.username);
+                                // السماح لأي مشرف (Admin) برؤية زر الحذف
+                                const canDelete = currentUser.role === 'admin';
 
                                 // قراءة الفلاتر
                                 const filterFrom = document.getElementById('historyDateFrom').value;
@@ -2807,16 +3171,40 @@ if (currentUser.role === 'admin') {
                             }
 
                             function deleteComplaint(username, key) {
-                                // حماية إضافية: لو المستخدم أبو تميم يرفض العملية
-                                if (currentUser.username === 'abutamim') {
-                                    alert("⛔ ليس لديك صلاحية لحذف الشكاوى.");
+                                // 1. التأكد أن القائم بالحذف هو مشرف
+                                if (currentUser.role !== 'admin') {
+                                    alert("⛔ عذراً، هذه الصلاحية للمشرفين فقط.");
                                     return;
                                 }
 
-                                if(confirm("هل أنت متأكد من حذف هذه المخالفة من السجل؟")) {
-                                    db.ref('users/' + username + '/complaints/' + key).remove()
-                                    .then(() => renderComplaintsHistory(username));
-                                }
+                                // 2. رسالة تأكيد إدارية
+                                if(!confirm("⚠️ تنبيه إداري:\nسيتم حذف هذه المخالفة نهائياً من ملف الموظف.\n\nسيتم تسجيل تفاصيل المخالفة واسمك في أرشيف الرقابة للإدارة العليا.\n\nهل تريد المتابعة؟")) return;
+
+                                const complaintRef = db.ref('users/' + username + '/complaints/' + key);
+
+                                // 3. جلب بيانات الشكوى قبل حذفها لأرشفتها
+                                complaintRef.once('value', (snapshot) => {
+                                    const data = snapshot.val();
+                                    if (data) {
+                                        // تجميع محتوى الشكوى المحذوفة في نص واحد
+                                        const deletedDetails = `[محتوى الشكوى المحذوفة]: العنوان: (${data.title}) - الخصم: ${data.amount || 0} - التفاصيل: ${data.details} - التاريخ الأصلي: ${data.date}`;
+                                        
+                                        // 4. تسجيل العملية في سجل الرقابة (admin_logs)
+                                        logDeletionAction("حذف مخالفة من السجل", username, deletedDetails);
+
+                                        // 5. الحذف الفعلي
+                                        complaintRef.remove()
+                                            .then(() => {
+                                                alert("✅ تم الحذف بنجاح، وتم تسجيل العملية في أرشيف الرقابة.");
+                                                renderComplaintsHistory(username); // تحديث الجدول
+                                            })
+                                            .catch((error) => {
+                                                alert("حدث خطأ أثناء الحذف: " + error.message);
+                                            });
+                                    } else {
+                                        alert("هذه الشكوى غير موجودة بالفعل.");
+                                    }
+                                });
                             }
 
                             function acknowledgeComplaint(key) {
@@ -3401,22 +3789,73 @@ function openSecretArchive() {
 
     document.getElementById('archiveModal').classList.remove('hidden');
     const tbody = document.getElementById('archiveBody');
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">جاري تحميل السجلات... ⏳</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">جاري تحميل السجلات... ⏳</td></tr>';
 
     // جلب آخر 100 عملية حذف
     db.ref('admin_logs').limitToLast(100).once('value', snapshot => {
         const data = snapshot.val();
-        tbody.innerHTML = '';
 
         if (!data) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">السجل نظيف ✅</td></tr>';
+            cachedArchiveData = [];
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">السجل نظيف ✅</td></tr>';
+            updateArchiveCountBadge();
             return;
         }
 
-        // تحويل البيانات لمصفوفة وعكسها (عشان الجديد يظهر فوق)
-        const logs = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+        // التعديل هنا: استخدام Object.entries عشان نحتفظ بالمفتاح (key)
+        cachedArchiveData = Object.entries(data).map(([key, val]) => {
+            return { ...val, id: key }; // دمجنا المفتاح جوه البيانات
+        }).sort((a, b) => b.timestamp - a.timestamp);
 
-        logs.forEach(log => {
+        // عرض البيانات
+        filterArchiveTable();
+    });
+}
+
+// دالة فلترة جدول الأرشيف
+function filterArchiveTable() {
+    const tbody = document.getElementById('archiveBody');
+    const searchTerm = document.getElementById('archiveSearchInput').value.toLowerCase();
+    const dateFrom = document.getElementById('archiveDateFrom').value;
+    const dateTo = document.getElementById('archiveDateTo').value;
+
+    tbody.innerHTML = '';
+
+    if (cachedArchiveData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">السجل نظيف ✅</td></tr>';
+        updateArchiveCountBadge();
+        return;
+    }
+
+    let filteredData = cachedArchiveData;
+
+    // فلترة بالبحث
+    if (searchTerm) {
+        filteredData = filteredData.filter(log =>
+            log.adminName.toLowerCase().includes(searchTerm) ||
+            log.target.toLowerCase().includes(searchTerm) ||
+            log.action.toLowerCase().includes(searchTerm) ||
+            log.details.toLowerCase().includes(searchTerm)
+        );
+    }
+
+    // فلترة بالتاريخ
+    if (dateFrom || dateTo) {
+        filteredData = filteredData.filter(log => {
+            const logDate = log.dateStr.split(' ')[0]; // استخراج التاريخ فقط (DD/MM/YYYY)
+            const logDateISO = logDate.split('/').reverse().join('-'); // تحويل لـ YYYY-MM-DD
+
+            if (dateFrom && logDateISO < dateFrom) return false;
+            if (dateTo && logDateISO > dateTo) return false;
+            return true;
+        });
+    }
+
+    // عرض النتائج
+    if (filteredData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد نتائج للبحث 🔍</td></tr>';
+    } else {
+        filteredData.forEach(log => {
             tbody.innerHTML += `
                 <tr style="background:rgba(255,255,255,0.02); border-bottom:1px solid rgba(255,215,0,0.1);">
                     <td style="color:gold; font-weight:bold;">${log.adminName}</td>
@@ -3424,10 +3863,62 @@ function openSecretArchive() {
                     <td>${log.target}</td>
                     <td style="font-size:0.9rem; color:#aaa;">${log.details}</td>
                     <td style="direction:ltr;">${log.dateStr}</td>
+                    <td style="text-align:center;">
+                        <button onclick="deleteArchiveLog('${log.id}')" class="btn btn-danger btn-sm" title="حذف السجل نهائياً">🗑</button>
+                    </td>
                 </tr>
             `;
         });
-    });
+    }
+
+    updateArchiveCountBadge(filteredData.length);
+}
+
+// دالة إعادة تعيين الفلاتر
+function resetArchiveFilters() {
+    document.getElementById('archiveSearchInput').value = '';
+    document.getElementById('archiveDateFrom').value = '';
+    document.getElementById('archiveDateTo').value = '';
+    filterArchiveTable();
+}
+
+// دالة تحديث عداد النتائج
+function updateArchiveCountBadge(count) {
+    const badge = document.getElementById('archiveCountBadge');
+    if (count === undefined) count = cachedArchiveData.length;
+    badge.innerHTML = `عدد السجلات: ${count}`;
+}
+
+// دالة حذف سجل واحد من الأرشيف
+function deleteArchiveLog(logId) {
+    if (!confirm("⚠️ هل أنت متأكد من حذف هذا السجل نهائياً؟\n\nلا يمكن التراجع عن هذا الإجراء.")) return;
+
+    db.ref('admin_logs/' + logId).remove()
+        .then(() => {
+            alert("✅ تم حذف السجل بنجاح.");
+            // إعادة تحميل البيانات
+            openSecretArchive();
+        })
+        .catch((error) => {
+            alert("حدث خطأ: " + error.message);
+        });
+}
+
+// دالة مسح جميع سجلات الأرشيف
+function clearAllArchiveLogs() {
+    if (!confirm("🚨 تحذير خطير!\n\nسيتم مسح جميع سجلات الأرشيف نهائياً.\n\nهذا الإجراء لا يمكن التراجع عنه ويؤثر على الرقابة الإدارية.\n\nهل تريد المتابعة؟")) return;
+
+    if (!confirm("تأكيد نهائي: هل أنت متأكد تماماً؟")) return;
+
+    db.ref('admin_logs').remove()
+        .then(() => {
+            alert("✅ تم مسح جميع سجلات الأرشيف.");
+            // إعادة تحميل البيانات
+            openSecretArchive();
+        })
+        .catch((error) => {
+            alert("حدث خطأ: " + error.message);
+        });
 }
 
 // تعديل دالة showAdmin عشان تظهر الزرار لمحمود بس
@@ -3486,6 +3977,236 @@ function openSecretArchive() {
                                     });
                                 });
                             }
+
+                            async function runSmartArchiving() {
+    // التحقق من الصلاحية (للمدير العام فقط)
+    if (!['mahmoud', 'ahmed'].includes(currentUser.username)) {
+        return alert("⛔ هذه العملية حساسة ومتاحة للإدارة العليا فقط.");
+    }
+
+    if (!confirm("⚠️ تنبيه هام:\nسيتم نقل سجلات الحضور والشكاوى الأقدم من 60 يوماً إلى الأرشيف.\n\nهل تريد المتابعة لتسريع الموقع؟")) return;
+
+    const loadingDiv = document.createElement('div');
+    loadingDiv.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:99999; font-size:1.5rem;";
+    loadingDiv.innerHTML = "<div>⏳ جاري أرشفة البيانات القديمة...<br><small id='archProgress'>يرجى عدم إغلاق الصفحة</small></div>";
+    document.body.appendChild(loadingDiv);
+
+    try {
+        const usersRef = db.ref('users');
+        const archiveRef = db.ref('archive');
+        const snapshot = await usersRef.once('value');
+        const users = snapshot.val();
+
+        if (!users) throw new Error("لا توجد بيانات!");
+
+        let sessionsCount = 0;
+        let complaintsCount = 0;
+        const updates = {}; // لتجميع كل التعديلات وإرسالها مرة واحدة (Atomic Update)
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - 60); // تحديد تاريخ قبل 60 يوم
+
+        for (const [userId, userData] of Object.entries(users)) {
+            // 1. أرشفة سجلات الحضور (Sessions)
+            if (userData.sessions) {
+                for (const [key, session] of Object.entries(userData.sessions)) {
+                    const parts = session.date.split('/'); // Assuming DD/MM/YYYY
+                    const sessionDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+
+                    if (sessionDate < cutoffDate) {
+                        // تحديد مسار الأرشيف: archive/sessions/YYYY/UserId/SessionKey
+                        const year = parts[2];
+                        const archivePath = `archive/sessions/${year}/${userId}/${key}`;
+                        const userPath = `users/${userId}/sessions/${key}`;
+
+                        updates[archivePath] = session; // نسخ للأرشيف
+                        updates[userPath] = null;       // حذف من الملف النشط
+                        sessionsCount++;
+                    }
+                }
+            }
+
+            // 2. أرشفة الشكاوى (Complaints)
+            if (userData.complaints) {
+                for (const [key, complaint] of Object.entries(userData.complaints)) {
+                    const parts = complaint.date.split('/');
+                    const compDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+
+                    if (compDate < cutoffDate) {
+                        const year = parts[2];
+                        const archivePath = `archive/complaints/${year}/${userId}/${key}`;
+                        const userPath = `users/${userId}/complaints/${key}`;
+
+                        updates[archivePath] = complaint;
+                        updates[userPath] = null;
+                        complaintsCount++;
+                    }
+                }
+            }
+        }
+
+        if (Object.keys(updates).length > 0) {
+            await db.ref().update(updates);
+            alert(`✅ تمت العملية بنجاح!\n\n📦 تم أرشفة:\n- ${sessionsCount} سجل حضور\n- ${complaintsCount} شكوى قديمة\n\nالموقع الآن أخف وأسرع! 🚀`);
+        } else {
+            alert("✨ قاعدة البيانات نظيفة، لا توجد سجلات قديمة جداً للأرشفة.");
+        }
+
+    } catch (error) {
+        console.error(error);
+        alert("حدث خطأ أثناء الأرشفة: " + error.message);
+    } finally {
+        document.body.removeChild(loadingDiv);
+        triggerGlobalRefresh();
+    }
+}
+function exportProfessionalExcel() {
+    const startDateVal = document.getElementById('filterStartDate').value;
+    const endDateVal = document.getElementById('filterEndDate').value;
+
+    if (!startDateVal || !endDateVal) {
+        return alert("📅 يرجى تحديد تاريخ البداية والنهاية أولاً لاستخراج التقرير.");
+    }
+
+    // 1. تجهيز البيانات
+    const dataRows = [];
+    let grandTotalDeductions = 0;
+    let grandTotalOvertime = 0;
+
+    Object.values(allUsersData).forEach(u => {
+        if (!u.username || MANAGERS.includes(u.username)) return;
+
+        let totalBreak = 0;
+        let totalPrayer = 0;
+        let totalMeeting = 0;
+        let totalVIP = 0;
+        let totalOvertime = 0;
+        let totalDeductions = 0;
+        let complaintsCount = 0;
+        let workingDays = new Set(); // لحساب عدد أيام الحضور الفعلية
+
+        // حساب السجلات
+        if (u.sessions) {
+            Object.values(u.sessions).forEach(s => {
+                const parts = s.date.split('/');
+                const sDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                
+                if (sDate >= startDateVal && sDate <= endDateVal) {
+                    workingDays.add(s.date);
+                    const dur = parseInt(s.duration) || 0;
+                    if (s.type === 'بريك عام' || s.type === 'طوارئ') totalBreak += dur;
+                    else if (s.type === 'صلاة') totalPrayer += dur;
+                    else if (s.type === 'ميتنج') totalMeeting += dur;
+                    else if (s.type === 'استراحة VIP') totalVIP += dur;
+                }
+            });
+        }
+
+        // حساب الإضافي
+        if (u.overtimeHistory) {
+            Object.values(u.overtimeHistory).forEach(ot => {
+                const parts = ot.date.split('/');
+                const otDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                if (otDate >= startDateVal && otDate <= endDateVal) {
+                    totalOvertime += parseFloat(ot.hours) || 0;
+                }
+            });
+        }
+
+        // حساب الشكاوى والخصومات
+        if (u.complaints) {
+            Object.values(u.complaints).forEach(c => {
+                const parts = c.date.split('/');
+                const cDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                if (cDate >= startDateVal && cDate <= endDateVal) {
+                    complaintsCount++;
+                    totalDeductions += parseFloat(c.amount) || 0;
+                }
+            });
+        }
+
+        // حساب صافي الأكسدة (التأخيرات)
+        let totalOxidation = 0;
+        // (حساب مبسط: إجمالي البريك - المسموح به مضروب في عدد أيام الحضور)
+        // ملاحظة: الحساب الدقيق يتطلب تجميع يومي، سنستخدم الإجمالي هنا للتبسيط أو يمكنك استخدام الكود السابق للتجميع اليومي
+        const allowancePerDay = (u.allowance || 45) * 60;
+        // هنا سنفترض الحساب الإجمالي للفترة بناء على أيام العمل
+        // التحسين: حساب الأكسدة يوم بيوم ليكون دقيقاً
+        let dailyMap = {};
+        if (u.sessions) {
+             Object.values(u.sessions).forEach(s => {
+                const parts = s.date.split('/');
+                const sDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                if (sDate >= startDateVal && sDate <= endDateVal && (s.type === 'بريك عام' || s.type === 'طوارئ')) {
+                    dailyMap[s.date] = (dailyMap[s.date] || 0) + (parseInt(s.duration) || 0);
+                }
+             });
+        }
+        Object.values(dailyMap).forEach(val => {
+            if(val > allowancePerDay) totalOxidation += (val - allowancePerDay);
+        });
+
+
+        grandTotalDeductions += totalDeductions;
+        grandTotalOvertime += totalOvertime;
+
+        // إضافة الصف للمصفوفة
+        dataRows.push([
+            u.realName || u.username,         // الاسم
+            workingDays.size,                 // أيام العمل
+            (totalOxidation / 60).toFixed(0), // أكسدة (دقيقة)
+            (totalPrayer / 60).toFixed(0),    // صلاة (دقيقة)
+            (totalMeeting / 60).toFixed(0),   // اجتماعات (دقيقة)
+            totalOvertime,                    // إضافي (ساعات)
+            complaintsCount,                  // عدد المخالفات
+            totalDeductions                   // قيمة الخصم
+        ]);
+    });
+
+    // 2. بناء هيكل ملف الإكسيل (Array of Arrays)
+    const ws_data = [
+        ["تقرير الأداء الوظيفي والرواتب"], // العنوان الرئيسي
+        [`الفترة من: ${startDateVal} إلى: ${endDateVal}`], // التاريخ
+        [], // سطر فارغ
+        ["الاسم", "أيام الحضور", "أكسدة (دقيقة)", "صلاة (دقيقة)", "اجتماعات (دقيقة)", "إضافي (ساعات)", "عدد المخالفات", "إجمالي الخصم (ج.م)"] // عناوين الأعمدة
+    ];
+
+    // دمج البيانات
+    dataRows.forEach(row => ws_data.push(row));
+
+    // إضافة سطر الإجماليات في النهاية
+    ws_data.push([]);
+    ws_data.push(["الإجمالي الكلي", "", "", "", "", grandTotalOvertime, "", grandTotalDeductions]);
+
+    // 3. إنشاء الشيت
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+    // 4. تنسيق عرض الأعمدة (Column Widths)
+    const wscols = [
+        {wch: 25}, // الاسم
+        {wch: 12}, // أيام الحضور
+        {wch: 15}, // أكسدة
+        {wch: 15}, // صلاة
+        {wch: 15}, // اجتماعات
+        {wch: 15}, // إضافي
+        {wch: 15}, // مخالفات
+        {wch: 20}  // خصم
+    ];
+    ws['!cols'] = wscols;
+
+    // 5. دمج خلايا العنوان (Merge Cells)
+    // دمج السطر الأول (العنوان) على طول 8 أعمدة
+    if(!ws['!merges']) ws['!merges'] = [];
+    ws['!merges'].push({ s: {r:0, c:0}, e: {r:0, c:7} }); // دمج العنوان الرئيسي
+    ws['!merges'].push({ s: {r:1, c:0}, e: {r:1, c:7} }); // دمج التاريخ
+
+    // 6. التصدير
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "تقرير الموظفين");
+    
+    // اسم الملف
+    const fileName = `Report_${startDateVal}_to_${endDateVal}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+}
 
                             // استدعيها مرة واحدة فقط أو اتركها لضمان عدم ضياع الحسابات
                             autoCreateAdmins();
