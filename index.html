@@ -1247,7 +1247,6 @@
                             // 2. ده لازم تجيبه من الإعدادات زي ما شرحتلك فوق (تأكد إنه Unsigned)
                             const UPLOAD_PRESET = "my_preset";
 
-                            // دالة الرفع السريع (بتضغط الصور عشان ماتسحبش نت)
                             async function uploadToCloudinary(file) {
                                 if (!file) return null;
 
@@ -1255,25 +1254,25 @@
                                 formData.append("file", file);
                                 formData.append("upload_preset", UPLOAD_PRESET);
 
-                                // ده سطر سحري: بيخلي Cloudinary يصغر الصورة وهو بيرفعها
-                                // عشان الرفع يخلص في ثانية والموقع ما يعلقش
-                                if (file.type.startsWith('image')) {
-                                    formData.append("transformation", "w_800,q_auto:good");
-                                }
-
                                 try {
                                     const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {
                                         method: "POST",
                                         body: formData
                                     });
 
-                                    if (!response.ok) throw new Error("فشل الاتصال بالسيرفر");
-
                                     const data = await response.json();
-                                    return data.secure_url; // بيرجع رابط خفيف جداً
+
+                                    if (!response.ok) {
+                                        // هنا السيرفر هيقولنا السبب بالظبط
+                                        console.error("Cloudinary Error:", data);
+                                        alert("خطأ من السيرفر: " + (data.error ? data.error.message : "خطأ غير معروف"));
+                                        return null;
+                                    }
+
+                                    return data.secure_url;
                                 } catch (error) {
                                     console.error("Upload Error:", error);
-                                    alert("حدث خطأ في النت أثناء رفع الملف، حاول تاني.");
+                                    alert("فشل الاتصال بالسيرفر، تأكد من جودة النت.");
                                     return null;
                                 }
                             }
