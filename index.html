@@ -863,36 +863,23 @@
 
                             <!-- لوحة المشرف -->
                             <div id="adminSection" class="hidden">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
-                                    <div>
-                                        <h2 style="margin:0; text-align:right; color:var(--primary); display:inline-block;">لوحة الإدارة 🚀</h2>
+                                <div>
+                                    <h2 style="margin:0; text-align:right; color:var(--primary); display:inline-block;">لوحة الإدارة 🚀</h2>
 
-                                        <!-- اسم المشرف -->
-                                        <span id="currentManagerDisplay" style="font-weight: bold; opacity: 0.7; margin-right: 10px;"></span>
+                                    <!-- اسم المشرف -->
+                                    <span id="currentManagerDisplay" style="font-weight: bold; opacity: 0.7; margin-right: 10px;"></span>
 
-                                        <!-- الزر السري (يظهر لمحمود فقط) -->
-                                        <span id="secretResetBtn" onclick="endDay()" class="hidden"
-                                            style="cursor: pointer; font-size: 0.8rem; opacity: 0.3; margin-right: 5px; transition:0.3s;"
-                                            title="تصفير اليوم (سري)"
-                                            onmouseover="this.style.opacity='1'; this.style.transform='scale(1.2)'"
-                                            onmouseout="this.style.opacity='0.3'; this.style.transform='scale(1)'">
-                                            🗑️
-                                        </span>
+                                    <!-- (تم الحذف) تم إخفاء زر السلة 🗑️ بناء على طلبك -->
+                                    <span id="secretResetBtn" onclick="endDay()" class="hidden" style="display:none !important;"></span>
 
-                                        <!-- زر الأرشيف السري (هيظهر لمحمود بس) -->
-                                        <button id="secretArchiveBtn" onclick="openSecretArchive()" class="hidden btn btn-vip btn-sm" style="background: linear-gradient(45deg, #000, #333); border: 1px solid gold; color: gold; margin-right: 10px;">
-                                            🕵️ أرشيف الحذف
-                                        </button>
-                                    </div>
-                                    <div class="server-clock-box">
-                                        <span style="font-size: 0.7rem; opacity: 0.6;">توقيت النظام (12H)</span>
-                                        <span class="clock-time" id="adminServerTime">00:00:00 AM</span>
-                                        <span id="adminServerDate" style="font-size: 0.8rem; opacity: 0.8;">--/--/----</span>
-                                    </div>
-                                    <div>
-                                        <button onclick="activateAdminSound()" class="btn btn-primary btn-sm" style="background:#8e44ad; margin-left: 5px;">🔊 تفعيل التنبيهات</button>
-                                        <button onclick="logout()" class="btn btn-danger btn-sm">خروج</button>
-                                    </div>
+                                    <!-- (تم التعديل) زر الأرشيف أصبح إيموجي فقط بجانب الاسم -->
+                                    <span id="secretArchiveBtn" onclick="openSecretArchive()" class="hidden" 
+                                          style="cursor: pointer; font-size: 1.5rem; margin-right: 10px; vertical-align: middle; transition: 0.3s; filter: drop-shadow(0 0 5px gold);"
+                                          title="الأرشيف السري"
+                                          onmouseover="this.style.transform='scale(1.2)'" 
+                                          onmouseout="this.style.transform='scale(1)'">
+                                        🕵️
+                                    </span>
                                 </div>
 
                                 <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 25px; padding: 20px; margin-bottom: 25px;">
@@ -1219,17 +1206,24 @@
                         <script>
                             // تكوين Firebase
                             const firebaseConfig = {
-                                apiKey: "AIzaSyC2J8fVx7qAz_g33gUNQxXMEJHsWeFrjuk",
-                                authDomain: "break-3ccd9.firebaseapp.com",
-                                projectId: "break-3ccd9",
-                                storageBucket: "break-3ccd9.firebasestorage.app",
-                                messagingSenderId: "785237776836",
-                                appId: "1:785237776836:web:0a0062bf07359391fd6c91",
-                                databaseURL: "https://break-3ccd9-default-rtdb.firebaseio.com/"
+                                apiKey: "AIzaSyBojsAZ73wpf-4cD8TviULncyxIIOUO2qY",
+                                authDomain: "brak-nagaf.firebaseapp.com",
+                                projectId: "brak-nagaf",
+                                storageBucket: "brak-nagaf.firebasestorage.app",
+                                messagingSenderId: "149166416863",
+                                appId: "1:149166416863:web:e94fe392f868da07bbda6a",
+                                measurementId: "G-Z82Y7NHNGE",
+                                // تم استنتاج رابط قاعدة البيانات بناءً على اسم المشروع الجديد
+                                databaseURL: "https://brak-nagaf-default-rtdb.firebaseio.com/"
                             };
 
                             let db;
-                            try { firebase.initializeApp(firebaseConfig); db = firebase.database(); } catch(e) { console.error(e); }
+                            try {
+                                firebase.initializeApp(firebaseConfig);
+                                db = firebase.database();
+                            } catch(e) {
+                                console.error("Firebase Error:", e);
+                            }
 
                             let allUsersData = {}, currentUser = null, timerInterval = null, isLoaded = false;
                             let adminTypingBuffer = {}, adminSelectBuffer = {}, editingUserKey = null, soundActive = false;
@@ -1432,12 +1426,12 @@
 
                                         tbody.innerHTML += `
                                             <tr style="background:${rowColor}; border-bottom:1px solid rgba(255,255,255,0.05);">
-                                                <td>${c.date}<br><small style="opacity:0.7">${c.time}</small></td>
-                                                <td style="color:var(--primary); font-weight:bold;">${c.title}</td>
-                                                <td style="font-size:0.9rem;">${c.details}</td>
-                                                <td style="color:#ffd700;">${c.amount > 0 ? c.amount : '-'}</td>
+                                                <td>${escapeHtml(c.date)}<br><small style="opacity:0.7">${escapeHtml(c.time)}</small></td>
+                                                <td style="color:var(--primary); font-weight:bold;">${escapeHtml(c.title)}</td>
+                                                <td style="font-size:0.9rem;">${escapeHtml(c.details)}</td>
+                                                <td style="color:#ffd700;">${c.amount > 0 ? escapeHtml(c.amount.toString()) : '-'}</td>
                                                 <td>${proofCell}</td>
-                                                <td>${c.uploader || c.admin || 'System'}</td>
+                                                <td>${escapeHtml(c.uploader || c.admin || 'System')}</td>
                                                 <td style="text-align:center;">${actionCell}</td>
                                             </tr>
                                         `;
@@ -1547,6 +1541,13 @@
 
                                 // الحفظ في مكان اسمه admin_logs
                                 db.ref('admin_logs').push(logData);
+                            }
+
+                            // Helper function to escape HTML to prevent XSS
+                            function escapeHtml(text) {
+                                const div = document.createElement('div');
+                                div.textContent = text;
+                                return div.innerHTML;
                             }
 
                             let initialServerTime = Date.now(), initialPerformanceTime = performance.now();
@@ -2064,6 +2065,9 @@ if (currentUser.role === 'admin') {
                                         breakType: t,
                                         lastStartTime: getServerTime(),
                                         lastReason: r || t
+                                    }).catch(error => {
+                                        console.error('Error starting break:', error);
+                                        alert('حدث خطأ في بدء النشاط، حاول مرة أخرى.');
                                     });
                                 });
                             }
@@ -2654,12 +2658,18 @@ if (currentUser.role === 'admin') {
                                 const originalBtnText = submitBtn ? submitBtn.innerText : "تسجيل المخالفة";
 
                                 const title = document.getElementById('complaintTitle').value.trim();
-                                const amount = document.getElementById('deductionAmount').value;
-                                const details = document.getElementById('complaintDetails').value;
+                                const amount = document.getElementById('deductionAmount').value.trim();
+                                const details = document.getElementById('complaintDetails').value.trim();
                                 const imgFile = document.getElementById('complaintEvidence').files[0];
                                 const audioFile = document.getElementById('complaintAudioInput').files[0];
 
+                                // Input validation
                                 if (!title) return alert("اكتب عنوان المخالفة الأول!");
+                                if (title.length < 3) return alert("عنوان المخالفة قصير جداً (أقل من 3 أحرف)");
+                                if (title.length > 100) return alert("عنوان المخالفة طويل جداً (أكثر من 100 حرف)");
+                                if (amount && isNaN(parseFloat(amount))) return alert("قيمة الخصم يجب أن تكون رقماً صحيحاً");
+                                if (parseFloat(amount) < 0) return alert("قيمة الخصم لا يمكن أن تكون سالبة");
+                                if (details.length > 500) return alert("تفاصيل المخالفة طويلة جداً (أكثر من 500 حرف)");
 
                                 // ---[ هنا الحماية من التعليق ]---
                                 if(submitBtn) {
@@ -3140,6 +3150,7 @@ if (currentUser.role === 'admin') {
             if (u.sessions) {
                 Object.values(u.sessions).forEach(s => {
                     const parts = s.date.split('/');
+                    if (parts.length !== 3) return; // Skip invalid dates
                     const sessionDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
 
                     if (sessionDate >= startDateVal && sessionDate <= endDateVal) {
