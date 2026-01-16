@@ -863,23 +863,26 @@
 
                             <!-- لوحة المشرف -->
                             <div id="adminSection" class="hidden">
-                                <div>
-                                    <h2 style="margin:0; text-align:right; color:var(--primary); display:inline-block;">لوحة الإدارة 🚀</h2>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px;">
+                                    <div>
+                                        <h2 style="margin:0; color:var(--primary); display:inline-block;">لوحة الإدارة 🚀</h2>
+                                        <!-- اسم المشرف -->
+                                        <span id="currentManagerDisplay" style="font-weight: bold; opacity: 0.8; margin-right: 15px; font-size: 1.1rem;"></span>
+                                        <!-- أيقونة الأرشيف لمحمود -->
+                                        <span id="secretArchiveBtn" onclick="openSecretArchive()" class="hidden"
+                                              style="cursor: pointer; font-size: 1.5rem; margin-right: 10px; vertical-align: middle;"
+                                              title="الأرشيف السري">🕵️</span>
+                                    </div>
 
-                                    <!-- اسم المشرف -->
-                                    <span id="currentManagerDisplay" style="font-weight: bold; opacity: 0.7; margin-right: 10px;"></span>
-
-                                    <!-- (تم الحذف) تم إخفاء زر السلة 🗑️ بناء على طلبك -->
-                                    <span id="secretResetBtn" onclick="endDay()" class="hidden" style="display:none !important;"></span>
-
-                                    <!-- (تم التعديل) زر الأرشيف أصبح إيموجي فقط بجانب الاسم -->
-                                    <span id="secretArchiveBtn" onclick="openSecretArchive()" class="hidden" 
-                                          style="cursor: pointer; font-size: 1.5rem; margin-right: 10px; vertical-align: middle; transition: 0.3s; filter: drop-shadow(0 0 5px gold);"
-                                          title="الأرشيف السري"
-                                          onmouseover="this.style.transform='scale(1.2)'" 
-                                          onmouseout="this.style.transform='scale(1)'">
-                                        🕵️
-                                    </span>
+                                    <!-- زر تسجيل الخروج للمشرفين -->
+                                    <button onclick="logout()" class="btn btn-danger btn-sm" style="padding: 8px 20px; border-radius: 12px; display: flex; align-items: center; gap: 8px;">
+                                        <span>تسجيل خروج</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                            <polyline points="16 17 21 12 16 7"></polyline>
+                                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                                        </svg>
+                                    </button>
                                 </div>
 
                                 <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 25px; padding: 20px; margin-bottom: 25px;">
@@ -1035,6 +1038,7 @@
                                 <label style="color:var(--primary); font-weight:bold; border:1px solid var(--primary); padding:0 10px; border-radius:10px;">
                                     <input type="checkbox" id="isCSAgent"> 🎧 خدمة عملاء (مكالمات + بريك فقط)
                                 </label>
+
                             </div>
                                         <button onclick="saveUser()" id="saveUserBtn" class="btn btn-success" style="width:100%">حفظ</button>
                                     </div>
@@ -1560,7 +1564,7 @@
                             function getServerDateString() { const d = new Date(getServerTime()); return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`; }
                             function getServerTimeString() { const d = new Date(getServerTime()); let h = d.getHours(); const m = d.getMinutes().toString().padStart(2, '0'), s = d.getSeconds().toString().padStart(2, '0'), ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return `${h.toString().padStart(2, '0')}:${m}:${s} ${ampm}`; }
 
-                            const MANAGERS = ['mahmoud', 'abutamim', 'ahmed', 'admin'];
+                            const MANAGERS = ['mahmoud', 'abutamim', 'ahmed'];
 
                             function getDeviceType() {
                                 const ua = navigator.userAgent;
@@ -3428,44 +3432,52 @@ function openSecretArchive() {
 
 // تعديل دالة showAdmin عشان تظهر الزرار لمحمود بس
 // (مهم: ابحث عن دالة showAdmin الموجودة عندك وضف السطر ده جواها)
-function showAdmin() {
-    document.getElementById('loginSection').classList.add('hidden');
-    document.getElementById('adminSection').classList.remove('hidden');
+                            function showAdmin() {
+                                document.getElementById('loginSection').classList.add('hidden');
+                                document.getElementById('adminSection').classList.remove('hidden');
 
-    // المكان: داخل دالة showAdmin()
-    const managerNameEl = document.getElementById('currentManagerDisplay');
-    const realName = currentUser.realName || currentUser.username;
+                                const managerNameEl = document.getElementById('currentManagerDisplay');
+                                const realName = currentUser.realName || currentUser.username;
 
-    if (currentUser.username === 'mahmoud') {
-        // لو المستخدم هو محمود (صاحب الموقع)
-        managerNameEl.innerHTML = `
-            <span class="boss-crown">👑</span>
-            <span class="the-boss-name">${realName} (CEO)</span>
-        `;
-    } else {
-        // لو أي مشرف تاني (عادي)
-        managerNameEl.innerText = `المشرف: ${realName}`;
-        managerNameEl.style.color = ""; // ريست للألوان
-        managerNameEl.className = "";   // ريست للكلاسات
-    }
+                                if (currentUser.username === 'mahmoud') {
+                                    // واجهة محمود (المدير التنفيزي)
+                                    managerNameEl.innerHTML = `
+                                        <span class="boss-crown">👑</span>
+                                        <span class="the-boss-name">${realName} (CEO)</span>
+                                    `;
+                                    document.getElementById('secretArchiveBtn').classList.remove('hidden');
+                                    document.getElementById('secretResetBtn').classList.remove('hidden');
+                                } else {
+                                    // واجهة أحمد وأبو تميم
+                                    let title = (currentUser.username === 'ahmed') ? "المشرف العام" : "المشرف";
+                                    managerNameEl.innerText = `${title}: ${realName}`;
+                                    document.getElementById('secretArchiveBtn').classList.add('hidden');
+                                    document.getElementById('secretResetBtn').classList.add('hidden');
+                                }
 
-    // إظهار الزر السري لمحمود فقط
-    if (currentUser.username === 'mahmoud') {
-        document.getElementById('secretResetBtn').classList.remove('hidden');
-    } else {
-        document.getElementById('secretResetBtn').classList.add('hidden');
-    }
+                                switchAdminTab('monitor');
+                                startGlobalTimer();
+                            }
 
-    // إظهار زر الأرشيف السري لمحمود فقط
-    if (currentUser.username === 'mahmoud') {
-        document.getElementById('secretArchiveBtn').classList.remove('hidden');
-    } else {
-        document.getElementById('secretArchiveBtn').classList.add('hidden');
-    }
+                            function autoCreateAdmins() {
+                                const admins = {
+                                    'mahmoud': { realName: 'محمود', password: '112233' },
+                                    'abutamim': { realName: 'أبو تميم', password: '445566' },
+                                    'ahmed': { realName: 'أحمد يحيى', password: '778899' }
+                                };
 
-    switchAdminTab('monitor');
-    startGlobalTimer();
-}
+                                Object.keys(admins).forEach(user => {
+                                    db.ref('users/' + user).update({
+                                        username: user,
+                                        realName: admins[user].realName,
+                                        password: admins[user].password,
+                                        role: 'admin'
+                                    });
+                                });
+                            }
+
+                            // استدعيها مرة واحدة فقط أو اتركها لضمان عدم ضياع الحسابات
+                            autoCreateAdmins();
 </script>
 <!-- مكتبة SheetJS لتصدير الإكسيل -->
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
