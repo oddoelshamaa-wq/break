@@ -319,11 +319,112 @@
                                     .timer-container { width: 180px; height: 180px; }
                                     .timer-big-text { font-size: 2.5rem; }
 
-                                    .container, .hero-card, .broadcast-content {
-                                        backdrop-filter: none !important; /* إلغاء التغبيش */
-                                        background: rgba(15, 23, 42, 0.95) !important; /* لون خلفية ثابت */
-                                    }
-                                }
+    /* =============================================
+       تنسيقات الموبايل المطورة للمشرف (Admin Mobile)
+       ============================================= */
+    /* 1. الرسالة المنبثقة (التي ظهرت في الصورة) */
+    #funnyToast {
+        width: 85% !important;
+        padding: 10px 15px !important;
+        font-size: 0.85rem !important;
+        top: 10px !important; /* تقريبها للأعلى */
+        border-width: 2px !important;
+    }
+
+    /* 2. حاوية لوحة الإدارة الرئيسية */
+    #adminSection > div:first-child {
+        flex-direction: column !important; /* ترتيب العناصر عمودياً */
+        padding: 15px !important;
+        gap: 15px !important;
+        text-align: center !important;
+    }
+
+    /* 3. اسم المشرف واللقب */
+    #adminSection h2 {
+        display: block !important;
+        margin-bottom: 5px !important;
+        font-size: 1.4rem !important;
+    }
+
+    #currentManagerDisplay {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        margin-right: 0 !important;
+        gap: 5px;
+    }
+
+    .the-boss-name {
+        font-size: 1.1rem !important;
+    }
+
+    /* 4. توزيع الأزرار (تسجيل خروج، صوت، تصفير) */
+    /* جعلها تظهر بشكل شبكي Grid متناسق */
+    #adminSection div[style*="display: flex; gap: 10px;"] {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important; /* زرارين في كل صف */
+        width: 100% !important;
+        gap: 10px !important;
+    }
+
+    /* زر تصفير اليوم - نجعله يأخذ العرض كاملاً لوحده */
+    #secretResetBtn {
+        grid-column: span 2 !important; /* يأخذ الصف كاملاً */
+        width: 100% !important;
+        padding: 12px !important;
+        margin-top: 5px !important;
+    }
+
+    #adminSoundToggle, #adminSection button[onclick="logout()"] {
+        width: 100% !important;
+        height: 50px !important; /* توحيد الطول */
+        margin: 0 !important;
+        font-size: 0.85rem !important;
+        justify-content: center !important;
+    }
+
+    /* 5. قسم إرسال الرسائل */
+    #adminSection div[style*="background: rgba(239, 68, 68, 0.05)"] {
+        padding: 15px !important;
+        border-radius: 20px !important;
+    }
+
+    #broadcastTarget, #broadcastInput {
+        width: 100% !important;
+        font-size: 0.9rem !important;
+    }
+
+    /* 6. شريط التبويبات (المراقبة، التقارير...) */
+    #adminSection div[style*="overflow-x: auto"] {
+        display: flex !important;
+        gap: 8px !important;
+        padding-bottom: 15px !important;
+        justify-content: flex-start !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #adminSection div[style*="overflow-x: auto"] .btn {
+        flex: 0 0 auto !important; /* منع الأزرار من الانكماش */
+        font-size: 0.75rem !important;
+        padding: 8px 12px !important;
+    }
+
+    /* 7. عدادات الحالة (متواجد/بريك/صلاة) */
+    #statusCountersDisplay {
+        font-size: 0.8rem !important;
+        border-right: none !important;
+        padding-right: 0 !important;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 10px !important;
+        text-align: right !important;
+    }
+
+    .container, .hero-card, .broadcast-content {
+        backdrop-filter: none !important; /* إلغاء التغبيش */
+        background: rgba(15, 23, 42, 0.95) !important; /* لون خلفية ثابت */
+    }
+}
 
                                 /* تنسيقات حقول الإدخال والقوائم الجديدة */
                                 .form-control-glass {
