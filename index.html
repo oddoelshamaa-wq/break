@@ -420,6 +420,108 @@
         text-align: right !important;
     }
 
+    /* 1. إخفاء رأس الجدول (العناوين) لأننا سنحول الجدول لكروت */
+    #tab-monitor thead {
+        display: none !important;
+    }
+
+    /* 2. تحويل كل صف (Row) إلى كارت منفصل */
+    #monitorBody tr {
+        display: flex !important;
+        flex-direction: column !important;
+        background: rgba(255, 255, 255, 0.04) !important;
+        margin-bottom: 15px !important;
+        border-radius: 20px !important;
+        padding: 15px !important;
+        border: 1px solid var(--glass-border) !important;
+        position: relative !important;
+    }
+
+    /* 3. تنسيق الخلايا (الخانات) داخل الكارت */
+    #monitorBody td {
+        display: block !important;
+        text-align: right !important;
+        border: none !important;
+        padding: 5px 0 !important;
+        width: 100% !important;
+    }
+
+    /* 4. إبراز اسم الموظف والصورة */
+    #monitorBody td:first-child {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        padding-bottom: 10px !important;
+        margin-bottom: 10px !important;
+    }
+
+    /* 5. جعل "الوقت المتبقي" (البريك) يظهر بشكل كبير وواضح في الزاوية */
+    #monitorBody td:nth-child(3) {
+        position: absolute !important;
+        top: 15px !important;
+        left: 15px !important; /* لجهة اليسار */
+        width: auto !important;
+        background: rgba(0, 0, 0, 0.3) !important;
+        padding: 10px 15px !important;
+        border-radius: 12px !important;
+        border: 1px solid var(--primary) !important;
+    }
+
+    #monitorBody td:nth-child(3) span {
+        font-size: 1.4rem !important; /* تكبير وقت البريك */
+        color: var(--primary) !important;
+        display: block !important;
+    }
+
+    /* إضافة كلمة "البريك" فوق الوقت لتوضيحه */
+    #monitorBody td:nth-child(3)::before {
+        content: "البريك المتبقي";
+        display: block;
+        font-size: 0.65rem;
+        color: #aaa;
+        margin-bottom: 2px;
+    }
+
+    /* 6. تنسيق الصلاة والمتابعة (المتبع) */
+    #monitorBody td:nth-child(4), #monitorBody td:nth-child(5) {
+        display: inline-block !important;
+        width: 48% !important; /* جنب بعض */
+        font-size: 0.8rem !important;
+        background: rgba(0,0,0,0.2);
+        padding: 8px !important;
+        border-radius: 10px;
+        margin-top: 5px;
+    }
+
+    /* 7. أزرار التحكم (إيقاف / ملف / تشغيل) */
+    #monitorBody td:last-child {
+        margin-top: 15px !important;
+        padding-top: 10px !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        gap: 10px !important;
+    }
+
+    #monitorBody td:last-child button,
+    #monitorBody td:last-child .admin-row-top {
+        flex: 1 !important;
+        width: 100% !important;
+        height: 45px !important;
+        font-size: 0.85rem !important;
+    }
+
+    /* تنسيق القائمة المنسدلة (البريك/الصلاة) داخل الكارت */
+    .admin-row-top select {
+        width: 100% !important;
+        height: 40px !important;
+        margin-bottom: 5px !important;
+    }
+
+    /* حالة الأكسدة (الوميض الأحمر) */
+    .وضع-التنبيه {
+        border: 2px solid #ef4444 !important;
+        animation: oxidation-glow 0.8s infinite !important;
+    }
+
     .container, .hero-card, .broadcast-content {
         backdrop-filter: none !important; /* إلغاء التغبيش */
         background: rgba(15, 23, 42, 0.95) !important; /* لون خلفية ثابت */
