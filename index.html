@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- تم تحديث هذا السطر للسماح بعمل المكتبات -->
     <meta http-equiv="Content-Security-Policy" content="default-src * data: blob: filesystem: about: ws: wss: 'unsafe-inline' 'unsafe-eval'; script-src * data: blob: 'unsafe-inline' 'unsafe-eval'; connect-src * data: blob: 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src * data: blob: ; style-src * data: blob: 'unsafe-inline'; font-src * data: blob: 'unsafe-inline';">
-    <title>نظام الإدارة الذكي 2026 - النسخة الاحترافية</title>
+    <title>ELSHAMAA | إدارة الموارد البشرية</title>
 
                             <!-- كود أيقونة الموقع (Favicon) -->
                             <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" type="image/png">
@@ -14,20 +14,23 @@
                             <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
                             <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
                             <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-                            <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+                            <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+                            <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
                             <style>
                                 :root {
-                                    --bg-deep: #0f172a;
-                                    --glass: rgba(255, 255, 255, 0.05);
-                                    --glass-border: rgba(255, 255, 255, 0.1);
-                                    --primary: #38bdf8;
-                                    --accent: #f472b6;
+                                    --bg-deep: #020617;
+                                    --glass: rgba(15, 23, 42, 0.6);
+                                    --glass-border: rgba(255, 255, 255, 0.08);
+                                    /* الألوان الجديدة: Indigo & Cyan */
+                                    --primary: #6366f1; /* Indigo */
+                                    --accent: #06b6d4;  /* Cyan */
                                     --success: #10b981;
-                                    --danger: #ef4444;
+                                    --danger: #f43f5e;
                                     --warning: #fbbf24;
                                     --vip-gold: linear-gradient(45deg, #ffd700, #b8860b);
-                                    --text-light: #f8fafc;
+                                    --text-light: #f1f5f9;
+                                    --logo-gradient: linear-gradient(135deg, #818cf8 0%, #22d3ee 100%);
                                 }
 
                                 body { 
@@ -468,6 +471,77 @@
                                     gap: 15px;
                                 }
 
+                        /* تصميم اللوجو ELSHAMAA */
+                        .logo-container {
+                            display: inline-flex;
+                            flex-direction: column;
+                            align-items: flex-start;
+                            padding: 10px;
+                        }
+
+                        .logo-text {
+                            font-family: 'Montserrat', 'Cairo', sans-serif;
+                            font-size: 2.8rem;
+                            font-weight: 900;
+                            line-height: 1;
+                            background: var(--logo-gradient);
+                            -webkit-background-clip: text;
+                            -webkit-text-fill-color: transparent;
+                            filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.3));
+                            letter-spacing: -1px;
+                            margin: 0;
+                        }
+
+                        .logo-tagline {
+                            font-size: 0.75rem;
+                            color: var(--accent);
+                            text-transform: uppercase;
+                            letter-spacing: 4px;
+                            margin-top: 5px;
+                            font-weight: 700;
+                            opacity: 0.8;
+                        }
+
+                        /* تعديل الأزرار لتناسب الألوان الجديدة */
+                        .btn-primary {
+                            background: linear-gradient(135deg, #6366f1, #4338ca) !important;
+                            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+                        }
+                        .btn-primary:hover {
+                            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+                        }
+
+                        .digital-clock-container {
+                            border-right: 4px solid var(--accent) !important;
+                            background: rgba(15, 23, 42, 0.8);
+                        }
+                        .digital-time {
+                            color: var(--accent) !important;
+                        }
+
+                        /* تأثير اسم صاحب الموقع */
+                        .brand-name {
+                            font-family: 'Cairo', sans-serif;
+                            font-weight: 900;
+                            background: linear-gradient(45deg, #ffd700, #fff5b7, #fbbf24);
+                            -webkit-background-clip: text;
+                            -webkit-text-fill-color: transparent;
+                            text-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+                            letter-spacing: 2px;
+                            text-transform: uppercase;
+                        }
+
+                        /* 3. تعديل الساعة الرقمية لتناسب الألوان الجديدة */
+                        .digital-clock-container {
+                            background: rgba(0, 0, 0, 0.4);
+                            border-right: 4px solid var(--primary) !important;
+                            border-radius: 15px;
+                        }
+                        .digital-time {
+                            color: var(--primary) !important;
+                            text-shadow: 0 0 10px rgba(251, 191, 36, 0.5) !important;
+                        }
+
                         /* تأثير اسم صاحب الموقع */
                         .the-boss-name {
                             background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
@@ -640,7 +714,15 @@
 
                         <div id="loading" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center;">
                             <div style="border:5px solid var(--glass-border); border-top:5px solid var(--primary); border-radius:50%; width:60px; height:60px; animation:spin 1s linear infinite;"></div>
-                            <h3 style="margin-top:20px;">جاري تحميل النظام الذكي...</h3>
+                            <div class="logo-container">
+                                <h1 class="logo-text">ELSHAMAA</h1>
+                                <span class="logo-tagline">Smart Management System</span>
+                            </div>
+                        </div>
+
+                        <div class="logo-container">
+                            <h1 class="logo-text">ELSHAMAA</h1>
+                            <span class="logo-tagline">Smart Management System</span>
                         </div>
 
                         <audio id="alarmSound" loop preload="auto"><source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg"></audio>
@@ -1036,29 +1118,45 @@
                                 </div>
 
                                 <div id="tab-reports" class="hidden">
-                                    <!-- أدوات البحث والتصدير (زي ما هي) -->
-                                    <div style="background: rgba(255,255,255,0.05); padding: 25px; border-radius: 25px; margin-bottom: 20px;">
-                                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; align-items: end;">
-                                            <div><label>الموظف:</label><select id="reportUserSelect" style="width:100%"></select></div>
-                                            <div><label>من:</label><input type="date" id="filterStartDate" style="width:100%"></div>
-                                            <div><label>إلى:</label><input type="date" id="filterEndDate" style="width:100%"></div>
-                                            <button onclick="renderUserReport()" class="btn btn-primary">🔍 بحث</button>
-                                            <button onclick="exportMonthlyExcel()" class="btn btn-success" style="background:#217346;">📊 استخراج شيت Excel</button>
-                                        </div>
-                                    </div>
+    <div style="background: rgba(255,255,255,0.05); padding: 25px; border-radius: 25px; margin-bottom: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end;">
+            <div>
+                <label style="display:block; margin-bottom:5px; color:#aaa;">اختر الموظف:</label>
+                <select id="reportUserSelect" style="width:100%"></select>
+            </div>
+            <div>
+                <label style="display:block; margin-bottom:5px; color:#aaa;">من تاريخ:</label>
+                <input type="date" id="filterStartDate" style="width:100%">
+            </div>
+            <div>
+                <label style="display:block; margin-bottom:5px; color:#aaa;">إلى تاريخ:</label>
+                <input type="date" id="filterEndDate" style="width:100%">
+            </div>
+            <button onclick="renderUserReport()" class="btn btn-primary" style="height:45px;">🔍 عرض النتائج</button>
+        </div>
+        
+        <!-- هذا هو الزر الوحيد الذي سيظهر بالأسفل -->
+        <button onclick="exportProfessionalExcel()" class="btn btn-success" style="background:#217346; width:100%; margin-top:20px; font-weight:900; font-size:1.1rem; height:55px; border-radius:15px; box-shadow: 0 4px 15px rgba(33, 115, 70, 0.3);">
+            📊 استخراج تقرير احترافي
+        </button>
+    </div>
 
-                                    <!-- ملخص التقرير (زي ما هو) -->
-                                    <div class="hidden" id="monthlySummary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px;">
-                                        <!-- ... (نفس العدادات القديمة بتاعتك) ... -->
-                                        <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:20px; text-align:center; border:1px solid var(--danger);"><small>الأكسدة</small><p id="monthTotalBreaks" style="font-size:1.4rem; color:var(--danger); font-weight:bold;">0 د</p></div>
-                                        <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:20px; text-align:center;"><small>الصلاة</small><p id="monthTotalPrayer" style="font-size:1.4rem;">0 د</p></div>
-                                        <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:20px; text-align:center; border:1px solid var(--success);"><small>المتابعة</small><p id="monthTotalFollowUp" style="font-size:1.4rem; color:var(--success);">0 د</p></div>
-                                        <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:20px; text-align:center; border:1px solid #ffd700;"><small>VIP</small><p id="monthTotalVIP" style="font-size:1.4rem; color:#ffd700;">0 د</p></div>
-                                        <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:20px; text-align:center; border:1px solid var(--primary);"><small>إضافي</small><p id="monthTotalOvertime" style="font-size:1.4rem; color:var(--primary);">0 س</p></div>
-                                    </div>
+    <!-- ملخص التقرير الرقمي -->
+    <div class="hidden" id="monthlySummary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px;">
+        <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:20px; text-align:center; border:1px solid var(--danger);"><small>الأكسدة</small><p id="monthTotalBreaks" style="font-size:1.4rem; color:var(--danger); font-weight:bold;">0 د</p></div>
+        <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:20px; text-align:center;"><small>الصلاة</small><p id="monthTotalPrayer" style="font-size:1.4rem;">0 د</p></div>
+        <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:20px; text-align:center; border:1px solid var(--success);"><small>المتابعة</small><p id="monthTotalFollowUp" style="font-size:1.4rem; color:var(--success);">0 د</p></div>
+        <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:20px; text-align:center; border:1px solid #ffd700;"><small>VIP</small><p id="monthTotalVIP" style="font-size:1.4rem; color:#ffd700;">0 د</p></div>
+    </div>
 
-                                    <!-- الجدول (زي ما هو) -->
-                                    <div class="table-responsive"><table><thead><tr><th>اليوم</th><th>السجل</th><th>الإجمالي</th><th>صافي الأكسدة</th></tr></thead><tbody id="sessionsReportBody"></tbody></table></div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr><th>اليوم</th><th>السجل</th><th>الإجمالي</th><th>صافي الأكسدة</th></tr>
+            </thead>
+            <tbody id="sessionsReportBody"></tbody>
+        </table>
+    </div>
 
             <!-- ======================================================= -->
             <!-- منطقة الخطر (Danger Zone) - معزولة وبعيدة جداً -->
@@ -2630,7 +2728,22 @@ function renderMonitorTable() {
                             }
 
                             function renderAdminPermRequests() { const tb = document.getElementById('adminPermBody'); tb.innerHTML = ''; let c = 0; Object.values(allUsersData).forEach(u => { if(u.permRequest && u.permRequest.status === 'قيد الانتظار') { c++; tb.innerHTML += `<tr><td>${u.realName}</td><td>${u.permRequest.hours} ساعة</td><td>${u.permRequest.reason}</td><td>${new Date(u.permRequest.timestamp).toLocaleTimeString()}</td><td><button onclick="handlePerm('${u.username}', true)" class="btn btn-success btn-sm">✔</button><button onclick="handlePerm('${u.username}', false)" class="btn btn-danger btn-sm">✖</button></td></tr>`; } }); document.getElementById('permBadge').innerText = c; c > 0 ? document.getElementById('permBadge').classList.remove('hidden') : document.getElementById('permBadge').classList.add('hidden'); }
-                            window.handlePerm = (un, app) => { db.ref(`users/${un}/permRequest`).update({ status: app ? 'تم القبول' : 'رُفض' }).then(() => triggerGlobalRefresh()); };
+window.handlePerm = (un, app) => {
+    if(app) {
+        // لو وافق، بنسجل الاستئذان في سجل التاريخ للموظف
+        const permData = allUsersData[un].permRequest;
+        db.ref(`users/${un}/permHistory/${getServerTime()}`).set({
+            date: getServerDateString(),
+            hours: permData.hours,
+            reason: permData.reason,
+            approvedBy: currentUser.username
+        });
+    }
+    // تحديث الحالة لتم القبول أو رُفض
+    db.ref(`users/${un}/permRequest`).update({
+        status: app ? 'تم القبول' : 'رُفض'
+    }).then(() => triggerGlobalRefresh());
+};
                             
                             function sendMeetingRequest() { const r = document.getElementById('breakReason').value.trim(); if(!r) return alert("اكتب السبب"); db.ref('users/'+currentUser.username+'/meetingRequest').set({ reason: r, status: 'قيد الانتظار', timestamp: getServerTime() }); }
                             
@@ -3537,10 +3650,11 @@ function renderMonitorTable() {
             let totalBreakTime = 0;
             let totalPrayerTime = 0;
             let totalMeetingTime = 0;
-            let totalVIPTime = 0; // إضافة وقت الـ VIP
-            let totalOvertimeHours = 0; // حساب الإضافي
-            let complaintsCount = 0;
+            let totalVIPTime = 0;
+            let totalOvertimeHours = 0;
+            let totalPermHours = 0; // متغيير الاستأذان الجديد
             let totalDeductions = 0;
+            let totalOxidation = 0;
 
             // حساب السجلات (أكسدة، صلاة، ميتنج، VIP)
             if (u.sessions) {
@@ -3570,8 +3684,7 @@ function renderMonitorTable() {
                 });
             }
 
-            // حساب الأكسدة الصافية (تراكمي يومي)
-            let totalOxidation = 0;
+
             if (u.sessions) {
                 let dailyBreaks = {};
                 Object.values(u.sessions).forEach(s => {
@@ -3602,13 +3715,13 @@ function renderMonitorTable() {
 
             reportData.push({
                 "اسم الموظف": u.realName || u.username,
-                "عدد الشكاوى": complaintsCount,
-                "إجمالي الخصومات": totalDeductions,
-                "الأكسدة (دقائق)": Math.round(totalOxidation / 60),
-                "الإضافي المعتمد (ساعات)": totalOvertimeHours, // الحقل الجديد
-                "الصلاة (دقائق)": Math.round(totalPrayerTime / 60),
-                "الميتنج (دقائق)": Math.round(totalMeetingTime / 60),
-                "VIP (دقائق)": Math.round(totalVIPTime / 60)
+                "الأكسدة (د)": Math.round(totalOxidation / 60),
+                "الإضافي (س)": totalOvertimeHours,
+                "الاستأذان (س)": totalPermHours, // إضافة العمود الجديد
+                "الخصم (ج.م)": totalDeductions,
+                "الصلاة (د)": Math.round(totalPrayerTime / 60),
+                "الميتنج (د)": Math.round(totalMeetingTime / 60),
+                "VIP (د)": Math.round(totalVIPTime / 60)
             });
         });
 
@@ -4063,157 +4176,397 @@ function clearAllArchiveLogs() {
         triggerGlobalRefresh();
     }
 }
-function exportProfessionalExcel() {
+async function exportProfessionalExcel() {
     const startDateVal = document.getElementById('filterStartDate').value;
     const endDateVal = document.getElementById('filterEndDate').value;
 
-    if (!startDateVal || !endDateVal) {
-        return alert("📅 يرجى تحديد تاريخ البداية والنهاية أولاً لاستخراج التقرير.");
-    }
+    if (!startDateVal || !endDateVal) return alert("📅 حدد التاريخ الأول يا مدير!");
 
-    // 1. تجهيز البيانات
-    const dataRows = [];
-    let grandTotalDeductions = 0;
-    let grandTotalOvertime = 0;
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('تقرير الأداء الشامل', {
+        views: [{ rightToLeft: true }] // اتجاه من اليمين للشمال
+    });
+
+    // 1. حساب البيانات (نفس المنطق بتاعك)
+    let rows = [];
+    let totals = { days: 0, ox: 0, ot: 0, perm: 0, cash: 0, count: 0 };
 
     Object.values(allUsersData).forEach(u => {
         if (!u.username || MANAGERS.includes(u.username)) return;
 
-        let totalBreak = 0;
-        let totalPrayer = 0;
-        let totalMeeting = 0;
-        let totalVIP = 0;
-        let totalOvertime = 0;
-        let totalDeductions = 0;
-        let complaintsCount = 0;
-        let workingDays = new Set(); // لحساب عدد أيام الحضور الفعلية
+        let uS = { name: u.realName || u.username, days: new Set(), ox: 0, prayer: 0, meet: 0, vip: 0, ot: 0, perm: 0, comp: 0, cash: 0 };
 
-        // حساب السجلات
         if (u.sessions) {
+            let daily = {};
             Object.values(u.sessions).forEach(s => {
-                const parts = s.date.split('/');
-                const sDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
-                
-                if (sDate >= startDateVal && sDate <= endDateVal) {
-                    workingDays.add(s.date);
+                const sD = s.date.split('/').reverse().join('-');
+                if (sD >= startDateVal && sD <= endDateVal) {
+                    uS.days.add(s.date);
                     const dur = parseInt(s.duration) || 0;
-                    if (s.type === 'بريك عام' || s.type === 'طوارئ') totalBreak += dur;
-                    else if (s.type === 'صلاة') totalPrayer += dur;
-                    else if (s.type === 'ميتنج') totalMeeting += dur;
-                    else if (s.type === 'استراحة VIP') totalVIP += dur;
+                    if (s.type === 'بريك عام' || s.type === 'طوارئ') daily[s.date] = (daily[s.date] || 0) + dur;
+                    else if (s.type === 'صلاة') uS.prayer += dur;
+                    else if (s.type === 'ميتنج') uS.meet += dur;
+                    else if (s.type === 'استراحة VIP') uS.vip += dur;
                 }
             });
+            const allow = (u.allowance || 45) * 60;
+            Object.values(daily).forEach(v => { if(v > allow) uS.ox += (v - allow); });
         }
 
-        // حساب الإضافي
         if (u.overtimeHistory) {
             Object.values(u.overtimeHistory).forEach(ot => {
-                const parts = ot.date.split('/');
-                const otDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
-                if (otDate >= startDateVal && otDate <= endDateVal) {
-                    totalOvertime += parseFloat(ot.hours) || 0;
-                }
+                const otD = ot.date.split('/').reverse().join('-');
+                if (otD >= startDateVal && otD <= endDateVal) uS.ot += parseFloat(ot.hours) || 0;
             });
         }
 
-        // حساب الشكاوى والخصومات
+        if (u.permHistory) {
+            Object.values(u.permHistory).forEach(p => {
+                const pD = p.date.split('/').reverse().join('-');
+                if (pD >= startDateVal && pD <= endDateVal) uS.perm += parseFloat(p.hours) || 0;
+            });
+        }
+
         if (u.complaints) {
             Object.values(u.complaints).forEach(c => {
-                const parts = c.date.split('/');
-                const cDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
-                if (cDate >= startDateVal && cDate <= endDateVal) {
-                    complaintsCount++;
-                    totalDeductions += parseFloat(c.amount) || 0;
-                }
+                const cD = c.date.split('/').reverse().join('-');
+                if (cD >= startDateVal && cD <= endDateVal) { uS.comp++; uS.cash += parseFloat(c.amount) || 0; }
             });
         }
 
-        // حساب صافي الأكسدة (التأخيرات)
-        let totalOxidation = 0;
-        // (حساب مبسط: إجمالي البريك - المسموح به مضروب في عدد أيام الحضور)
-        // ملاحظة: الحساب الدقيق يتطلب تجميع يومي، سنستخدم الإجمالي هنا للتبسيط أو يمكنك استخدام الكود السابق للتجميع اليومي
-        const allowancePerDay = (u.allowance || 45) * 60;
-        // هنا سنفترض الحساب الإجمالي للفترة بناء على أيام العمل
-        // التحسين: حساب الأكسدة يوم بيوم ليكون دقيقاً
-        let dailyMap = {};
-        if (u.sessions) {
-             Object.values(u.sessions).forEach(s => {
-                const parts = s.date.split('/');
-                const sDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
-                if (sDate >= startDateVal && sDate <= endDateVal && (s.type === 'بريك عام' || s.type === 'طوارئ')) {
-                    dailyMap[s.date] = (dailyMap[s.date] || 0) + (parseInt(s.duration) || 0);
-                }
-             });
-        }
-        Object.values(dailyMap).forEach(val => {
-            if(val > allowancePerDay) totalOxidation += (val - allowancePerDay);
-        });
+        totals.days += uS.days.size;
+        totals.ox += Math.round(uS.ox/60);
+        totals.ot += uS.ot;
+        totals.perm += uS.perm;
+        totals.cash += uS.cash;
+        totals.count++;
 
-
-        grandTotalDeductions += totalDeductions;
-        grandTotalOvertime += totalOvertime;
-
-        // إضافة الصف للمصفوفة
-        dataRows.push([
-            u.realName || u.username,         // الاسم
-            workingDays.size,                 // أيام العمل
-            (totalOxidation / 60).toFixed(0), // أكسدة (دقيقة)
-            (totalPrayer / 60).toFixed(0),    // صلاة (دقيقة)
-            (totalMeeting / 60).toFixed(0),   // اجتماعات (دقيقة)
-            totalOvertime,                    // إضافي (ساعات)
-            complaintsCount,                  // عدد المخالفات
-            totalDeductions                   // قيمة الخصم
-        ]);
+        rows.push([uS.name, uS.days.size, Math.round(uS.ox/60), Math.round(uS.prayer/60), Math.round(uS.meet/60), Math.round(uS.vip/60), uS.ot, uS.perm, uS.comp, uS.cash]);
     });
 
-    // 2. بناء هيكل ملف الإكسيل (Array of Arrays)
-    const ws_data = [
-        ["تقرير الأداء الوظيفي والرواتب"], // العنوان الرئيسي
-        [`الفترة من: ${startDateVal} إلى: ${endDateVal}`], // التاريخ
-        [], // سطر فارغ
-        ["الاسم", "أيام الحضور", "أكسدة (دقيقة)", "صلاة (دقيقة)", "اجتماعات (دقيقة)", "إضافي (ساعات)", "عدد المخالفات", "إجمالي الخصم (ج.م)"] // عناوين الأعمدة
-    ];
+    // --- تنسيق الصفحة ---
 
-    // دمج البيانات
-    dataRows.forEach(row => ws_data.push(row));
+    // الصف الأول: العنوان الكبير
+    worksheet.mergeCells('A1:J1');
+    const titleCell = worksheet.getCell('A1');
+    titleCell.value = 'نظام ELSHAMAA لإدارة الموارد البشرية - التقرير التحليلي';
+    titleCell.font = { size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
+    titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
-    // إضافة سطر الإجماليات في النهاية
-    ws_data.push([]);
-    ws_data.push(["الإجمالي الكلي", "", "", "", "", grandTotalOvertime, "", grandTotalDeductions]);
+    // الصف الثاني: التواريخ (مثل الصورة)
+    worksheet.mergeCells('A2:J2');
+    const dateRangeCell = worksheet.getCell('A2');
+    dateRangeCell.value = `الفترة من ${startDateVal} إلى ${endDateVal} | تاريخ الاستخراج: ${getServerDateString()}`;
+    dateRangeCell.font = { bold: true };
+    dateRangeCell.alignment = { horizontal: 'center' };
+    dateRangeCell.border = { bottom: { style: 'double', color: { argb: 'FF000000' } } };
 
-    // 3. إنشاء الشيت
-    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    worksheet.addRow([]); // صف فارغ للفصل
 
-    // 4. تنسيق عرض الأعمدة (Column Widths)
-    const wscols = [
-        {wch: 25}, // الاسم
-        {wch: 12}, // أيام الحضور
-        {wch: 15}, // أكسدة
-        {wch: 15}, // صلاة
-        {wch: 15}, // اجتماعات
-        {wch: 15}, // إضافي
-        {wch: 15}, // مخالفات
-        {wch: 20}  // خصم
-    ];
-    ws['!cols'] = wscols;
+    // --- الجدول العلوي (اللون الأصفر - ملخص الإدارة) ---
+    // دمج الخلايا للبدء من المنتصف قليلاً مثل الصورة
+    const summaryHeader = ["إجمالي الأيام", "إجمالي الأكسدة (د)", "إجمالي الإضافي (س)", "إجمالي الخصم (ج.م)", "عدد الموظفين"];
+    const summaryRow = worksheet.addRow(["", "", "", "", ...summaryHeader]);
 
-    // 5. دمج خلايا العنوان (Merge Cells)
-    // دمج السطر الأول (العنوان) على طول 8 أعمدة
-    if(!ws['!merges']) ws['!merges'] = [];
-    ws['!merges'].push({ s: {r:0, c:0}, e: {r:0, c:7} }); // دمج العنوان الرئيسي
-    ws['!merges'].push({ s: {r:1, c:0}, e: {r:1, c:7} }); // دمج التاريخ
+    // تنسيق عناوين الملخص (الأصفر)
+    for (let i = 5; i <= 10; i++) {
+        const cell = summaryRow.getCell(i);
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFD700' } }; // اللون الذهبي/الأصفر
+        cell.font = { bold: true };
+        cell.alignment = { horizontal: 'center' };
+        cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    }
 
-    // 6. التصدير
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "تقرير الموظفين");
-    
-    // اسم الملف
-    const fileName = `Report_${startDateVal}_to_${endDateVal}.xlsx`;
-    XLSX.writeFile(wb, fileName);
+    const summaryData = worksheet.addRow(["", "", "", "", totals.days, totals.ox, totals.ot, totals.cash, totals.count]);
+    for (let i = 5; i <= 10; i++) {
+        const cell = summaryData.getCell(i);
+        cell.alignment = { horizontal: 'center' };
+        cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    }
+
+    worksheet.addRow([]); // صف فارغ
+
+    // --- الجدول الرئيسي (اللون الأزرق - بيانات الموظفين) ---
+    const mainHeader = ["اسم الموظف", "أيام الحضور", "الأكسدة (د)", "الصلاة (د)", "الميتنج (د)", "VIP (د)", "إضافي (س)", "استأذان (س)", "المخالفات", "الخصم (ج.م)"];
+    const headerRow = worksheet.addRow(mainHeader);
+
+    headerRow.eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } }; // اللون الأزرق
+        cell.font = { color: { argb: 'FFFFFFFF' }, bold: true }; // نص أبيض عريض
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    });
+
+    // إضافة بيانات الموظفين
+    rows.forEach((rowData, index) => {
+        const row = worksheet.addRow(rowData);
+        row.eachCell((cell) => {
+            cell.alignment = { horizontal: 'center' };
+            cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+            // تلوين الصفوف بالتناوب (اختياري لسهولة القراءة)
+            if (index % 2 !== 0) {
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+            }
+        });
+
+        // تنبيه بالأحمر لو الأكسدة عالية (أكثر من 60 دقيقة)
+        if (rowData[2] > 60) {
+            row.getCell(3).font = { color: { argb: 'FFFF0000' }, bold: true };
+        }
+    });
+
+    // ضبط عرض الأعمدة تلقائياً
+    worksheet.getColumn(1).width = 25; // اسم الموظف عريض
+    for (let i = 2; i <= 10; i++) {
+        worksheet.getColumn(i).width = 15;
+    }
+
+    // تصدير الملف
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), `ELSHAMAA_Report_${startDateVal}.xlsx`);
 }
 
                             // استدعيها مرة واحدة فقط أو اتركها لضمان عدم ضياع الحسابات
                             autoCreateAdmins();
+
+function exportMonthlyExcel() {
+    const startDateVal = document.getElementById('filterStartDate').value;
+    const endDateVal = document.getElementById('filterEndDate').value;
+
+    if (!startDateVal || !endDateVal) {
+        return alert("يرجى تحديد تاريخ البداية والنهاية لاستخراج التقرير 📅");
+    }
+
+    let reportData = [];
+
+    Object.values(allUsersData).forEach(u => {
+        if (!u.username || MANAGERS.includes(u.username)) return;
+
+        let totalBreakTime = 0;
+        let totalPrayerTime = 0;
+        let totalMeetingTime = 0;
+        let totalVIPTime = 0;
+        let totalOvertimeHours = 0;
+        let totalPermHours = 0; // متغيير الاستأذان الجديد
+        let totalDeductions = 0;
+        let totalOxidation = 0;
+
+        // حساب السجلات (بريك، صلاة، ميتنج، VIP)
+        if (u.sessions) {
+            let dailyBreaks = {};
+            Object.values(u.sessions).forEach(s => {
+                const parts = s.date.split('/');
+                const sessionDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+
+                if (sessionDate >= startDateVal && sessionDate <= endDateVal) {
+                    const dur = parseInt(s.duration) || 0;
+                    if (s.type === 'بريك عام' || s.type === 'طوارئ') {
+                        totalBreakTime += dur;
+                        dailyBreaks[s.date] = (dailyBreaks[s.date] || 0) + dur;
+                    }
+                    else if (s.type === 'صلاة') totalPrayerTime += dur;
+                    else if (s.type === 'ميتنج') totalMeetingTime += dur;
+                    else if (s.type === 'استراحة VIP') totalVIPTime += dur;
+                }
+            });
+            // حساب الأكسدة
+            Object.values(dailyBreaks).forEach(dailyTotal => {
+                const allow = (u.allowance || 45) * 60;
+                if (dailyTotal > allow) totalOxidation += (dailyTotal - allow);
+            });
+        }
+
+        // حساب الإضافي المعتمد
+        if (u.overtimeHistory) {
+            Object.values(u.overtimeHistory).forEach(ot => {
+                const otD = ot.date.split('/').reverse().join('-');
+                if (otD >= startDateVal && otD <= endDateVal) totalOvertimeHours += parseFloat(ot.hours) || 0;
+            });
+        }
+
+        // حساب الاستأذان المعتمد (المطلوب)
+        if (u.permHistory) {
+            Object.values(u.permHistory).forEach(p => {
+                const pD = p.date.split('/').reverse().join('-');
+                if (pD >= startDateVal && pD <= endDateVal) totalPermHours += parseFloat(p.hours) || 0;
+            });
+        }
+
+        // حساب الاستأذان المعتمد (المطلوب)
+        if (u.permHistory) {
+            Object.values(u.permHistory).forEach(p => {
+                const pD = p.date.split('/').reverse().join('-');
+                if (pD >= startDateVal && pD <= endDateVal) totalPermHours += parseFloat(p.hours) || 0;
+            });
+        }
+
+        // حساب الخصومات
+        if (u.complaints) {
+            Object.values(u.complaints).forEach(c => {
+                const cD = c.date.split('/').reverse().join('-');
+                if (cD >= startDateVal && cD <= endDateVal) totalDeductions += parseFloat(c.amount) || 0;
+            });
+        }
+
+        reportData.push({
+            "اسم الموظف": u.realName || u.username,
+            "الأكسدة (د)": Math.round(totalOxidation / 60),
+            "الإضافي (س)": totalOvertimeHours,
+            "الاستأذان (س)": totalPermHours, // إضافة العمود الجديد
+            "الخصم (ج.م)": totalDeductions,
+            "الصلاة (د)": Math.round(totalPrayerTime / 60),
+            "الميتنج (د)": Math.round(totalMeetingTime / 60),
+            "VIP (د)": Math.round(totalVIPTime / 60)
+        });
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(reportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "تقرير شهري");
+    XLSX.writeFile(workbook, `Report_${startDateVal}.xlsx`);
+}
+
+async function exportProfessionalExcel() {
+    const startDateVal = document.getElementById('filterStartDate').value;
+    const endDateVal = document.getElementById('filterEndDate').value;
+
+    if (!startDateVal || !endDateVal) return alert("📅 حدد التاريخ أولاً يا مدير!");
+
+    const workbook = new ExcelJS.Workbook();
+
+    // 1. إنشاء ورقة الملخص
+    const summarySheet = workbook.addWorksheet('ملخص الأداء العام', { views: [{ rightToLeft: true }] });
+
+    // 2. إنشاء ورقة التفاصيل (التفنيدة)
+    const detailsSheet = workbook.addWorksheet('سجل التفاصيل اليومي', { views: [{ rightToLeft: true }] });
+
+    let summaryRows = [];
+    let detailedLogs = [];
+    let totals = { days: 0, ox: 0, ot: 0, perm: 0, cash: 0, count: 0 };
+
+    Object.values(allUsersData).forEach(u => {
+        if (!u.username || MANAGERS.includes(u.username)) return;
+
+        let uS = { name: u.realName || u.username, days: new Set(), ox: 0, prayer: 0, meet: 0, vip: 0, ot: 0, perm: 0, comp: 0, cash: 0 };
+
+        if (u.sessions) {
+            let daily = {};
+            Object.entries(u.sessions).forEach(([key, s]) => {
+                const sD = s.date.split('/').reverse().join('-');
+                if (sD >= startDateVal && sD <= endDateVal) {
+                    uS.days.add(s.date);
+                    const dur = parseInt(s.duration) || 0;
+                    const durMin = Math.round(dur/60);
+
+                    detailedLogs.push([s.date, uS.name, s.type, durMin + " دقيقة", s.reason || "بدون سبب"]);
+
+                    if (s.type === 'بريك عام' || s.type === 'طوارئ') daily[s.date] = (daily[s.date] || 0) + dur;
+                    else if (s.type === 'صلاة') uS.prayer += dur;
+                    else if (s.type === 'ميتنج') uS.meet += dur;
+                    else if (s.type === 'استراحة VIP') uS.vip += dur;
+                }
+            });
+            const allow = (u.allowance || 45) * 60;
+            Object.values(daily).forEach(v => { if(v > allow) uS.ox += (v - allow); });
+        }
+
+        if (u.overtimeHistory) {
+            Object.values(u.overtimeHistory).forEach(ot => {
+                const otD = ot.date.split('/').reverse().join('-');
+                if (otD >= startDateVal && otD <= endDateVal) {
+                    uS.ot += parseFloat(ot.hours) || 0;
+                    detailedLogs.push([ot.date, uS.name, "إضافي", ot.hours + " ساعة", "معتمد من: " + ot.approvedBy]);
+                }
+            });
+        }
+
+        if (u.complaints) {
+            Object.values(u.complaints).forEach(c => {
+                const cD = c.date.split('/').reverse().join('-');
+                if (cD >= startDateVal && cD <= endDateVal) {
+                    uS.comp++; uS.cash += parseFloat(c.amount) || 0;
+                    detailedLogs.push([c.date, uS.name, "مخالفة/خصم", c.amount + " ج.م", c.title + ": " + c.details]);
+                }
+            });
+        }
+
+        totals.days += uS.days.size; totals.ox += Math.round(uS.ox/60); totals.ot += uS.ot; totals.perm += uS.perm; totals.cash += uS.cash; totals.count++;
+        summaryRows.push([uS.name, uS.days.size, Math.round(uS.ox/60), Math.round(uS.prayer/60), Math.round(uS.meet/60), Math.round(uS.vip/60), uS.ot, uS.perm, uS.comp, uS.cash]);
+    });
+
+    // --- تنسيق ورقة الملخص ---
+    summarySheet.mergeCells('A1:J1');
+    summarySheet.getCell('A1').value = 'ELSHAMAA - تقرير الأداء التفصيلي 2026';
+    summarySheet.getCell('A1').font = { size: 18, bold: true, color: { argb: 'FFFFFFFF' } };
+    summarySheet.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+    summarySheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'center' };
+
+    const headerRow = summarySheet.getRow(7);
+    const mainHeader = ["اسم الموظف", "أيام الحضور", "الأكسدة (د)", "الصلاة (د)", "الميتنج (د)", "VIP (د)", "إضافي (س)", "استأذان (س)", "المخالفات", "الخصم (ج.م)"];
+
+    headerRow.values = mainHeader;
+    headerRow.eachCell(cell => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+        cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+        cell.alignment = { horizontal: 'center' };
+        cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    });
+
+    summaryRows.forEach(rowData => {
+        summarySheet.addRow(rowData).eachCell(cell => {
+            cell.alignment = { horizontal: 'center' };
+            cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+        });
+    });
+
+    // إضافة الفلتر لورقة الملخص
+    summarySheet.autoFilter = 'A7:J7';
+    summarySheet.getColumn(1).width = 25;
+    for(let i=2; i<=10; i++) summarySheet.getColumn(i).width = 14;
+
+    // --- تنسيق ورقة التفاصيل (التفنيدة) مع الفلتر ---
+    detailsSheet.mergeCells('A1:E1');
+    detailsSheet.getCell('A1').value = 'تفاصيل الحركات اليومية (تفنيدة النشاط)';
+    detailsSheet.getCell('A1').font = { size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+    detailsSheet.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF059669' } };
+    detailsSheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'center' };
+
+    const dHeaderRow = detailsSheet.getRow(3);
+    dHeaderRow.values = ["التاريخ", "الموظف", "نوع النشاط", "المدة/القيمة", "السبب/التفاصيل"];
+    dHeaderRow.eachCell(cell => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF334155' } };
+        cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+        cell.alignment = { horizontal: 'center' };
+        cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    });
+
+    // إضافة البيانات
+    detailedLogs.sort((a,b) => b[0].localeCompare(a[0])).forEach((log, index) => {
+        const row = detailsSheet.addRow(log);
+        row.eachCell(cell => {
+            cell.alignment = { horizontal: 'center' };
+            cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+        });
+        // تلوين الصفوف (Zebra Style) لسهولة القراءة في التفاصيل
+        if(index % 2 !== 0) {
+            row.eachCell(cell => { cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } }; });
+        }
+    });
+
+    // السحر هنا: إضافة خاصية الفلتر لجدول التفاصيل (الصف الثالث)
+    detailsSheet.autoFilter = 'A3:E3';
+
+    detailsSheet.getColumn(1).width = 15;
+    detailsSheet.getColumn(2).width = 20;
+    detailsSheet.getColumn(3).width = 15;
+    detailsSheet.getColumn(4).width = 15;
+    detailsSheet.getColumn(5).width = 45;
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), `ELSHAMAA_Report_${startDateVal}.xlsx`);
+}
 </script>
 <!-- مكتبة SheetJS لتصدير الإكسيل -->
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
