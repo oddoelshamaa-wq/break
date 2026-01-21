@@ -2068,13 +2068,45 @@ function deleteComplaint(username, key) {
                                 }
                             }
 
+                            // الاستماع للرسائل الجديدة فقط لتشغيل الصوت
+                            db.ref('broadcasts').on('child_added', (snap) => {
+                                if (isInitialLoad) return; // تجاهل الرسائل القديمة عند فتح الصفحة
+
+                                const b = snap.val();
+                                const bKey = snap.key;
+
+                                // التأكد أن الرسالة تخص الموظف الحالي وليست مرسلة قديمة
+                                if (currentUser && currentUser.role !== 'admin') {
+                                    let forMe = (!b.target || b.target === 'all');
+                                    if(!forMe) {
+                                        let targets = Array.isArray(b.target) ? b.target : [b.target];
+                                        if(targets.includes(currentUser.username)) forMe = true;
+                                    }
+                                    
+                                    if(forMe) {
+                                        showBroadcastOverlay(b.message);
+                                        // الصوت يعمل هنا فقط عند إضافة "ابن" جديد للنود وليس عند الحذف
+                                        if (soundActive) document.getElementById('broadcastSound').play().catch(e => {});
+                                    }
+                                }
+                            });
+
+                            // تحديث السجل فقط عند حدوث أي تغيير (إضافة أو حذف) بدون صوت
                             db.ref('broadcasts').on('value', (snap) => {
-                                const data = snap.val() || {}, employeeLog = document.getElementById('employeeBroadcastLog'), adminLog = document.getElementById('adminBroadcastLog');
-                                if(employeeLog) employeeLog.innerHTML = ""; if(adminLog) adminLog.innerHTML = "";
+                                const data = snap.val() || {};
+                                const employeeLog = document.getElementById('employeeBroadcastLog');
+                                const adminLog = document.getElementById('adminBroadcastLog');
+                                
+                                if(employeeLog) employeeLog.innerHTML = "";
+                                if(adminLog) adminLog.innerHTML = "";
+
                                 const keys = Object.keys(data).sort((a, b) => data[b].timestamp - data[a].timestamp);
                                 keys.forEach(key => {
-                                    const b = data[key], timeStr = new Date(b.timestamp).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'});
+                                    const b = data[key];
+                                    const timeStr = new Date(b.timestamp).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'});
+                                    
                                     if (adminLog) adminLog.innerHTML += `<div style="padding:4px; border-bottom:1px solid rgba(255,255,255,0.1)"><b>[${timeStr}]</b> ${b.message} <button onclick="deleteBroadcast('${key}')" style="background:none; border:none; color:red; cursor:pointer;">🗑</button></div>`;
+                                    
                                     if (employeeLog && currentUser) {
                                         let isForMe = (!b.target || b.target === 'all');
                                         if(!isForMe) {
@@ -2084,10 +2116,17 @@ function deleteComplaint(username, key) {
                                         if(isForMe) employeeLog.innerHTML += `<div class="broadcast-item"><b>[${timeStr}]</b> ${b.message}</div>`;
                                     }
                                 });
+                                
                                 if (keys.length > 0) {
                                     const latestKey = keys[0], b = data[latestKey];
-                                    if (latestKey !== lastReceivedBroadcastID) {
-                                        lastReceivedBroadcastID = latestKey; localStorage.setItem('last_broadcast_id', latestKey);
+                                    // التعديل السحري هنا:
+                                    // لا تظهر التنبيه الصارخ ولا تشغل الصوت إلا إذا كانت الرسالة "جديدة فعلاً" (أقل من 30 ثانية)
+                                    // ده هيمنع الصوت تماماً لما تمسح رسالة قديمة
+                                    const isVeryRecent = (getServerTime() - b.timestamp) < 30000;
+
+                                    if (latestKey !== lastReceivedBroadcastID && isVeryRecent) {
+                                        lastReceivedBroadcastID = latestKey; 
+                                        localStorage.setItem('last_broadcast_id', latestKey);
                                         if (currentUser && currentUser.role !== 'admin') {
                                             let forMe = (!b.target || b.target === 'all');
                                             if(!forMe) {
@@ -2098,6 +2137,7 @@ function deleteComplaint(username, key) {
                                         }
                                     }
                                 }
+                                isInitialLoad = false; // بعد أول تحميل، أي إضافة قادمة ستشغل الصوت
                             });
 
                             // الاستماع لحالة نافذة الصلاة وتحديث الواجهة
@@ -2296,7 +2336,19 @@ if (currentUser.role === 'admin') {
                                 db.ref(".info/connected").on("value", snap => { if (snap.val()) { s.onDisconnect().set("offline").then(() => { s.set("online"); dRef.set(getDeviceType()); }); } }); 
                             }
 
-                            function logout() { if(currentUser && currentUser.role !== 'admin') db.ref("users/"+currentUser.username+"/state").set("offline"); localStorage.removeItem('break_sys_user'); sessionStorage.removeItem('systemActive'); location.reload(); }
+                            function logout() { 
+                                if(currentUser && currentUser.role !== 'admin') {
+                                    const today = getServerDateString().replace(/\//g, '-');
+                                    // تسجيل وقت الانصراف عند الضغط على تسجيل الخروج
+                                    db.ref(`users/${currentUser.username}/attendance/${today}`).update({
+                                        clockOut: getServerTimeString()
+                                    });
+                                    db.ref("users/"+currentUser.username+"/state").set("offline");
+                                }
+                                localStorage.removeItem('break_sys_user'); 
+                                sessionStorage.removeItem('systemActive'); 
+                                location.reload(); 
+                            }
 
                             function showAdmin() {
                                 document.getElementById('loginSection').classList.add('hidden');
@@ -2330,9 +2382,31 @@ if (currentUser.role === 'admin') {
                                 startGlobalTimer();
                             }
                             
+                            // متغير لمنع تشغيل الصوت عند تحميل الصفحة لأول مرة للرسائل القديمة
+                            let isInitialLoad = true;
+
                             function showEmployee() { 
-                                document.getElementById('loginSection').classList.add('hidden'); document.getElementById('employeeSection').classList.remove('hidden'); 
+                                document.getElementById('loginSection').classList.add('hidden'); 
+                                document.getElementById('employeeSection').classList.remove('hidden'); 
                                 document.getElementById('welcomeMsg').innerText = `أهلاً، ${currentUser.realName || currentUser.username}`; 
+                                
+                                // --- تسجيل وقت الحضور (Clock-In) ---
+                                const today = getServerDateString().replace(/\//g, '-');
+                                const attendanceRef = db.ref(`users/${currentUser.username}/attendance/${today}`);
+                                
+                                attendanceRef.once('value', (snap) => {
+                                    if (!snap.exists() || !snap.val().clockIn) {
+                                        attendanceRef.update({
+                                            clockIn: getServerTimeString(),
+                                            lastSeen: getServerTimeString()
+                                        });
+                                    } else {
+                                        // تحديث آخر ظهور باستمرار
+                                        attendanceRef.update({ lastSeen: getServerTimeString() });
+                                    }
+                                });
+                                // ----------------------------------
+                                
                                 const pPic = currentUser.profilePic || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
                                 document.getElementById('userProfilePicDisplay').src = pPic;
                                 const titleBox = document.getElementById('userFunTitleDisplay');
@@ -2566,7 +2640,20 @@ function renderMonitorTable() {
                                         if(!grouped[s.date]) grouped[s.date] = { acts: [], total: 0, prayer: 0, follow: 0, vip: 0 };
                                         const dur = parseInt(s.duration) || 0;
                                         let deleteBtnHTML = ""; if(['mahmoud', 'ahmed'].includes(currentUser.username)) deleteBtnHTML = `<button onclick="deleteSpecificSession('${un}', '${k}')" style="background:var(--danger); border:none; color:white; border-radius:5px; padding:2px 6px; cursor:pointer; font-size:0.7rem; margin-right:5px;">حذف</button>`;
-                                        grouped[s.date].acts.push(`<div style="font-size:0.75rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; background:rgba(255,255,255,0.02); padding:3px; border-radius:4px;"><span>${s.type}: ${Math.round(dur/60)}د (${s.reason||'--'})</span>${deleteBtnHTML}</div>`);
+                                        
+                                        const startTimeDisplay = s.startTime ? `<span style="color:#aaa; margin-left:8px;">[${s.startTime}]</span>` : "";
+
+                                        grouped[s.date].acts.push(`
+    <div style="font-size:0.75rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; background:rgba(255,255,255,0.02); padding:5px; border-radius:4px; border-right:3px solid var(--primary);">
+        <span>
+            ${startTimeDisplay} 
+            <b style="color:var(--primary)">${s.type}</b>: 
+            ${Math.round(dur/60)}د 
+            <small style="opacity:0.7">(${s.reason||'--'})</small>
+        </span>
+        ${deleteBtnHTML}
+    </div>
+`);
                                         if(s.type === 'بريك عام' || s.type === 'طوارئ') grouped[s.date].total += dur;
                                         else if(s.type === 'صلاة') grouped[s.date].prayer += dur; else if(s.type === 'متابع عميل') grouped[s.date].follow += dur; else if(s.type === 'استراحة VIP') grouped[s.date].vip += dur;
                                     });
@@ -2589,7 +2676,13 @@ function renderMonitorTable() {
                             };
                             window.adminStop = (un) => { 
                                 const u = allUsersData[un], d = Math.floor((getServerTime() - u.lastStartTime)/1000); 
-                                db.ref('users/'+un+'/sessions').push({ date: getServerDateString(), type: u.breakType, reason: u.lastReason || 'إيقاف إداري', duration: d }); 
+                                db.ref('users/'+un+'/sessions').push({ 
+                                    date: getServerDateString(), 
+                                    type: u.breakType, 
+                                    reason: u.lastReason || 'إيقاف إداري', 
+                                    duration: d,
+                                    startTime: new Date(u.lastStartTime).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})
+                                }); 
                                 const up = { isOnBreak: false, lastStartTime: null, lastEndedTime: getServerTime(), lastEndedType: u.breakType }; 
                                 if(u.breakType==='بريك عام' || u.breakType==='طوارئ') { up.usedSeconds = (u.usedSeconds||0)+d; if(u.breakType==='طوارئ') up.emRequest = null; } 
                                 else if(u.breakType==='صلاة') up.prayerSeconds = (u.prayerSeconds||0)+d; 
@@ -2652,7 +2745,13 @@ function renderMonitorTable() {
 
                             function stopMyBreak() {
                                 const u = currentUser, d = Math.floor((getServerTime() - u.lastStartTime)/1000);
-                                db.ref('users/'+u.username+'/sessions').push({ date: getServerDateString(), type: u.breakType, reason: u.lastReason, duration: d });
+                                db.ref('users/'+u.username+'/sessions').push({ 
+                                    date: getServerDateString(), 
+                                    type: u.breakType, 
+                                    reason: u.lastReason, 
+                                    duration: d,
+                                    startTime: new Date(u.lastStartTime).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})
+                                });
                                 const up = { isOnBreak: false, lastStartTime: null, lastEndedTime: getServerTime(), lastEndedType: u.breakType };
                                 if(u.breakType==='بريك عام' || u.breakType==='طوارئ') { up.usedSeconds = (u.usedSeconds||0)+d; if(u.breakType === 'طوارئ') up.emRequest = null; }
                                 else if(u.breakType==='صلاة') {
@@ -4423,6 +4522,9 @@ async function exportProfessionalExcel() {
             }
         }
 
+        // إضافة وقت الحضور والانصراف لصفوف الإكسيل
+        rows.push([uS.name, uS.days.size, clockInTime, clockOutTime, Math.round(uS.ox/60), Math.round(uS.prayer/60), Math.round(uS.meet/60), Math.round(uS.vip/60), uS.ot, uS.perm, uS.comp, uS.cash]);
+
         if (u.sessions) {
             let daily = {};
             Object.values(u.sessions).forEach(s => {
@@ -4474,7 +4576,7 @@ async function exportProfessionalExcel() {
     // --- تنسيق الصفحة ---
 
     // الصف الأول: العنوان الكبير
-    worksheet.mergeCells('A1:J1');
+    worksheet.mergeCells('A1:L1');
     const titleCell = worksheet.getCell('A1');
     titleCell.value = 'نظام ELSHAMAA لإدارة الموارد البشرية - التقرير التحليلي';
     titleCell.font = { size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
@@ -4482,7 +4584,7 @@ async function exportProfessionalExcel() {
     titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
     // الصف الثاني: التواريخ (مثل الصورة)
-    worksheet.mergeCells('A2:J2');
+    worksheet.mergeCells('A2:L2');
     const dateRangeCell = worksheet.getCell('A2');
     dateRangeCell.value = `الفترة من ${startDateVal} إلى ${endDateVal} | تاريخ الاستخراج: ${getServerDateString()}`;
     dateRangeCell.font = { bold: true };
@@ -4579,6 +4681,20 @@ function exportMonthlyExcel() {
         let totalPermHours = 0; // متغيير الاستأذان الجديد
         let totalDeductions = 0;
         let totalOxidation = 0;
+        
+        let clockInTime = "--:--";
+        let clockOutTime = "--:--";
+
+        // جلب أول يوم وقت الحضور والانصراف
+        if (u.attendance) {
+            const attendanceDates = Object.keys(u.attendance);
+            const firstDate = attendanceDates[0];
+            if (firstDate) {
+                const dayData = u.attendance[firstDate];
+                clockInTime = dayData.clockIn || "--:--";
+                clockOutTime = dayData.clockOut || dayData.lastSeen || "--:--";
+            }
+        }
 
         // حساب السجلات (بريك، صلاة، ميتنج، VIP)
         if (u.sessions) {
@@ -4639,6 +4755,8 @@ function exportMonthlyExcel() {
 
         reportData.push({
             "اسم الموظف": u.realName || u.username,
+            "وقت الحضور": clockInTime,
+            "وقت الانصراف": clockOutTime,
             "الأكسدة (د)": Math.round(totalOxidation / 60),
             "الإضافي (س)": totalOvertimeHours,
             "الاستأذان (س)": totalPermHours, // إضافة العمود الجديد
@@ -4687,7 +4805,13 @@ async function exportProfessionalExcel() {
                     const dur = parseInt(s.duration) || 0;
                     const durMin = Math.round(dur/60);
 
-                    detailedLogs.push([s.date, uS.name, s.type, durMin + " دقيقة", s.reason || "بدون سبب"]);
+                    detailedLogs.push([
+                        s.date, 
+                        uS.name, 
+                        s.type, 
+                        durMin + " دقيقة", 
+                        (s.startTime ? "بداية: " + s.startTime + " | " : "") + (s.reason || "بدون سبب")
+                    ]);
 
                     if (s.type === 'بريك عام' || s.type === 'طوارئ') daily[s.date] = (daily[s.date] || 0) + dur;
                     else if (s.type === 'صلاة') uS.prayer += dur;
@@ -4731,7 +4855,7 @@ async function exportProfessionalExcel() {
     summarySheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'center' };
 
     const headerRow = summarySheet.getRow(7);
-    const mainHeader = ["اسم الموظف", "أيام الحضور", "الأكسدة (د)", "الصلاة (د)", "الميتنج (د)", "VIP (د)", "إضافي (س)", "استأذان (س)", "المخالفات", "الخصم (ج.م)"];
+    const mainHeader = ["اسم الموظف", "أيام الحضور", "وقت الحضور", "وقت الانصراف", "الأكسدة (د)", "الصلاة (د)", "الميتنج (د)", "VIP (د)", "إضافي (س)", "استأذان (س)", "المخالفات", "الخصم (ج.م)"];
 
     headerRow.values = mainHeader;
     headerRow.eachCell(cell => {
@@ -4749,9 +4873,9 @@ async function exportProfessionalExcel() {
     });
 
     // إضافة الفلتر لورقة الملخص
-    summarySheet.autoFilter = 'A7:J7';
+    summarySheet.autoFilter = 'A7:L7';
     summarySheet.getColumn(1).width = 25;
-    for(let i=2; i<=10; i++) summarySheet.getColumn(i).width = 14;
+    for(let i=2; i<=12; i++) summarySheet.getColumn(i).width = 14;
 
     // --- تنسيق ورقة التفاصيل (التفنيدة) مع الفلتر ---
     detailsSheet.mergeCells('A1:E1');
