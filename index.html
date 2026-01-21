@@ -1428,37 +1428,6 @@
                                 <th>إجراء</th>
                             </tr>
                         </thead><tbody id="usersManagementBody"></tbody></table></div>
-
-<div style="background: rgba(124, 58, 237, 0.1); padding: 25px; border-radius: 30px; border: 1px dashed #7c3aed; margin-top: 25px; margin-bottom: 25px;">
-    <h4 style="color: #a78bfa;">🔗 ربط الموظفين (Coverage Groups)</h4>
-    <p style="font-size:0.85rem; color:#ccc; margin-bottom:15px;">الموظفين في نفس المجموعة لا يمكنهم الخروج للبريك في نفس الوقت.</p>
-    
-    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-        <input type="text" id="newGroupName" placeholder="اسم المجموعة (مثلاً: تيم المبيعات A)" class="form-control-glass" style="flex: 1; margin:0;">
-        
-        <!-- قائمة متعددة الاختيارات -->
-        <select id="groupMembersSelect" multiple class="form-control-glass" style="flex: 2; height: 50px; margin:0;">
-            <!-- سيتم الملء بالجافاسكريبت -->
-        </select>
-        
-        <button onclick="saveGroup()" class="btn btn-primary" style="background: #7c3aed;">حفظ المجموعة</button>
-    </div>
-    <small style="color:#aaa;">* اضغط Ctrl (أو Command) لتحديد أكثر من موظف.</small>
-
-    <!-- جدول المجموعات الحالية -->
-    <div class="table-responsive" style="margin-top: 15px;">
-        <table>
-            <thead>
-                <tr>
-                    <th style="color:#a78bfa;">اسم المجموعة</th>
-                    <th>الأعضاء المرتبطين</th>
-                    <th>حذف</th>
-                </tr>
-            </thead>
-            <tbody id="groupsTableBody"></tbody>
-        </table>
-    </div>
-</div>
                                 </div>
                             </div>
 
@@ -1593,6 +1562,13 @@
                                             <div style="border:1px solid var(--danger); padding:8px; border-radius:15px;"><h4>🚨 طوارئ</h4><div id="emStatusArea"><button onclick="sendEmRequest()" class="btn btn-danger" style="width:100%">طلب</button></div></div>
                                         </div>
 
+                                        <!-- زر منطقة الألعاب - يظهر للموظف -->
+                                        <div id="gamesButtonArea" class="hidden" style="margin-top: 15px;">
+                                            <button onclick="openGamesModal()" class="btn" style="background: linear-gradient(45deg, #ff00cc, #3333ff); width: 100%; padding: 15px; font-size: 1.2rem; border-radius: 20px; box-shadow: 0 0 20px rgba(255, 0, 204, 0.3);">
+                                                🎮 منطقة الألعاب (تسلية البريك) 🕹️
+                                            </button>
+                                        </div>
+
                                         <!-- قسم الإضافي -->
                                         <div style="margin-top: 25px; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 25px; border: 1px solid var(--glass-border); max-width: 500px; margin: 25px auto 0;">
                                             <h4 style="margin:0 0 10px 0; color:var(--primary)">💼 طلب إضافي</h4>
@@ -1648,7 +1624,7 @@
                                 console.error("Firebase Error:", e);
                             }
 
-                            let allUsersData = {}, allGroupsData = {}, currentUser = null, timerInterval = null, isLoaded = false;
+                            let allUsersData = {}, currentUser = null, timerInterval = null, isLoaded = false;
                             let adminTypingBuffer = {}, adminSelectBuffer = {}, editingUserKey = null, soundActive = false;
                             let maxBreaksAllowed = 3, maxPrayersAllowed = 2, lastReceivedBroadcastID = localStorage.getItem('last_broadcast_id') || "";
                             let currentProfileTarget = null; // الموظف الذي نعرض ملفه حالياً
@@ -2289,14 +2265,6 @@ if (currentUser.role === 'admin') {
                                 }
                             });
 
-                            db.ref('groups').on('value', (snap) => {
-                                allGroupsData = snap.val() || {};
-                                if (currentUser && currentUser.role === 'admin') {
-                                    renderGroupsTable(); // تحديث جدول المجموعات للمشرف
-                                    updateGroupUserSelect(); // تحديث قائمة اختيار الموظفين
-                                }
-                            });
-
                             function updateLimits() {
                                 const b = parseInt(document.getElementById('maxBreaksInput').value), p = parseInt(document.getElementById('maxPrayersInput').value);
                                 db.ref('settings/limits').set({ breaks: b, prayers: p }).then(() => { triggerGlobalRefresh(); alert("تم التحديث ✅"); });
@@ -2631,160 +2599,72 @@ function renderMonitorTable() {
                                 db.ref('users/'+un).update(up).then(() => triggerGlobalRefresh()); 
                             };
 
-function startMyBreak(t) {
-    if (currentUser.isOnBreak) return;
+                            function startMyBreak(t) {
+                                if(currentUser.isOnBreak) return;
 
-    db.ref('users').get().then((snapshot) => {
-        const latestUsers = snapshot.val() || {};
-        const myData = latestUsers[currentUser.username];
+                                db.ref('users').get().then((snapshot) => {
+                                    const latestUsers = snapshot.val() || {};
+                                    const myData = latestUsers[currentUser.username];
 
-        // 1. متغيرات فحص المجموعات
-        let partnerOnBreak = null;
-        let amIInAGroup = false; // متغير جديد لنعرف هل الموظف تابع لمجموعة أم لا
+                                    // التحقق من الزحمة في البريك العام
+                                    const currentActiveBreaks = Object.values(latestUsers).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
 
-        // 2. البحث: هل أنا في مجموعة؟ ومن هو زميلي؟
-        // تأكد أن allGroupsData معرفة عالمياً كما شرحنا سابقاً
-        if (typeof allGroupsData !== 'undefined') {
-            Object.values(allGroupsData).forEach(group => {
-                if (group.members && group.members.includes(currentUser.username)) {
-                    amIInAGroup = true; // نعم، أنا في مجموعة
-                    group.members.forEach(memberUser => {
-                        if (memberUser !== currentUser.username) {
-                            const partner = latestUsers[memberUser];
-                            // لو الزميل في بريك (ما عدا الصلاة لو حبيت)
-                            if (partner && partner.isOnBreak) {
-                                partnerOnBreak = partner.realName || partner.username;
+                                    // ---[ منطق الصلاة الجديد ]---
+                                    if (t === 'صلاة') {
+                                        // 1. هل الصلاة مفتوحة؟
+                                        if (!isPrayerWindowOpen) {
+                                            alert("🛑 وقت الصلاة مغلق حالياً، انتظر المشرف.");
+                                            return;
+                                        }
+
+                                        // 2. هل عنده رصيد؟
+                                        const limit = myData.prayerLimit || 0; // الرصيد اللي المشرف نزله
+                                        const used = myData.prayerSeconds || 0; // اللي الموظف استهلكه
+
+                                        // الشرط: لو المستهلك أكبر من أو يساوي الرصيد
+                                        if (used >= limit) {
+                                            // الرسالة دي هتوضحلك السبب بالظبط
+                                            alert(`⚠️ رصيد الصلاة انتهى!\n\nالمستخدم: ${Math.floor(used/60)} دقيقة\nالرصيد الكلي: ${Math.floor(limit/60)} دقيقة\n\nانتظر المشرف يزود الوقت.`);
+                                            return;
+                                        }
+                                    }
+                                    // -----------------------------
+
+                                    // التحقق من زحمة البريك العام
+                                    if ((t === 'بريك عام' || t === 'طوارئ' || t === 'ميتنج' || t === 'متابع عميل') && currentActiveBreaks >= maxBreaksAllowed) {
+                                        return alert(`العدد مكتمل حالياً في البريك، انتظر قليلاً..`);
+                                    }
+
+                                    let r = document.getElementById('breakReason').value.trim();
+                                    if(t === 'صلاة') r = "صلاة";
+
+                                    db.ref('users/'+currentUser.username).update({
+                                        isOnBreak: true,
+                                        breakType: t,
+                                        lastStartTime: getServerTime(),
+                                        lastReason: r || t
+                                    }).catch(error => {
+                                        console.error('Error starting break:', error);
+                                        alert('حدث خطأ في بدء النشاط، حاول مرة أخرى.');
+                                    });
+                                });
                             }
-                        }
-                    });
-                }
-            });
-        }
-
-        // 3. لو أنا في مجموعة وزميلي برة -> امنع الخروج (شرط الكافريج)
-        if (partnerOnBreak) {
-            alert(`🛑 لا يمكنك الخروج الآن!\n\nزميلك المرتبط بك (${partnerOnBreak}) في استراحة حالياً.\n(نظام التغطية Coverage).`);
-            return;
-        }
-
-        // ---[ منطق الصلاة ]---
-        if (t === 'صلاة') {
-            if (!isPrayerWindowOpen) {
-                alert("🛑 وقت الصلاة مغلق حالياً، انتظر المشرف.");
-                return;
-            }
-            const limit = myData.prayerLimit || 0;
-            const used = myData.prayerSeconds || 0;
-            if (used >= limit) {
-                alert(`⚠️ رصيد الصلاة انتهى!\nالمستخدم: ${Math.floor(used/60)} دقيقة\nالرصيد الكلي: ${Math.floor(limit/60)} دقيقة`);
-                return;
-            }
-        }
-
-        // 4. التحقق من العداد (هنا التعديل المهم)
-        // بنحسب عدد الناس اللي في بريك حالياً
-        const currentActiveBreaks = Object.values(latestUsers).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
-
-        // الشرط الجديد:
-        // لو أنا مش في مجموعة (!amIInAGroup) -> طبق عليا العداد.
-        // لو أنا في مجموعة (amIInAGroup) -> تجاهل العداد (لأن شرطي هو زميلي فقط).
-
-        if (!amIInAGroup) {
-            // أنا "سنجل" ماليش جروب، يبقى لازم التزم بالعدد المسموح
-            if ((t === 'بريك عام' || t === 'طوارئ' || t === 'ميتنج' || t === 'متابع عميل') && currentActiveBreaks >= maxBreaksAllowed) {
-                return alert(`العدد مكتمل حالياً في البريك (${currentActiveBreaks}/${maxBreaksAllowed})، انتظر قليلاً..`);
-            }
-        } else {
-            // أنا في جروب، عدي يا باشا طالما زميلك موجود (تجاهل العداد)
-            console.log("تم تجاوز العداد لأن الموظف يتبع نظام المجموعات");
-        }
-
-        // تجهيز السبب
-        let r = document.getElementById('breakReason').value.trim();
-        if (t === 'صلاة') r = "صلاة";
-
-        // التنفيذ وبدء البريك
-        db.ref('users/' + currentUser.username).update({
-            isOnBreak: true,
-            breakType: t,
-            lastStartTime: getServerTime(),
-            lastReason: r || t
-        }).catch(error => {
-            console.error('Error starting break:', error);
-            alert('حدث خطأ، حاول مرة أخرى.');
-        });
-    });
-}
 
                             function stopMyBreak() {
-                                // 1. الحماية من التداخل (لو التحويل التلقائي شغال، امنع الإيقاف اليدوي)
-                                if (window.isProcessingTransition) {
-                                    console.log("تم منع الإيقاف اليدوي بسبب التحويل التلقائي");
-                                    return;
-                                }
-
-                                // 2. قفل الزر لمنع الضغط مرتين ورا بعض (Double Click)
-                                const stopBtn = document.querySelector('#stopArea button');
-                                if(stopBtn) {
-                                    stopBtn.disabled = true;
-                                    stopBtn.innerText = "جاري الحفظ...";
-                                }
-                                window.isProcessingTransition = true; // قفل
-
-                                const u = currentUser;
-                                const d = Math.floor((getServerTime() - u.lastStartTime)/1000);
-
-                                // تسجيل الجلسة في التاريخ
-                                db.ref('users/'+u.username+'/sessions').push({
-                                    date: getServerDateString(),
-                                    type: u.breakType,
-                                    reason: u.lastReason,
-                                    duration: d
-                                });
-
-                                const up = {
-                                    isOnBreak: false,
-                                    lastStartTime: null,
-                                    lastEndedTime: getServerTime(),
-                                    lastEndedType: u.breakType
-                                };
-
-                                // الحسابات
-                                if(u.breakType === 'بريك عام' || u.breakType === 'طوارئ') {
-                                    up.usedSeconds = (u.usedSeconds||0) + d;
-                                    if(u.breakType === 'طوارئ') up.emRequest = null;
-                                }
-                                else if(u.breakType === 'صلاة') {
-                                    up.prayerSeconds = (u.prayerSeconds||0) + d;
+                                const u = currentUser, d = Math.floor((getServerTime() - u.lastStartTime)/1000);
+                                db.ref('users/'+u.username+'/sessions').push({ date: getServerDateString(), type: u.breakType, reason: u.lastReason, duration: d });
+                                const up = { isOnBreak: false, lastStartTime: null, lastEndedTime: getServerTime(), lastEndedType: u.breakType };
+                                if(u.breakType==='بريك عام' || u.breakType==='طوارئ') { up.usedSeconds = (u.usedSeconds||0)+d; if(u.breakType === 'طوارئ') up.emRequest = null; }
+                                else if(u.breakType==='صلاة') {
+                                    up.prayerSeconds = (u.prayerSeconds||0)+d;
+                                    // زيادة عداد المرات
                                     up.prayerCountToday = (u.prayerCountToday || 0) + 1;
                                 }
-                                else if(u.breakType === 'ميتنج') {
-                                    up.meetingSeconds = (u.meetingSeconds||0) + d;
-                                    up.meetingRequest = null;
-                                }
-                                else if(u.breakType === 'متابع عميل') {
-                                    up.followUpSeconds = (u.followUpSeconds||0) + d;
-                                }
-                                else if(u.breakType === 'استراحة VIP') {
-                                    up.vipSeconds = (u.vipSeconds||0) + d;
-                                }
-
-                                db.ref('users/'+u.username).update(up).then(() => {
-                                    // تنظيف الحقول وإعادة تفعيل الزر
-                                    document.getElementById('breakReason').value = "";
-                                    window.isProcessingTransition = false; // فك القفل
-                                    if(stopBtn) {
-                                        stopBtn.disabled = false;
-                                        stopBtn.innerText = "🛑 إنهاء النشاط والعودة";
-                                    }
-                                });
-                            }
-
-                            // الكود ده هيشيل 15 دقيقة (900 ثانية) من رصيد الصلاة للموظف ده
-                            function deductPrayerTime(targetUser) {
-                                db.ref('users/' + targetUser + '/prayerSeconds').transaction((current) => {
-                                    return (current || 0) - 900;
-                                });
+                                // بقية الأنواع...
+                                else if(u.breakType==='ميتنج') { up.meetingSeconds = (u.meetingSeconds||0)+d; up.meetingRequest = null; }
+                                else if(u.breakType==='متابع عميل') up.followUpSeconds = (u.followUpSeconds||0)+d;
+                                else if(u.breakType==='استراحة VIP') up.vipSeconds = (u.vipSeconds||0)+d;
+                                db.ref('users/'+u.username).update(up); document.getElementById('breakReason').value = "";
                             }
 
                             function updateUserUI() {
@@ -4526,6 +4406,23 @@ async function exportProfessionalExcel() {
 
         let uS = { name: u.realName || u.username, days: new Set(), ox: 0, prayer: 0, meet: 0, vip: 0, ot: 0, perm: 0, comp: 0, cash: 0 };
 
+        let clockInTime = "--:--";
+        let clockOutTime = "--:--";
+
+        // جلب وقت الحضور والانصراف من تاريخ البداية المختار (أو أول يوم في الفلتر)
+        if (u.attendance) {
+            // نبحث عن حضور الموظف في تواريخ الفلتر (سنأخذ متوسط أو عرض أول يوم متاح)
+            const attendanceDates = Object.keys(u.attendance);
+            const targetDate = startDateVal.split('-').reverse().join('-'); // تحويل YYYY-MM-DD لـ DD-MM-YYYY
+            
+            // نأخذ بيانات الحضور لليوم المختار في التقرير
+            const dayData = u.attendance[startDateVal] || u.attendance[Object.keys(u.attendance)[0]]; 
+            if(dayData) {
+                clockInTime = dayData.clockIn || "--:--";
+                clockOutTime = dayData.clockOut || dayData.lastSeen || "--:--";
+            }
+        }
+
         if (u.sessions) {
             let daily = {};
             Object.values(u.sessions).forEach(s => {
@@ -4571,7 +4468,7 @@ async function exportProfessionalExcel() {
         totals.cash += uS.cash;
         totals.count++;
 
-        rows.push([uS.name, uS.days.size, Math.round(uS.ox/60), Math.round(uS.prayer/60), Math.round(uS.meet/60), Math.round(uS.vip/60), uS.ot, uS.perm, uS.comp, uS.cash]);
+        rows.push([uS.name, uS.days.size, clockInTime, clockOutTime, Math.round(uS.ox/60), Math.round(uS.prayer/60), Math.round(uS.meet/60), Math.round(uS.vip/60), uS.ot, uS.perm, uS.comp, uS.cash]);
     });
 
     // --- تنسيق الصفحة ---
@@ -4618,7 +4515,7 @@ async function exportProfessionalExcel() {
     worksheet.addRow([]); // صف فارغ
 
     // --- الجدول الرئيسي (اللون الأزرق - بيانات الموظفين) ---
-    const mainHeader = ["اسم الموظف", "أيام الحضور", "الأكسدة (د)", "الصلاة (د)", "الميتنج (د)", "VIP (د)", "إضافي (س)", "استأذان (س)", "المخالفات", "الخصم (ج.م)"];
+    const mainHeader = ["اسم الموظف", "أيام الحضور", "وقت الحضور", "وقت الانصراف", "الأكسدة (د)", "الصلاة (د)", "الميتنج (د)", "VIP (د)", "إضافي (س)", "استأذان (س)", "المخالفات", "الخصم (ج.م)"];
     const headerRow = worksheet.addRow(mainHeader);
 
     headerRow.eachCell((cell) => {
@@ -4660,76 +4557,6 @@ async function exportProfessionalExcel() {
 
                             // استدعيها مرة واحدة فقط أو اتركها لضمان عدم ضياع الحسابات
                             autoCreateAdmins();
-
-// تحديث قائمة اختيار الموظفين في قسم المجموعات
-function updateGroupUserSelect() {
-    const sel = document.getElementById('groupMembersSelect');
-    if (!sel) return;
-    
-    let html = '';
-    Object.values(allUsersData).forEach(u => {
-        if (u.username && !MANAGERS.includes(u.username)) {
-            html += `<option value="${u.username}">${u.realName || u.username}</option>`;
-        }
-    });
-    sel.innerHTML = html;
-}
-
-// حفظ مجموعة جديدة
-function saveGroup() {
-    const name = document.getElementById('newGroupName').value.trim();
-    const select = document.getElementById('groupMembersSelect');
-    const selectedMembers = Array.from(select.selectedOptions).map(option => option.value);
-
-    if (!name) return alert("اكتب اسم المجموعة");
-    if (selectedMembers.length < 2) return alert("يجب اختيار موظفين اثنين على الأقل لربطهم ببعض!");
-
-    const groupId = 'grp_' + Date.now();
-    
-    db.ref('groups/' + groupId).set({
-        name: name,
-        members: selectedMembers
-    }).then(() => {
-        alert("تم إنشاء المجموعة وربط الموظفين بنجاح ✅");
-        document.getElementById('newGroupName').value = '';
-        select.selectedIndex = -1; // إلغاء التحديد
-    });
-}
-
-// عرض جدول المجموعات
-function renderGroupsTable() {
-    const tbody = document.getElementById('groupsTableBody');
-    if (!tbody) return;
-    
-    tbody.innerHTML = '';
-    
-    if (!allGroupsData) return;
-
-    Object.entries(allGroupsData).forEach(([key, group]) => {
-        // تحويل أسماء المستخدمين لأسماء حقيقية للعرض
-        const memberNames = group.members.map(username => {
-            const u = allUsersData[username];
-            return u ? (u.realName || username) : username;
-        }).join(' ↔️ '); // سهم يوضح الارتباط
-
-        tbody.innerHTML += `
-            <tr>
-                <td style="font-weight:bold;">${group.name}</td>
-                <td>${memberNames}</td>
-                <td>
-                    <button onclick="deleteGroup('${key}')" class="btn btn-danger btn-sm">🗑</button>
-                </td>
-            </tr>
-        `;
-    });
-}
-
-// حذف مجموعة
-function deleteGroup(key) {
-    if (confirm("هل تريد فك ارتباط هذه المجموعة؟")) {
-        db.ref('groups/' + key).remove();
-    }
-}
 
 function exportMonthlyExcel() {
     const startDateVal = document.getElementById('filterStartDate').value;
