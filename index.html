@@ -973,15 +973,34 @@
                             <span class="logo-tagline">Smart Management System</span>
                         </div>
 
-                        <audio id="alarmSound" loop preload="auto"><source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg"></audio>
-                        <audio id="notifySound" preload="none"><source src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" type="audio/mp3"></audio>
-                        <audio id="requestRing" loop preload="none"><source src="https://assets.mixkit.co/active_storage/sfx/1110/1110-preview.mp3" type="audio/mp3"></audio>
-                        <audio id="broadcastSound" loop preload="none"><source src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" type="audio/mp3"></audio>
+<!-- =============================================
+     🔊 نظام الأصوات الكامل - 5 أصوات مختلفة
+     ============================================= -->
 
-                        <!-- تأكد أن هذا الصوت موجود في الصفحة (صوت تنبيه مميز) -->
-                        <audio id="complaintSound" preload="auto">
-                            <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mp3">
-                        </audio>
+<!-- 1. صوت التنبيه (Alarm) - بيب قصير -->
+<audio id="alarmSound" loop preload="auto">
+    <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+</audio>
+
+<!-- 2. صوت الإشعار (Notify) - تنويه خفيف -->
+<audio id="notifySound" preload="none">
+    <source src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" type="audio/mp3">
+</audio>
+
+<!-- 3. صوت الجرس (Request Ring) - جرس متكرر -->
+<audio id="requestRing" loop preload="none">
+    <source src="https://assets.mixkit.co/active_storage/sfx/1110/1110-preview.mp3" type="audio/mp3">
+</audio>
+
+<!-- 4. صوت البث (Broadcast) - رسائل إدارية عاجلة -->
+<audio id="broadcastSound" loop preload="none">
+    <source src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" type="audio/mp3">
+</audio>
+
+<!-- 5. صوت المخالفة (Complaint) - شكاوى وانتهاكات -->
+<audio id="complaintSound" preload="auto">
+    <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mp3">
+</audio>
 
                         <div id="forceSoundOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.98); z-index:20000; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
                             <div class="broadcast-content" style="border-color: var(--primary); box-shadow: 0 0 50px var(--primary);">
@@ -989,6 +1008,7 @@
                                 <p>يرجى تفعيل الواجهة لبدء استلام التنبيهات والرسائل الإدارية اللحظية.</p>
                                 <button onclick="activateSystemAndSound()" class="btn btn-primary" style="width:100%; padding:20px; font-size:1.3rem; margin-top:20px;">✅ بدء الدوام وتفعيل الصوت</button>
                             </div>
+
                         </div>
 
                         <!-- زر وويدجت الصلاة -->
@@ -1238,6 +1258,20 @@
 
                             <!-- لوحة المشرف -->
                             <div id="adminSection" class="hidden">
+                                <!-- الساعة والتاريخ للأدمن - في الأعلى -->
+                                <div style="display: flex; justify-content: center; margin-bottom: 25px;">
+                                    <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(6, 182, 212, 0.3)); padding: 16px 35px; border-radius: 25px; border: 2px solid rgba(99, 102, 241, 0.6); box-shadow: 0 0 30px rgba(99, 102, 241, 0.5), inset 0 0 15px rgba(99, 102, 241, 0.2); backdrop-filter: blur(10px);">
+                                        <div style="display: flex; align-items: center; gap: 12px; justify-content: center;">
+                                            <span style="font-size: 2rem;">⏰</span>
+                                            <div>
+                                                <span style="font-family: 'Courier New', monospace; font-weight: 900; font-size: 2rem; color: #38bdf8; text-shadow: 0 0 15px rgba(56, 189, 248, 0.9); letter-spacing: 2px;" id="adminServerTime">00:00:00 AM</span>
+                                                <br>
+                                                <span id="adminServerDate" style="font-size: 1.1rem; color: #06b6d4; font-weight: 700; opacity: 0.95; letter-spacing: 1px; display: block; text-align: center;">--/--/----</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px;">
                                     <div>
                                         <h2 style="margin:0; color:var(--primary); display:inline-block;">لوحة الإدارة 🚀</h2>
@@ -1329,23 +1363,41 @@
                                         </button>
                                     </div>
 
-                                    <!-- قسم ترتيب دور الصلاة - للمشرف -->
-                                    <div id="prayerQueueSection" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); padding: 15px; border-radius: 20px; margin-bottom: 20px;">
-                                        <h4 style="margin:0 0 10px 0; color:var(--primary);">📅 ترتيب دور الصلاة (الطابور)</h4>
-                                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                                            <select id="queueUserSelect" class="form-control-glass" style="width: 100%; color: white;">
-                                                <option value="">-- اختر الموظف لإضافته للدور --</option>
-                                            </select>
-                                            <button onclick="addToQueue()" class="btn btn-primary" style="flex: 1;">➕ إضافة للدور</button>
-                                            <button onclick="clearQueue()" class="btn btn-danger" style="flex: 1;">🗑 تصفير الدور</button>
-                                        </div>
 
-                                        <div id="queueDisplay" style="display: flex; gap: 10px; overflow-x: auto; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 15px; min-height: 50px;">
-                                            <!-- سيظهر الموظفين المرتبين هنا كبطاقات صغيرة -->
-                                        </div>
-                                    </div>
 
-                                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+    <!-- قسم ترتيب دور الصلاة - للمشرف -->
+    <div id="prayerQueueSection" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); padding: 15px; border-radius: 20px; margin-bottom: 20px;">
+        <h4 style="margin:0 0 10px 0; color:var(--primary);">📅 ترتيب دور الصلاة (الطابور)</h4>
+        <div id="rotationSelectionArea" style="margin-bottom: 15px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 15px;">
+            <p style="font-size: 0.9rem; color: #aaa; margin-bottom: 10px;">اختر الموظفين الذين سيشملهم جدول التدوير:</p>
+            <div id="rotationMembersSelector" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <!-- الأسماء ستظهر هنا تلقائياً -->
+            </div>
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <select id="queueUserSelect" class="form-control-glass" style="width: 100%; color: white;">
+                <option value="">-- اختر الموظف لإضافته للدور --</option>
+            </select>
+            <button onclick="addToQueue()" class="btn btn-primary" style="flex: 1;">➕ إضافة للدور</button>
+            <button onclick="clearQueue()" class="btn btn-danger" style="flex: 1;">🗑 تصفير الدور</button>
+        </div>
+
+        <div id="queueDisplay" style="display: flex; gap: 10px; overflow-x: auto; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 15px; min-height: 50px;">
+            <!-- سيظهر الموظفين المرتبين هنا كبطاقات صغيرة -->
+    </div>
+</div>
+
+<!-- زر الحفظ اليدوي وزر عرض السجل -->
+<div style="display: flex; gap: 10px; margin-top: 10px;">
+    <button onclick="saveCurrentOrderToHistory()" class="btn btn-primary" style="background: #4f46e5; flex: 1;">
+        ☁️ حفظ الترتيب الحالي للسحابة
+    </button>
+    <button onclick="openPrayerCloudHistory()" class="btn btn-dark" style="flex: 1;">
+        📜 السجل السحابي
+    </button>
+</div>
+
+    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                                         <input type="text" id="monitorSearch" placeholder="بحث عن موظف..." style="flex:1" oninput="renderMonitorTable()">
                                         <button onclick="endDay()" class="btn btn-danger btn-sm">إقفال اليوم 🛑</button>
                                     </div>
@@ -1573,10 +1625,16 @@
                                     </div>
 
                                     <!-- الجزء الشمال: الساعة والتاريخ (التصميم الجديد) -->
-                                    <div style="display: flex; align-items: center; gap: 15px;">
-                                        <div class="digital-clock-container">
-                                            <span id="userServerTime" class="digital-time">00:00:00</span>
-                                            <span id="userServerDate" class="digital-date">10/01/2026</span>
+                                    <div style="display: flex; align-items: center; gap: 20px;">
+                                        <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(6, 182, 212, 0.3)); padding: 14px 28px; border-radius: 22px; border: 2px solid rgba(99, 102, 241, 0.6); box-shadow: 0 0 25px rgba(99, 102, 241, 0.5), inset 0 0 12px rgba(99, 102, 241, 0.2); backdrop-filter: blur(10px);">
+                                            <div style="display: flex; align-items: center; gap: 10px;">
+                                                <span style="font-size: 1.5rem;">⏰</span>
+                                                <div>
+                                                    <span id="userServerTime" style="font-family: 'Courier New', monospace; font-weight: 900; font-size: 1.5rem; color: #38bdf8; text-shadow: 0 0 12px rgba(56, 189, 248, 0.9); letter-spacing: 2px;">00:00:00</span>
+                                                    <br>
+                                                    <span id="userServerDate" style="font-size: 0.95rem; color: #06b6d4; font-weight: 700; opacity: 0.95; letter-spacing: 1px;">10/01/2026</span>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         <button onclick="logout()" class="btn btn-danger btn-sm" style="height: 45px; width: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);" title="تسجيل خروج">
@@ -1773,6 +1831,88 @@
                             let cachedArchiveData = []; // متغير عالمي لتخزين بيانات الأرشيف مؤقتاً لتسريع البحث
                             let allGroupsData = {}; // متغير لتخزين بيانات المجموعات
                             let currentQueue = []; // متغير لتخزين الطابور الحالي
+                            // متغير لحفظ "شكل" الجدول الأخير عشان منرسموش لو مفيش تغيير هيكلي
+                            let lastTableStructure = "";
+
+// 1. المتغيرات
+let selectedRotationMembers = []; // الموظفين اللي المشرف اختارهم بس
+let currentRotationOffset = 0;
+
+// 2. تحديث قائمة الاختيار (Checkbox لكل موظف)
+function updateRotationSelectorUI() {
+    const container = document.getElementById('rotationMembersSelector');
+    if(!container) return;
+    
+    let html = '';
+    Object.values(allUsersData).forEach(u => {
+        if(u.username && !MANAGERS.includes(u.username)) {
+            const isChecked = selectedRotationMembers.includes(u.username) ? 'checked' : '';
+            html += `
+                <label style="background:rgba(255,255,255,0.05); padding:5px 10px; border-radius:10px; cursor:pointer;">
+                    <input type="checkbox" class="rot-check" value="${u.username}" ${isChecked} onchange="updateSelectedFromUI()"> 
+                    ${u.realName || u.username}
+                </label>`;
+        }
+    });
+    container.innerHTML = html;
+}
+
+// 3. تحديث المصفوفة لما المشرف يعلم على حد
+function updateSelectedFromUI() {
+    const checks = document.querySelectorAll('.rot-check:checked');
+    selectedRotationMembers = Array.from(checks).map(c => c.value);
+    renderRotationTable();
+}
+
+// 4. حفظ الإعدادات في Firebase
+function saveRotationSettings() {
+    db.ref('settings/prayerRotation').set({
+        members: selectedRotationMembers, // القائمة الثابتة
+        offset: currentRotationOffset    // الرقم اللي بيحرك الدور
+    }).then(() => {
+        applyRotationToQueue(); // تطبيق الترتيب فوراً على الطابور
+        alert("تم حفظ مجموعة التدوير وتحديث الدور بنجاح ✅");
+    });
+}
+
+// 6. تدوير الأدوار (اللفافة)
+function rotateManually() {
+    // أضف هذا السطر في البداية:
+
+
+    const n = selectedRotationMembers.length;
+    if (n === 0) return alert("اختار الموظفين أولاً!");
+
+    currentRotationOffset = (currentRotationOffset + 1) % n;
+
+    db.ref('settings/prayerRotation/offset').set(currentRotationOffset).then(() => {
+        applyRotationToQueue();
+        alert("🔄 تم تدوير الدور وحفظ النسخة السابقة في السجل!");
+    });
+}
+
+// دالة لحفظ الترتيب الحالي في نود جديد بالداتابيز
+
+
+// 7. تطبيق الترتيب على "طابور الصلاة" عشان الموظف يشوفه
+function applyRotationToQueue() {
+    const n = selectedRotationMembers.length;
+    if (n === 0) return;
+
+    // بناء الطابور المرتب بناءً على الساقية الحالية
+    let sortedQueue = [];
+    for (let i = 0; i < n; i++) {
+        // نبحث عن الشخص الذي ترتيبه الحالي هو (i+1)
+        // الطريقة الرياضية الصحيحة لجعل الترتيب عادلاً ومتحركاً
+        let memberIndex = selectedRotationMembers.findIndex((un, idx) => {
+            return ((idx + currentRotationOffset) % n) === i;
+        });
+        sortedQueue.push(selectedRotationMembers[memberIndex]);
+    }
+
+    // إرسال الترتيب النهائي لـ Firebase ليراه الموظفون
+    db.ref('settings/prayerQueue').set(sortedQueue);
+}
 
                             // إعدادات Cloudinary (تم تحديثها ببياناتك)
                             // 1. ده الاسم اللي جبته من الصورة بتاعتك
@@ -2143,17 +2283,29 @@ function deleteComplaint(username, key) {
 
                             function triggerGlobalRefresh() { db.ref('refreshSignal').set(getServerTime()); }
 
-                            function activateSystemAndSound() {
-                                sessionStorage.setItem('systemActive', 'true');
-                                ['alarmSound', 'notifySound', 'requestRing', 'broadcastSound'].forEach(id => {
-                                    const s = document.getElementById(id);
-                                    s.volume = 0; s.play().then(() => { s.pause(); s.currentTime = 0; s.volume = 1; }).catch(e => console.log(e));
-                                });
-                                soundActive = true;
-                                if ("Notification" in window) Notification.requestPermission();
-                                document.getElementById('forceSoundOverlay').style.display = 'none';
-                                startGlobalTimer();
-                            }
+function activateSystemAndSound() {
+    sessionStorage.setItem('systemActive', 'true');
+    soundActive = true;
+
+    // تفعيل جميع الأصوات (فك الحظر من المتصفح)
+    const allSounds = ['alarmSound', 'notifySound', 'broadcastSound', 'complaintSound', 'requestRing'];
+
+    allSounds.forEach(id => {
+        const audio = document.getElementById(id);
+        if (audio) {
+            audio.volume = 0; // صامت (للتجهيز فقط)
+            audio.play().then(() => {
+                audio.pause();
+                audio.currentTime = 0;
+                audio.volume = 1; // إرجاع الصوت لوضعه الطبيعي
+            }).catch(e => console.log("Audio init:", e));
+        }
+    });
+
+    document.getElementById('forceSoundOverlay').style.display = 'none';
+    alert("✅ تم تفعيل النظام والأصوات بنجاح!");
+    startGlobalTimer();
+}
 
                             function activateAdminSound() {
                                 ['alarmSound', 'notifySound', 'requestRing', 'broadcastSound'].forEach(id => {
@@ -2235,8 +2387,38 @@ function deleteComplaint(username, key) {
                             let cachedBroadcasts = {};
 
                             db.ref('broadcasts').on('value', (snap) => {
-                                cachedBroadcasts = snap.val() || {};
+                                const data = snap.val() || {};
+                                cachedBroadcasts = data;
+                                const employeeLog = document.getElementById('employeeBroadcastLog');
+
                                 renderBroadcastLog(); // استدعاء دالة الرسم
+
+                                const keys = Object.keys(data).sort((a, b) => data[b].timestamp - data[a].timestamp);
+
+                                if (keys.length > 0) {
+                                    const latestKey = keys[0];
+                                    const b = data[latestKey];
+
+                                    // التحقق: هل هذه رسالة جديدة ولم يتم عرضها من قبل؟ وهل أرسلت منذ أقل من 10 ثوانٍ؟
+                                    const isVeryRecent = (getServerTime() - b.timestamp) < 10000;
+
+                                    if (latestKey !== lastReceivedBroadcastID && isVeryRecent) {
+                                        lastReceivedBroadcastID = latestKey;
+                                        localStorage.setItem('last_broadcast_id', latestKey);
+
+                                        if (currentUser && currentUser.role !== 'admin') {
+                                            let forMe = (!b.target || b.target === 'all');
+                                            if(!forMe) {
+                                                let targets = Array.isArray(b.target) ? b.target : Object.values(b.target);
+                                                if(targets.includes(currentUser.username)) forMe = true;
+                                            }
+
+                                            if(forMe) {
+                                                showBroadcastOverlay(b.message); // هذه الدالة الآن تشغل الصوت تلقائياً
+                                            }
+                                        }
+                                    }
+                                }
                             });
 
                             function renderBroadcastLog() {
@@ -2363,18 +2545,34 @@ function deleteComplaint(username, key) {
         db.ref('broadcasts/' + key).remove();
     }
 }
-                            function showBroadcastOverlay(msg) {
-                                document.getElementById('broadcastMsgText').innerText = msg;
-                                document.getElementById('broadcastOverlay').style.display = 'flex';
-                                if (soundActive) document.getElementById('broadcastSound').play().catch(e => {});
-                            }
+function showBroadcastOverlay(msg) {
+    const overlay = document.getElementById('broadcastOverlay');
+    const msgText = document.getElementById('broadcastMsgText');
+    const sound = document.getElementById('broadcastSound');
+
+    msgText.innerText = msg;
+    overlay.style.display = 'flex';
+
+    if (soundActive && sound) {
+        sound.muted = false; // إلغاء الكتم
+        sound.currentTime = 0; // البدء من البداية
+        sound.volume = 1.0;    // التأكد من أن الصوت بأعلى درجة
+        
+        let playPromise = sound.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.log("المتصفح منع الصوت: يرجى التفاعل مع الصفحة أولاً.");
+            });
+        }
+    }
+}
                             function acknowledgeBroadcast() { document.getElementById('broadcastOverlay').style.display = 'none'; const s = document.getElementById('broadcastSound'); s.pause(); s.currentTime = 0; }
 
 db.ref('settings/limits').on('value', (snap) => {
     const limits = snap.val() || { breaks: 3, prayers: 2 };
-    
+
     // تحديث القيم في الذاكرة
-    maxBreaksAllowed = limits.breaks; 
+    maxBreaksAllowed = limits.breaks;
     maxPrayersAllowed = limits.prayers;
 
     // 1. تحديث خانات الإدخال (للمشرف)
@@ -2385,12 +2583,61 @@ db.ref('settings/limits').on('value', (snap) => {
     if (currentUser) {
         if (currentUser.role === 'admin') {
             // لو إنت أدمن: هيعيد رسم الجدول والعداد العلوي (1/2) فوراً
-            renderMonitorTable(); 
+            renderMonitorTable();
         } else {
             // لو موظف: هيعيد فحص هل البريك متاح ولا مقفول بناءً على الرقم الجديد
-            checkBreakLimit(); 
+            checkBreakLimit();
         }
     }
+});
+
+function renderRotationTable() {
+    const tbody = document.getElementById('rotationTableBody');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+
+    const n = selectedRotationMembers.length;
+    if(n === 0) {
+        tbody.innerHTML = '<tr><td colspan="4">اختر الأسماء التي تصلي أولاً.</td></tr>';
+        return;
+    }
+
+    selectedRotationMembers.forEach((un, index) => {
+        const u = allUsersData[un];
+        if(!u) return;
+
+        // المعادلة الصحيحة للساقية (طرح الإزاحة لضمان تقدم الدور للأعلى)
+
+        // 1. ترتيبه في الصلاة الحالية (مثلاً الظهر)
+        let pos1 = ((index - currentRotationOffset) % n + n) % n + 1;
+
+        // 2. ترتيبه في الصلاة القادمة (مثلاً العصر)
+        let pos2 = ((index - (currentRotationOffset + 1)) % n + n) % n + 1;
+
+        // 3. ترتيبه بكرة (التدوير اللي بعده)
+        let pos3 = ((index - (currentRotationOffset + 2)) % n + n) % n + 1;
+
+        tbody.innerHTML += `
+            <tr style="${pos1 === 1 ? 'background: rgba(56, 189, 248, 0.1); border-right: 4px solid #38bdf8;' : ''}">
+                <td style="font-weight:bold; color:gold;">${u.realName || un}</td>
+                <td style="color:${pos1 === 1 ? '#38bdf8' : 'white'}; font-weight:${pos1 === 1 ? 'bold' : 'normal'}">
+                    #${pos1} ${pos1 === 1 ? '(عليه الدور)' : ''}
+                </td>
+                <td style="opacity:0.8;">#${pos2}</td>
+                <td style="color:var(--primary); font-weight:bold;">
+                    سيصبح #${pos3} بكرة
+                </td>
+            </tr>`;
+    });
+}
+
+db.ref('settings/prayerRotation').on('value', (snap) => {
+    const data = snap.val() || { members: [], offset: 0 };
+    selectedRotationMembers = data.members || [];
+    currentRotationOffset = data.offset || 0;
+    updateRotationSelectorUI();
+    renderRotationTable();
+    applyRotationToQueue();
 });
 
                             db.ref('users').on('value', (snap) => {
@@ -2421,7 +2668,19 @@ db.ref('settings/limits').on('value', (snap) => {
                                     const updatedMe = allUsersData[currentUser.username];
                                     if(updatedMe) { const r = currentUser.role; currentUser = updatedMe; currentUser.role = r; }
         if (currentUser.role === 'admin') {
-            renderMonitorTable(); renderAdminEmRequests(); renderAdminMeetingRequests(); renderAdminOtRequests(); renderAdminPermRequests(); renderUserManagementTable(); updateBroadcastTargets();
+            // حساب "شكل" الجدول الحالي (عدد الموظفين + أسماؤهم + حالاتهم)
+            const currentTableStructure = Object.values(allUsersData).filter(u => u && u.username && !MANAGERS.includes(u.username)).map(u => `${u.username}-${u.isOnBreak}-${u.breakType}-${u.state}`).join('|');
+
+            // لو الشكل اتغير (موظف جديد أو غادر أو غير حالته)، نرسم الجدول من جديد
+            if (currentTableStructure !== lastTableStructure) {
+                lastTableStructure = currentTableStructure;
+                renderMonitorTable();
+            } else {
+                // لو مفيش تغيير هيكلي، بنحدث الأرقام بس
+                updateMonitorValuesOnly();
+            }
+
+            renderAdminEmRequests(); renderAdminMeetingRequests(); renderAdminOtRequests(); renderAdminPermRequests(); renderUserManagementTable(); updateBroadcastTargets();
 
             if(['mahmoud', 'ahmed'].includes(currentUser.username)) {
                 document.getElementById('masterDeleteBtn').classList.remove('hidden');
@@ -2518,7 +2777,7 @@ function checkBreakLimit() {
     }
 }
 
-                            function checkSavedSession() { const s = localStorage.getItem('break_sys_user'); if (s && allUsersData[s]) { currentUser = allUsersData[s]; currentUser.role = MANAGERS.includes(s) ? 'admin' : 'employee'; if (currentUser.role === 'admin') showAdmin(); else { setupPresence(s); showEmployee(); } } }
+                            function checkSavedSession() { const s = localStorage.getItem('break_sys_user'); if (s && allUsersData[s]) { currentUser = allUsersData[s]; currentUser.role = MANAGERS.includes(s) ? 'admin' : 'employee'; if (currentUser.role === 'admin') showAdmin(); else { setupPresence(s); showEmployee(); } startGlobalTimer(); } }
                             
                             function attemptLogin() { 
                                 const u = document.getElementById('loginUser').value.trim().toLowerCase(), p = document.getElementById('loginPass').value.trim(); 
@@ -2672,38 +2931,58 @@ function checkBreakLimit() {
     }
 }
                             
-                        function startGlobalTimer() {
-                            if(timerInterval) clearInterval(timerInterval);
+function startGlobalTimer() {
+    if(timerInterval) clearInterval(timerInterval);
+    
+    // تحديث الساعة والتاريخ فوراً قبل بدء الـ Interval
+    const timeStr = getServerTimeString();
+    const dateStr = getServerDateString();
+    
+    // تحديث الساعة في لوحة الموظف
+    const timeEl = document.getElementById('userServerTime');
+    const dateEl = document.getElementById('userServerDate');
+    if(timeEl) timeEl.innerText = timeStr;
+    if(dateEl) dateEl.innerText = dateStr;
 
-                            timerInterval = setInterval(() => {
-                                // 1. الحصول على الوقت والتاريخ الحاليين من السيرفر
-                                const sT = getServerTimeString();
-                                const sD = getServerDateString();
+    // تحديث الساعة والتاريخ في لوحة الأدمن لو موجودة
+    const adminTimeEl = document.getElementById('adminServerTime');
+    const adminDateEl = document.getElementById('adminServerDate');
+    if(adminTimeEl) adminTimeEl.innerText = timeStr;
+    if(adminDateEl) adminDateEl.innerText = dateStr;
+    
+    // تحديث الموظف فوراً أيضاً
+    if(currentUser && currentUser.role !== 'admin') {
+        updateUserUI();
+    }
+    
+    timerInterval = setInterval(() => {
+        try {
+            const timeStr = getServerTimeString();
+            const dateStr = getServerDateString();
 
-                                // 2. تحديث واجهة الأدمن (لو موجود)
-                                if(currentUser && currentUser.role === 'admin') {
-                                    if(document.getElementById('adminServerTime')) {
-                                        document.getElementById('adminServerTime').innerText = sT;
-                                        document.getElementById('adminServerDate').innerText = sD;
-                                    }
-                                    updateMonitorValuesOnly(); // تحديث الأرقام في جدول المراقبة
-                                }
+            // تحديث الساعة في لوحة الموظف
+            const timeEl = document.getElementById('userServerTime');
+            const dateEl = document.getElementById('userServerDate');
+            if(timeEl) timeEl.innerText = timeStr;
+            if(dateEl) dateEl.innerText = dateStr;
 
-                                // 3. تحديث واجهة الموظف (الجزء الجديد والمهم)
-                                if(currentUser) {
-                                    // تحديث الساعة
-                                    const timeEl = document.getElementById('userServerTime');
-                                    if(timeEl) timeEl.innerText = sT;
+            // تحديث الساعة والتاريخ في لوحة الأدمن لو موجودة
+            const adminTimeEl = document.getElementById('adminServerTime');
+            const adminDateEl = document.getElementById('adminServerDate');
+            if(adminTimeEl) adminTimeEl.innerText = timeStr;
+            if(adminDateEl) adminDateEl.innerText = dateStr;
 
-                                    // تحديث التاريخ
-                                    const dateEl = document.getElementById('userServerDate');
-                                    if(dateEl) dateEl.innerText = sD;
-
-                                    // تحديث عداد البريك
-                                    if(typeof updateUserUI === "function") updateUserUI();
-                                }
-                            }, 1000);
-                        }
+            // باقي منطق التايمر (البريك والأكسدة)
+            if(currentUser && currentUser.role !== 'admin') {
+                updateUserUI(); 
+            } else if (currentUser && currentUser.role === 'admin') {
+                updateMonitorValuesOnly();
+            }
+        } catch (e) {
+            console.error("Timer Error: ", e);
+        }
+    }, 1000);
+}
 
 function renderMonitorTable() {
     const tbody = document.getElementById('monitorBody');
@@ -2826,19 +3105,44 @@ function renderMonitorTable() {
 }
 
                             function updateMonitorValuesOnly() {
+                                // بنلف على الموظفين ونحدث الخلايا اللي محتاجة تحديث بس من غير ما نمسح الجدول
                                 Object.values(allUsersData).forEach(u => {
                                     if (!u || !u.username || MANAGERS.includes(u.username)) return;
-                                    let lg = u.usedSeconds||0, lp = u.prayerSeconds||0, lm = u.meetingSeconds||0, lf = u.followUpSeconds||0, lv = u.vipSeconds||0;
+
+                                    let lg = u.usedSeconds || 0, lp = u.prayerSeconds || 0, lm = u.meetingSeconds || 0,
+                                        lf = u.followUpSeconds || 0, lv = u.vipSeconds || 0;
+
                                     if (u.isOnBreak && u.lastStartTime) {
                                         let elap = Math.floor((getServerTime() - u.lastStartTime) / 1000);
-                                        if (u.breakType === 'بريك عام' || u.breakType === 'طوارئ') lg += elap; else if (u.breakType === 'صلاة') lp += elap; else if (u.breakType === 'ميتنج') lm += elap; else if (u.breakType === 'متابع عميل') lf += elap; else if (u.breakType === 'استراحة VIP') lv += elap;
+                                        if (u.breakType === 'بريك عام' || u.breakType === 'طوارئ') lg += elap;
+                                        else if (u.breakType === 'صلاة') lp += elap;
+                                        else if (u.breakType === 'ميتنج') lm += elap;
+                                        else if (u.breakType === 'متابع عميل') lf += elap;
+                                        else if (u.breakType === 'استراحة VIP') lv += elap;
                                     }
-                                    const rem = ((u.allowance||45)*60) - lg;
-                                    const rEl = document.getElementById(`rem_${u.username}`); if(rEl) rEl.innerHTML = rem>=0?formatTime(rem):`<span style="color:var(--danger); font-weight:bold;">-${formatTime(Math.abs(rem))}</span>`;
-                                    const pEl = document.getElementById(`pray_${u.username}`); if(pEl) pEl.innerText = formatTime(lp);
-                                    const mEl = document.getElementById(`meet_${u.username}`); if(mEl) mEl.innerText = formatTime(lm);
-                                    const fEl = document.getElementById(`follow_${u.username}`); if(fEl) fEl.innerText = formatTime(lf);
-                                    const vEl = document.getElementById(`vip_${u.username}`); if(vEl) vEl.innerText = formatTime(lv);
+
+                                    const rem = ((u.allowance || 45) * 60) - lg;
+
+                                    // تحديث "البريك المتبقي"
+                                    const rEl = document.getElementById(`rem_${u.username}`);
+                                    if (rEl) {
+                                        const newTime = rem >= 0 ? formatTime(rem) : "-" + formatTime(Math.abs(rem));
+                                        if (rEl.innerText !== newTime) { // تحديث فقط لو الرقم اتغير
+                                            rEl.innerText = newTime;
+                                            rEl.style.color = rem >= 0 ? "white" : "var(--danger)";
+                                        }
+                                    }
+
+                                    // تحديث باقي العدادات (الصلاة، الميتنج، الخ)
+                                    const updateText = (id, val) => {
+                                        const el = document.getElementById(id);
+                                        if (el && el.innerText !== formatTime(val)) el.innerText = formatTime(val);
+                                    };
+
+                                    updateText(`pray_${u.username}`, lp);
+                                    updateText(`meet_${u.username}`, lm);
+                                    updateText(`follow_${u.username}`, lf);
+                                    updateText(`vip_${u.username}`, lv);
                                 });
                             }
 
@@ -2958,6 +3262,130 @@ window.adminStop = (un) => {
     });
 };
 
+function openPrayerHistory() {
+    document.getElementById('prayerHistoryModal').classList.remove('hidden');
+    const content = document.getElementById('prayerHistoryContent');
+    content.innerHTML = '<p style="text-align:center;">جاري تحميل الأرشيف...</p>';
+
+    // جلب آخر 20 سجل صلاة
+    db.ref('prayer_order_history').limitToLast(20).once('value', (snap) => {
+        const data = snap.val();
+        if (!data) {
+            content.innerHTML = '<p style="text-align:center;">لا توجد سجلات سابقة بعد.</p>';
+            return;
+        }
+
+        content.innerHTML = '';
+        // ترتيب السجلات من الأحدث للأقدم
+        const keys = Object.keys(data).reverse();
+
+        keys.forEach(key => {
+            const record = data[key];
+            let orderHTML = '';
+
+            record.order.forEach(item => {
+                orderHTML += `
+                    <div style="display:flex; justify-content:space-between; background:rgba(255,255,255,0.05); padding:5px 10px; border-radius:8px; margin-bottom:5px; border-right:3px solid ${item.position === 1 ? 'var(--success)' : 'var(--primary)'}">
+                        <span>#${item.position} - ${item.name}</span>
+                        ${item.position === 1 ? '<span style="color:var(--success); font-size:0.7rem;">(الأول)</span>' : ''}
+                    </div>
+                `;
+            });
+
+            content.innerHTML += `
+                <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 15px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px dashed #444; padding-bottom:5px;">
+                        <span style="color:var(--accent); font-size:0.8rem; font-weight:bold;">🕒 ${record.dateStr}</span>
+                        <span style="color:#aaa; font-size:0.7rem;">بواسطة: ${record.admin}</span>
+                    </div>
+                    <div>${orderHTML}</div>
+                </div>
+            `;
+        });
+    });
+}
+
+// 1. دالة حفظ لقطة من الترتيب للسحابة (Firebase)
+function saveCurrentOrderToHistory() {
+    if (!currentQueue || currentQueue.length === 0) {
+        return alert("الطابور فارغ، لا يوجد موظفين لحفظ ترتيبهم!");
+    }
+
+    const membersOrder = currentQueue.map((username, index) => {
+        const u = allUsersData[username];
+        return {
+            username: username,
+            realName: u ? (u.realName || username) : username,
+            position: index + 1
+        };
+    });
+
+    const snapshot = {
+        admin: currentUser.realName || currentUser.username,
+        timestamp: getServerTime(),
+        dateDisplay: getServerDateString() + " " + getServerTimeString(),
+        order: membersOrder
+    };
+
+    db.ref('prayer_cloud_history').push(snapshot).then(() => {
+        alert("✅ تم حفظ ترتيب الطابور الحالي في السجل السحابي بنجاح");
+    }).catch(err => {
+        alert("❌ فشل الحفظ: " + err.message);
+    });
+}
+
+// 2. دالة عرض السجل السحابي
+function openPrayerCloudHistory() {
+    document.getElementById('prayerCloudModal').classList.remove('hidden');
+    const content = document.getElementById('cloudHistoryContent');
+    content.innerHTML = '<p style="text-align:center; color:var(--primary);">جاري جلب السجلات من السحابة... ☁️</p>';
+
+    // جلب آخر 30 سجل
+    db.ref('prayer_cloud_history').limitToLast(30).once('value', (snap) => {
+        const data = snap.val();
+        if (!data) {
+            content.innerHTML = '<p style="text-align:center; color:#aaa; padding:20px;">لا توجد سجلات محفوظة حالياً.</p>';
+            return;
+        }
+
+        content.innerHTML = '';
+        // تحويل الكائن لمصفوفة وعكسها (الأحدث فوق)
+        const entries = Object.entries(data).reverse();
+
+        entries.forEach(([key, record]) => {
+            let listItems = '';
+            record.order.forEach(item => {
+                listItems += `
+                    <div style="display:flex; justify-content:space-between; padding:5px 10px; background:rgba(255,255,255,0.03); margin-bottom:3px; border-radius:5px; border-right:3px solid ${item.position === 1 ? '#10b981' : '#6366f1'}">
+                        <span style="font-size:0.85rem; font-weight:bold;">#${item.position} - ${item.realName}</span>
+                        ${item.position === 1 ? '<span style="color:#10b981; font-size:0.7rem;">(الأول)</span>' : ''}
+                    </div>
+                `;
+            });
+
+            content.innerHTML += `
+                <div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); border-radius:15px; padding:12px; margin-bottom:15px;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#aaa; border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:8px;">
+                        <span>📅 ${record.dateDisplay}</span>
+                        <span>👤 المشرف: ${record.admin}</span>
+                    </div>
+                    <div>${listItems}</div>
+                    <div style="text-align:left; margin-top:5px;">
+                        <button onclick="deleteCloudPrayerLog('${key}')" style="background:none; border:none; color:#ef4444; font-size:0.7rem; cursor:pointer;">🗑 حذف السجل</button>
+                    </div>
+                </div>
+            `;
+        });
+    });
+}
+
+// 3. دالة حذف سجل صلاة (اختياري)
+function deleteCloudPrayerLog(key) {
+    if(confirm("هل تريد حذف هذا السجل من السحابة؟")) {
+        db.ref('prayer_cloud_history/' + key).remove().then(() => openPrayerCloudHistory());
+    }
+}
+
 function startMyBreak(t) {
     if (currentUser.isOnBreak) return;
 
@@ -2982,7 +3410,7 @@ function startMyBreak(t) {
     // --- 2. منطق البريك العام (استقلال المجموعات عن الحد العام) ---
     if (t === 'بريك عام' || t === 'طوارئ') {
         if (currentUser.groupName && currentUser.groupName !== "") {
-            // لو الموظف في جروب: نفحص زملاءه في نفس الجروب فقط
+            // لو الموظف في ج
             const inMyGroupOnBreak = Object.values(allUsersData).filter(u =>
                 u.groupName === currentUser.groupName &&
                 u.isOnBreak &&
@@ -5634,6 +6062,84 @@ db.ref('settings/prayerQueue').on('value', (snap) => {
         updateUserUI(); // تحديث أزرار وحالة الموظف فوراً
     }
 });
+
+// 3. دالة بناء الجدول (الخوارزمية)
+function renderRotationTable() {
+    const tbody = document.getElementById('rotationTableBody');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+
+    const n = selectedRotationMembers.length;
+    if(n === 0) {
+        tbody.innerHTML = '<tr><td colspan="4">لا يوجد موظفين مختارين.</td></tr>';
+        return;
+    }
+
+    selectedRotationMembers.forEach((un, index) => {
+        const u = allUsersData[un];
+        if(!u) return;
+
+        // حساب مكانه "الآن" في الدائرة
+        // الموظف اللي ترتيبه الحالي = 0 هو اللي هيظهر رقم 1
+        let currentPos = ((index - currentRotationOffset) % n + n) % n + 1;
+        
+        // حساب مكانه في "اللفة الجاية"
+        let nextPos = ((index - (currentRotationOffset + 1)) % n + n) % n + 1;
+
+        tbody.innerHTML += `
+            <tr style="${currentPos === 1 ? 'background: rgba(16, 185, 129, 0.1); border-right: 4px solid #10b981;' : ''}">
+                <td style="font-weight:bold; color:white;">
+                    ${currentPos === 1 ? '👑 ' : ''}${u.realName || un}
+                </td>
+                <td style="font-weight:bold; color:${currentPos === 1 ? '#10b981' : 'white'}">#${currentPos}</td>
+                <td style="color:#aaa;">#${nextPos}</td>
+                <td style="font-size:0.8rem; color:#666;">سيصبح #${nextPos} عند التدوير</td>
+            </tr>`;
+    });
+}
+
+// 4. دالة تحديث "طابور الصلاة الفعلي" بناء على الجدول الحالي
+function updateEmployeeQueueFromRotation() {
+    if (rotationBaseList.length === 0) return;
+
+    const n = rotationBaseList.length;
+    // ترتيب الموظفين حسب أولوية الظهر (أو الوقت الحالي)
+    let sortedQueue = [...rotationBaseList].sort((a, b) => {
+        let idxA = rotationBaseList.indexOf(a);
+        let idxB = rotationBaseList.indexOf(b);
+        let posA = ((idxA - currentOffset) % n + n) % n;
+        let posB = ((idxB - currentOffset) % n + n) % n;
+        return posA - posB;
+    });
+
+    // تحديث طابور الصلاة الرسمي في Firebase
+    // ملاحظة: دي بتخلي الزرار يفتح أوتوماتيك للي عليه الدور في الجدول
+    db.ref('settings/prayerQueue').set(sortedQueue);
+}
+
+// 5. دالة التدوير (تتحرك خطوة لقدام)
+function rotateManually() {
+    if(!confirm("هل تريد تدوير الأدوار للانتقال للصلاة التالية (أو لليوم التالي)؟")) return;
+    currentOffset = (currentOffset + 1) % rotationBaseList.length;
+    saveRotation();
+    alert("تم تدوير الجدول.. الموظف اللي كان التاني بقى الأول! 🚀");
+}
+
+function saveRotation() {
+    db.ref('settings/prayerRotation').set({
+        list: rotationBaseList,
+        offset: currentOffset
+    });
+}
+
+function resetRotation() {
+    if(!confirm("سيتم مسح القائمة الحالية وإعادة بنائها من موظفي اليوم.. هل أنت متأكد؟")) return;
+    rotationBaseList = Object.values(allUsersData)
+        .filter(u => u.username && !MANAGERS.includes(u.username))
+        .map(u => u.username);
+    currentOffset = 0;
+    saveRotation();
+}
 </script>
 <!-- نافذة تأكيد إتمام الصلاة -->
 <div id="prayerCheckModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:30000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(10px);">
@@ -5648,5 +6154,33 @@ db.ref('settings/prayerQueue').on('value', (snap) => {
         </div>
     </div>
 </div>
+
+<!-- نافذة عرض أرشيف الصلاة -->
+<div id="prayerHistoryModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:25000; padding:20px; overflow-y:auto; backdrop-filter: blur(8px);">
+    <div style="max-width:700px; margin:40px auto; background:#1e293b; border:1px solid var(--primary); border-radius:25px; padding:30px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:15px;">
+            <h3 style="color:var(--primary); margin:0;">📋 سجل ترتيب الصلوات السابقة</h3>
+            <button onclick="document.getElementById('prayerHistoryModal').classList.add('hidden')" class="btn btn-dark">إغلاق ✖</button>
+        </div>
+
+        <div id="prayerHistoryContent" style="display: flex; flex-direction: column; gap: 15px;">
+            <!-- السجلات ستظهر هنا -->
+        </div>
+    </div>
+</div>
+
+<!-- نافذة السجل السحابي -->
+<div id="prayerCloudModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:25000; padding:20px; overflow-y:auto; backdrop-filter: blur(10px);">
+    <div style="max-width:600px; margin:30px auto; background:#1e293b; border:2px solid var(--primary); border-radius:25px; padding:25px; box-shadow: 0 0 50px rgba(0,0,0,0.5);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:15px;">
+            <h3 style="color:var(--primary); margin:0;">☁️ سجل ترتيب الصلوات السحابي</h3>
+            <button onclick="document.getElementById('prayerCloudModal').classList.add('hidden')" class="btn btn-dark">إغلاق ✖</button>
+        </div>
+        <div id="cloudHistoryContent">
+            <!-- البيانات ستظهر هنا -->
+        </div>
+    </div>
+</div>
+
 </body>
-</html> 
+</html>
