@@ -356,6 +356,94 @@
                                         padding: 6px !important;
                                     }
 
+                                    /* تحسينات إضافية للموبايل - الجدول والأزرار */
+                                    #monitorBody tr {
+                                        display: block !important;
+                                        margin-bottom: 15px !important;
+                                        border: 1px solid rgba(99, 102, 241, 0.3) !important;
+                                        border-radius: 12px !important;
+                                        padding: 10px !important;
+                                        background: rgba(255,255,255,0.02) !important;
+                                    }
+
+                                    #monitorBody td {
+                                        display: block !important;
+                                        width: 100% !important;
+                                        margin-bottom: 8px !important;
+                                        text-align: right !important;
+                                        padding: 8px !important;
+                                        border: none !important;
+                                    }
+
+                                    #monitorBody td:last-child {
+                                        margin-bottom: 0 !important;
+                                    }
+
+                                    #monitorBody td:before {
+                                        content: attr(data-label);
+                                        font-weight: bold;
+                                        color: var(--primary);
+                                        margin-bottom: 4px;
+                                        display: block;
+                                        font-size: 0.85rem;
+                                    }
+
+                                    /* الأسماء والملفات - موبايل */
+                                    #monitorBody .profile-img {
+                                        width: 35px !important;
+                                        height: 35px !important;
+                                    }
+
+                                    #monitorBody div[style*="display:flex"] {
+                                        flex-direction: column !important;
+                                        align-items: flex-start !important;
+                                        gap: 8px !important;
+                                        width: 100% !important;
+                                    }
+
+                                    /* الأزرار والتحكم - موبايل - أحجام أكبر وسهلة الضغط */
+                                    #monitorBody button {
+                                        width: 100% !important;
+                                        font-size: 0.8rem !important;
+                                        padding: 10px !important;
+                                        margin-bottom: 6px !important;
+                                        min-height: 44px !important;
+                                        cursor: pointer !important;
+                                        touch-action: manipulation !important;
+                                    }
+
+                                    #monitorBody select {
+                                        width: 100% !important;
+                                        font-size: 0.8rem !important;
+                                        padding: 10px !important;
+                                        margin-bottom: 6px !important;
+                                        min-height: 44px !important;
+                                        cursor: pointer !important;
+                                        -webkit-appearance: none !important;
+                                        appearance: none !important;
+                                        background-color: rgba(99, 102, 241, 0.1) !important;
+                                        border: 1px solid rgba(99, 102, 241, 0.3) !important;
+                                    }
+
+                                    .admin-row-top {
+                                        display: flex !important;
+                                        flex-direction: column !important;
+                                        gap: 8px !important;
+                                        width: 100% !important;
+                                    }
+
+                                    .admin-row-top select,
+                                    .admin-row-top button {
+                                        width: 100% !important;
+                                        min-height: 44px !important;
+                                    }
+
+                                    .admin-table-ctrl {
+                                        width: 100% !important;
+                                        display: flex !important;
+                                        flex-direction: column !important;
+                                    }
+
                                     /* منطقة الخطر (Danger Zone) */
                                     #dangerZone {
                                         margin-top: 50px !important;
