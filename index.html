@@ -2231,46 +2231,47 @@ function deleteComplaint(username, key) {
                             });
 
                             // تحديث السجل فقط عند حدوث أي تغيير (إضافة أو حذف) بدون صوت
+                            // متغير عالمي لحفظ الرسايل في الذاكرة
+                            let cachedBroadcasts = {};
+
                             db.ref('broadcasts').on('value', (snap) => {
-                                const data = snap.val() || {}, employeeLog = document.getElementById('employeeBroadcastLog'), adminLog = document.getElementById('adminBroadcastLog');
-                                if(employeeLog) employeeLog.innerHTML = ""; if(adminLog) adminLog.innerHTML = "";
+                                cachedBroadcasts = snap.val() || {};
+                                renderBroadcastLog(); // استدعاء دالة الرسم
+                            });
+
+                            function renderBroadcastLog() {
+                                const data = cachedBroadcasts;
+                                const employeeLog = document.getElementById('employeeBroadcastLog');
+                                const adminLog = document.getElementById('adminBroadcastLog');
                                 
+                                if(employeeLog) employeeLog.innerHTML = ""; 
+                                if(adminLog) adminLog.innerHTML = "";
+                                
+                                // ترتيب الرسايل من الأحدث للأقدم
                                 const keys = Object.keys(data).sort((a, b) => data[b].timestamp - data[a].timestamp);
+                                
                                 keys.forEach(key => {
-                                    const b = data[key], timeStr = new Date(b.timestamp).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'});
-                                    if (adminLog) adminLog.innerHTML += `<div style="padding:4px; border-bottom:1px solid rgba(255,255,255,0.1)"><b>[${timeStr}]</b> ${b.message} <button onclick="deleteBroadcast('${key}')" style="background:none; border:none; color:red; cursor:pointer;">🗑</button></div>`;
+                                    const b = data[key];
+                                    const timeStr = new Date(b.timestamp).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'});
+                                    
+                                    // رسم لوحة الإدارة (الأدمن)
+                                    if (adminLog) {
+                                        adminLog.innerHTML += `<div style="padding:4px; border-bottom:1px solid rgba(255,255,255,0.1)"><b>[${timeStr}]</b> ${b.message} <button onclick="deleteBroadcast('${key}')" style="background:none; border:none; color:red; cursor:pointer;">🗑</button></div>`;
+                                    }
+                                    
+                                    // رسم لوحة الموظف (بشرط يكون مسجل دخول)
                                     if (employeeLog && currentUser) {
                                         let isForMe = (!b.target || b.target === 'all');
                                         if(!isForMe) {
                                             let targets = Array.isArray(b.target) ? b.target : (typeof b.target === 'object' ? Object.values(b.target) : [b.target]);
                                             if(targets.includes(currentUser.username)) isForMe = true;
                                         }
-                                        if(isForMe) employeeLog.innerHTML += `<div class="broadcast-item"><b>[${timeStr}]</b> ${b.message}</div>`;
-                                    }
-                                });
-                                
-                                if (keys.length > 0) {
-                                    const latestKey = keys[0], b = data[latestKey];
-                                    
-                                    // التعديل الجوهري هنا:
-                                    // نتحقق إذا كان الفرق بين وقت الرسالة والوقت الحالي أقل من 20 ثانية
-                                    // إذا كان أكثر، يعني هذه رسالة قديمة ظهرت بسبب مسح رسالة أخرى، فلا تشغل الصوت.
-                                    const isVeryRecent = (getServerTime() - b.timestamp) < 20000;
-                                    if (latestKey !== lastReceivedBroadcastID && isVeryRecent) {
-                                        lastReceivedBroadcastID = latestKey; 
-                                        localStorage.setItem('last_broadcast_id', latestKey);
-                                        if (currentUser && currentUser.role !== 'admin') {
-                                            let forMe = (!b.target || b.target === 'all');
-                                            if(!forMe) {
-                                                let targets = Array.isArray(b.target) ? b.target : (typeof b.target === 'object' ? Object.values(b.target) : [b.target]);
-                                                if(targets.includes(currentUser.username)) forMe = true;
-                                            }
-                                            if(forMe) showBroadcastOverlay(b.message);
+                                        if(isForMe) {
+                                            employeeLog.innerHTML += `<div class="broadcast-item"><b>[${timeStr}]</b> ${b.message}</div>`;
                                         }
                                     }
-                                }
-                                isInitialLoad = false;
-                            });
+                                });
+                            }
 
                             // الاستماع لحالة نافذة الصلاة وتحديث الواجهة
                             db.ref('settings/prayerOpen').on('value', (snap) => {
@@ -2412,6 +2413,9 @@ db.ref('settings/limits').on('value', (snap) => {
                                     if (pending) { if (ring.paused) ring.play().catch(e=>{}); } else { ring.pause(); ring.currentTime = 0; }
                                 }
                                 allUsersData = newData;
+                                if (currentUser) {
+                                    renderBroadcastLog(); // ضيف السطر ده هنا عشان أول ما يتعرف عليك يظهر التوجيهات فوراً
+                                }
                                 if (!isLoaded) { isLoaded = true; document.getElementById('loading').style.display = 'none'; document.getElementById('mainContainer').classList.remove('hidden'); checkSavedSession(); }
                                 if (currentUser) {
                                     const updatedMe = allUsersData[currentUser.username];
