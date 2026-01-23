@@ -2369,12 +2369,28 @@ function deleteComplaint(username, key) {
                             }
                             function acknowledgeBroadcast() { document.getElementById('broadcastOverlay').style.display = 'none'; const s = document.getElementById('broadcastSound'); s.pause(); s.currentTime = 0; }
 
-                            db.ref('settings/limits').on('value', (snap) => {
-                                const limits = snap.val() || { breaks: 3, prayers: 2 };
-                                maxBreaksAllowed = limits.breaks; maxPrayersAllowed = limits.prayers;
-                                if(document.getElementById('maxBreaksInput')) document.getElementById('maxBreaksInput').value = maxBreaksAllowed;
-                                if(document.getElementById('maxPrayersInput')) document.getElementById('maxPrayersInput').value = maxPrayersAllowed;
-                            });
+db.ref('settings/limits').on('value', (snap) => {
+    const limits = snap.val() || { breaks: 3, prayers: 2 };
+    
+    // تحديث القيم في الذاكرة
+    maxBreaksAllowed = limits.breaks; 
+    maxPrayersAllowed = limits.prayers;
+
+    // 1. تحديث خانات الإدخال (للمشرف)
+    if(document.getElementById('maxBreaksInput')) document.getElementById('maxBreaksInput').value = maxBreaksAllowed;
+    if(document.getElementById('maxPrayersInput')) document.getElementById('maxPrayersInput').value = maxPrayersAllowed;
+
+    // 2. تحديث الواجهة فوراً بناءً على نوع المستخدم
+    if (currentUser) {
+        if (currentUser.role === 'admin') {
+            // لو إنت أدمن: هيعيد رسم الجدول والعداد العلوي (1/2) فوراً
+            renderMonitorTable(); 
+        } else {
+            // لو موظف: هيعيد فحص هل البريك متاح ولا مقفول بناءً على الرقم الجديد
+            checkBreakLimit(); 
+        }
+    }
+});
 
                             db.ref('users').on('value', (snap) => {
                                 const newData = snap.val() || {};
