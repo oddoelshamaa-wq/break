@@ -3030,28 +3030,88 @@ function executeBreakStart(t) {
 }
 
                             function stopMyBreak() {
-                                const u = currentUser, d = Math.floor((getServerTime() - u.lastStartTime)/1000);
-                                db.ref('users/'+u.username+'/sessions').push({
+                                const u = currentUser;
+
+                                // إذا كان النشاط صلاة، نظهر نافذة التأكيد أولاً
+                                if (u.breakType === 'صلاة') {
+                                    const nextPrayerName = document.getElementById('nextPrayerName').innerText.replace("المتبقي على ", "") || "الصلاة";
+                                    document.getElementById('prayerCheckTitle').innerText = `هل أتممت ${nextPrayerName}؟`;
+                                    document.getElementById('prayerCheckModal').classList.remove('hidden');
+                                    return; // نتوقف هنا وننتظر رد الموظف من النافذة
+                                }
+
+                                // إذا كان نشاطاً عادياً، نكمل الإجراء الطبيعي
+                                finalizeStopBreak(false); // false تعني ليس صلاة مؤكدة
+                            }
+
+                            // دالة جديدة لإنهاء النشاط بشكل نهائي
+                            function finalizeStopBreak(didFinishPrayer) {
+                                const u = currentUser;
+                                const d = Math.floor((getServerTime() - u.lastStartTime) / 1000);
+
+                                // تسجيل الجلسة في السجل
+                                db.ref('users/' + u.username + '/sessions').push({
                                     date: getServerDateString(),
                                     type: u.breakType,
-                                    reason: u.lastReason,
+                                    reason: u.lastReason + (u.breakType === 'صلاة' ? (didFinishPrayer ? " (أتم الصلاة ✅)" : " (لم يصلِّ ❌)") : ""),
                                     duration: d,
                                     startTime: new Date(u.lastStartTime).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'}),
-                                    // أضف هذا السطر الجديد بالأسفل
                                     endTime: getServerTimeString()
                                 });
-                                const up = { isOnBreak: false, lastStartTime: null, lastEndedTime: getServerTime(), lastEndedType: u.breakType };
-                                if(u.breakType==='بريك عام' || u.breakType==='طوارئ') { up.usedSeconds = (u.usedSeconds||0)+d; if(u.breakType === 'طوارئ') up.emRequest = null; }
-                                else if(u.breakType==='صلاة') {
-                                    up.prayerSeconds = (u.prayerSeconds||0)+d;
-                                    // زيادة عداد المرات
+
+                                const up = {
+                                    isOnBreak: false,
+                                    lastStartTime: null,
+                                    lastEndedTime: getServerTime(),
+                                    lastEndedType: u.breakType
+                                };
+
+                                // تحديث العدادات
+                                if (u.breakType === 'بريك عام' || u.breakType === 'طوارئ') {
+                                    up.usedSeconds = (u.usedSeconds || 0) + d;
+                                    if (u.breakType === 'طوارئ') up.emRequest = null;
+                                } else if (u.breakType === 'صلاة') {
+                                    up.prayerSeconds = (u.prayerSeconds || 0) + d;
                                     up.prayerCountToday = (u.prayerCountToday || 0) + 1;
+
+                                    // --- الجزء الأهم: إدارة الطابور بناءً على الإجابة ---
+                                    if (didFinishPrayer) {
+                                        // لو صلى: نمسحه من الطابور فوراً عشان اللي بعده يدخل
+                                        removeFromQueueByUsername(u.username);
+                                    } else {
+                                        // لو ما صلاش: يفضل في الطابور زي ما هو عشان دوره ما يروحش
+                                        console.log("الموظف لم يصلِّ، سيبقى في الطابور.");
+                                    }
+                                } else if (u.breakType === 'ميتنج') {
+                                    up.meetingSeconds = (u.meetingSeconds || 0) + d;
+                                    up.meetingRequest = null;
+                                } else if (u.breakType === 'متابع عميل') {
+                                    up.followUpSeconds = (u.followUpSeconds || 0) + d;
+                                } else if (u.breakType === 'استراحة VIP') {
+                                    up.vipSeconds = (u.vipSeconds || 0) + d;
                                 }
-                                // بقية الأنواع...
-                                else if(u.breakType==='ميتنج') { up.meetingSeconds = (u.meetingSeconds||0)+d; up.meetingRequest = null; }
-                                else if(u.breakType==='متابع عميل') up.followUpSeconds = (u.followUpSeconds||0)+d;
-                                else if(u.breakType==='استراحة VIP') up.vipSeconds = (u.vipSeconds||0)+d;
-                                db.ref('users/'+u.username).update(up); document.getElementById('breakReason').value = "";
+
+                                db.ref('users/' + u.username).update(up).then(() => {
+                                    document.getElementById('breakReason').value = "";
+                                    document.getElementById('prayerCheckModal').classList.add('hidden');
+                                });
+                            }
+
+                            // دالة التعامل مع ضغطة الزر في نافذة الصلاة
+                            function confirmPrayerStatus(didPray) {
+                                finalizeStopBreak(didPray);
+                            }
+
+                            // دالة مساعدة لحذف الموظف من الطابور باسم المستخدم
+                            function removeFromQueueByUsername(username) {
+                                db.ref('settings/prayerQueue').once('value', (snap) => {
+                                    let queue = snap.val() || [];
+                                    const index = queue.indexOf(username);
+                                    if (index !== -1) {
+                                        queue.splice(index, 1);
+                                        db.ref('settings/prayerQueue').set(queue);
+                                    }
+                                });
                             }
 
                             function updatePrayerButton() {
@@ -5571,5 +5631,18 @@ db.ref('settings/prayerQueue').on('value', (snap) => {
     }
 });
 </script>
+<!-- نافذة تأكيد إتمام الصلاة -->
+<div id="prayerCheckModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:30000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(10px);">
+    <div style="background:#1e293b; border:2px solid var(--primary); border-radius:25px; padding:30px; width:90%; max-width:400px; text-align:center; box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);">
+        <div style="font-size: 4rem; margin-bottom: 10px;">🕌</div>
+        <h3 id="prayerCheckTitle" style="color:white; margin-bottom:15px;">هل أتممت صلاة الظهر؟</h3>
+        <p style="color:#aaa; font-size:0.9rem; margin-bottom:25px;">تأكيدك يساعد في تنظيم الدور لزملائك المنتظرين.</p>
+
+        <div style="display:flex; gap:15px;">
+            <button onclick="confirmPrayerStatus(true)" class="btn btn-success" style="flex:1; padding:15px; font-size:1.1rem;">✅ نعم، الحمد لله</button>
+            <button onclick="confirmPrayerStatus(false)" class="btn btn-danger" style="flex:1; padding:15px; font-size:1.1rem;">❌ لا، لسه</button>
+        </div>
+    </div>
+</div>
 </body>
 </html> 
