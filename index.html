@@ -1,4 +1,4 @@
-
+    
                         <!DOCTYPE html>
                         <html lang="ar" dir="rtl">
                         <head>
@@ -867,6 +867,51 @@
                                     border: 2px solid white !important;
                                 }
 
+                                /* تنسيقات قسم الشركاء */
+                                .partners-section {
+                                    background: rgba(255,255,255,0.03);
+                                    border: 1px solid var(--glass-border);
+                                    border-radius: 25px;
+                                    padding: 20px;
+                                    margin: 20px 0;
+                                    text-align: center;
+                                    overflow: hidden;
+                                }
+
+                                .partners-slider {
+                                    width: 100%;
+                                    overflow: hidden;
+                                    position: relative;
+                                }
+
+                                .partners-track {
+                                    display: flex;
+                                    gap: 20px;
+                                    animation: scrollPartners 30s linear infinite;
+                                    width: calc(150px * 10); /* 5 صور أصلية + 5 مكررة */
+                                }
+
+                                .partner-logo {
+                                    width: 150px;
+                                    height: 80px;
+                                    object-fit: contain;
+                                    border-radius: 10px;
+                                    background: rgba(255,255,255,0.1);
+                                    padding: 10px;
+                                    transition: 0.3s;
+                                    flex-shrink: 0;
+                                }
+
+                                .partner-logo:hover {
+                                    transform: scale(1.05);
+                                    background: rgba(255,255,255,0.2);
+                                }
+
+                                @keyframes scrollPartners {
+                                    0% { transform: translateX(0); }
+                                    100% { transform: translateX(-50%); }
+                                }
+
                                 /* الإيموجي اللي هيطير في الشاشة */
                                 .floating-emoji {
                                     position: fixed;
@@ -1244,6 +1289,7 @@
                                     <button onclick="switchAdminTab('permissions')" class="btn btn-primary btn-sm" style="background:#6b21a8">🚪 أذونات <span id="permBadge" class="badge-count hidden">0</span></button>
                                     <button onclick="switchAdminTab('reports')" class="btn btn-success btn-sm">📊 التقارير</button>
                                     <button onclick="switchAdminTab('users')" class="btn btn-dark btn-sm">⚙️ الموظفين</button>
+                                    <button onclick="switchAdminTab('groups')" class="btn btn-primary btn-sm">👥 المجموعات</button>
                                 </div>
 
                                 <div id="tab-monitor">
@@ -1281,6 +1327,22 @@
                                         <button onclick="addPrayerTimeGlobal()" class="btn btn-success" style="font-weight:bold; padding: 10px 20px;">
                                             ➕ توزيع 15 دقيقة للكل
                                         </button>
+                                    </div>
+
+                                    <!-- قسم ترتيب دور الصلاة - للمشرف -->
+                                    <div id="prayerQueueSection" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); padding: 15px; border-radius: 20px; margin-bottom: 20px;">
+                                        <h4 style="margin:0 0 10px 0; color:var(--primary);">📅 ترتيب دور الصلاة (الطابور)</h4>
+                                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                                            <select id="queueUserSelect" class="form-control-glass" style="width: 100%; color: white;">
+                                                <option value="">-- اختر الموظف لإضافته للدور --</option>
+                                            </select>
+                                            <button onclick="addToQueue()" class="btn btn-primary" style="flex: 1;">➕ إضافة للدور</button>
+                                            <button onclick="clearQueue()" class="btn btn-danger" style="flex: 1;">🗑 تصفير الدور</button>
+                                        </div>
+
+                                        <div id="queueDisplay" style="display: flex; gap: 10px; overflow-x: auto; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 15px; min-height: 50px;">
+                                            <!-- سيظهر الموظفين المرتبين هنا كبطاقات صغيرة -->
+                                        </div>
                                     </div>
 
                                     <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -1398,7 +1460,11 @@
                                             <input type="text" id="newPassword" placeholder="Password">
                                             <input type="number" id="newAllowance" value="45">
                                             <input type="text" id="newFunTitle" placeholder="اللقب (مثلاً: أشطر كتكوت)" style="border-color: var(--vip-gold);">
-                                            
+                                            <select id="newUserGroup">
+                                                <option value="واتساب">جروب واتساب</option>
+                                                <option value="طلبات">جروب طلبات</option>
+                                            </select>
+
                                             <div style="grid-column: span 2; display: flex; gap: 5px;">
                                                 <input type="text" id="newProfilePic" placeholder="رابط الصورة أو اختر من الجهاز" style="flex:1">
                                                 <button onclick="document.getElementById('adminPicInput').click()" class="btn btn-dark">📁 رفع</button>
@@ -1428,6 +1494,48 @@
                                 <th>إجراء</th>
                             </tr>
                         </thead><tbody id="usersManagementBody"></tbody></table></div>
+                                </div>
+
+                                <!-- قسم إدارة المجموعات -->
+                                <div id="tab-groups" class="hidden">
+                                    <div style="background: var(--glass); padding: 25px; border-radius: 30px; border: 1px dashed var(--glass-border); margin-bottom: 25px;">
+                                        <h4>👥 إنشاء وإدارة المجموعات</h4>
+                                        <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+
+                                            <!-- إدخال اسم المجموعة وزر الإنشاء -->
+                                            <div style="flex: 1; min-width: 250px;">
+                                                <input type="text" id="groupNameInput" placeholder="اسم المجموعة (مثلاً: طلبات)" style="width: 100%; margin-bottom: 15px;">
+                                                <button onclick="createNewGroup()" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1.1rem;">
+                                                    🔗 إنشاء المجموعة
+                                                </button>
+                                            </div>
+
+                                            <!-- قائمة اختيار الأعضاء (تظهر الموظفين المتاحين) -->
+                                            <div style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 15px; max-height: 200px; overflow-y: auto;">
+                                                <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 10px;">اختر أعضاء المجموعة:</p>
+                                                <div id="membersSelectorList">
+                                                    <!-- سيتم ملؤه بواسطة JS -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- جدول المجموعات (نفس اللي في الصورة) -->
+                                    <div class="table-responsive">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>اسم المجموعة</th>
+                                                    <th>الأعضاء</th>
+                                                    <th>الحالة الآن</th>
+                                                    <th>تحكم</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="groupsManagementBody">
+                                                <!-- المجموعات ستظهر هنا -->
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
 
@@ -1493,6 +1601,7 @@
                                             <div class="timer-text-overlay">
                                                 <div class="timer-big-text" id="userTimer">00:00</div>
                                                 <div id="timerLabel">رصيد البريك</div>
+                                                <div id="elapsedTime" style="font-size: 0.8rem; color: #aaa; margin-top: 5px;"></div>
                                             </div>
                                         </div>
                                         <h3 id="userStatusMsg" style="color: var(--success); text-align: center; margin-top: 15px;">متاح ✅</h3>
@@ -1503,6 +1612,12 @@
                                         <div id="employeeBroadcastLog" class="log-container"></div>
                                     </div>
                                 </div>
+
+                                <!-- قسم الشركاء -->
+                                <div class="partners-section" style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 25px; padding: 20px; margin: 20px 0; text-align: center;">
+
+
+                                    </div>
 
                                 <!-- صندوق تنبيه اكتمال العدد -->
                                 <div id="breakLimitAlert" style="display:none; background:rgba(220, 38, 38, 0.2); border:1px solid #ef4444; color:#ffcccc; padding:15px; border-radius:15px; margin:15px 0; text-align:center; font-weight:bold; animation: pulse 2s infinite;">
@@ -1656,6 +1771,8 @@
                             let pendingProfileUser = null;
                             let isPrayerWindowOpen = false;
                             let cachedArchiveData = []; // متغير عالمي لتخزين بيانات الأرشيف مؤقتاً لتسريع البحث
+                            let allGroupsData = {}; // متغير لتخزين بيانات المجموعات
+                            let currentQueue = []; // متغير لتخزين الطابور الحالي
 
                             // إعدادات Cloudinary (تم تحديثها ببياناتك)
                             // 1. ده الاسم اللي جبته من الصورة بتاعتك
@@ -2158,7 +2275,7 @@ function deleteComplaint(username, key) {
                             // الاستماع لحالة نافذة الصلاة وتحديث الواجهة
                             db.ref('settings/prayerOpen').on('value', (snap) => {
                                 isPrayerWindowOpen = snap.val() === true;
-                                
+
                                 // تحديث النص في لوحة الأدمن
                                 const statusText = document.getElementById('prayerStatusText');
                                 if (statusText) {
@@ -2167,20 +2284,7 @@ function deleteComplaint(username, key) {
                                 }
 
                                 // تحديث زر الصلاة عند الموظف
-                                const prayerBtn = document.querySelector("button[onclick=\"startMyBreak('صلاة')\"]");
-                                if (prayerBtn && currentUser && currentUser.role !== 'admin') {
-                                    if (isPrayerWindowOpen) {
-                                        prayerBtn.disabled = false;
-                                        prayerBtn.style.opacity = "1";
-                                        prayerBtn.style.cursor = "pointer";
-                                        prayerBtn.innerText = "ابدأ";
-                                    } else {
-                                        prayerBtn.disabled = true;
-                                        prayerBtn.style.opacity = "0.5";
-                                        prayerBtn.style.cursor = "not-allowed";
-                                        prayerBtn.innerText = "مغلق";
-                                    }
-                                }
+                                updatePrayerButton();
                             });
 
                             function sendBroadcast() {
@@ -2332,20 +2436,47 @@ if (currentUser.role === 'admin') {
                             });
 
                             function updateLimits() {
-                                const b = parseInt(document.getElementById('maxBreaksInput').value), p = parseInt(document.getElementById('maxPrayersInput').value);
-                                db.ref('settings/limits').set({ breaks: b, prayers: p }).then(() => { triggerGlobalRefresh(); alert("تم التحديث ✅"); });
+                                const b = parseInt(document.getElementById('maxBreaksInput').value);
+                                const p = parseInt(document.getElementById('maxPrayersInput').value); // هذا هو الرقم "2" في الصورة
+
+                                db.ref('settings/limits').set({
+                                    breaks: b,
+                                    prayers: p
+                                }).then(() => {
+                                    alert("تم حفظ الحدود الجديدة بنجاح ✅");
+                                });
                             }
 
-                            function checkBreakLimit() {
-                                if(!currentUser || currentUser.role === 'admin') return;
-                                const currentActive = Object.values(allUsersData).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
-                                const box = document.getElementById('breakLimitAlert');
-                                if(currentActive >= maxBreaksAllowed) { 
-                                    box.style.display = 'block'; 
-                                    box.innerHTML = `يا بطل، زمايلك كلهم في البريك دلوقتي. استنى دقايق لحد ما حد يرجع عشان نفضل شغالين.. أول ما حد يرجع الطريق هيكون مفتوح ليك! 💪`; 
-                                } 
-                                else box.style.display = 'none';
-                            }
+function checkBreakLimit() {
+    if(!currentUser || currentUser.role === 'admin') return;
+    const box = document.getElementById('breakLimitAlert');
+
+    // Check if user has a group
+    if (currentUser.groupName) {
+        // Find the group
+        const group = Object.values(allGroupsData).find(g => g.name === currentUser.groupName);
+        if (group) {
+            // Check if any member is on break
+            const anyMemberOnBreak = group.members.some(mUsername => {
+                const member = allUsersData[mUsername];
+                return member && member.isOnBreak && (member.breakType === 'بريك عام' || member.breakType === 'طوارئ');
+            });
+            if (anyMemberOnBreak) {
+                box.style.display = 'block';
+                box.innerHTML = `يا بطل، زمايلك في المجموعة كلهم في البريك دلوقتي. استنى دقايق لحد ما حد يرجع عشان نفضل شغالين.. أول ما حد يرجع الطريق هيكون مفتوح ليك! 💪`;
+                return;
+            }
+        }
+    }
+
+    // Fallback to old logic if no group or no member on break
+    const currentActive = Object.values(allUsersData).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
+    if(currentActive >= maxBreaksAllowed) {
+        box.style.display = 'block';
+        box.innerHTML = `يا بطل، زمايلك كلهم في البريك دلوقتي. استنى دقايق لحد ما حد يرجع عشان نفضل شغالين.. أول ما حد يرجع الطريق هيكون مفتوح ليك! 💪`;
+    }
+    else box.style.display = 'none';
+}
 
                             function checkSavedSession() { const s = localStorage.getItem('break_sys_user'); if (s && allUsersData[s]) { currentUser = allUsersData[s]; currentUser.role = MANAGERS.includes(s) ? 'admin' : 'employee'; if (currentUser.role === 'admin') showAdmin(); else { setupPresence(s); showEmployee(); } } }
                             
@@ -2469,7 +2600,7 @@ if (currentUser.role === 'admin') {
 
                             function switchAdminTab(t) {
     // أخفي كل التبويبات القديمة والجديدة
-    const tabs = ['tab-monitor', 'tab-reports', 'tab-users', 'tab-overtime', 'tab-emergency', 'tab-meetings', 'tab-permissions'];
+    const tabs = ['tab-monitor', 'tab-reports', 'tab-users', 'tab-groups', 'tab-overtime', 'tab-emergency', 'tab-meetings', 'tab-permissions'];
 
     tabs.forEach(id => {
         const element = document.getElementById(id);
@@ -2487,6 +2618,18 @@ if (currentUser.role === 'admin') {
 
     // تحديث جدول الاستأذان لو فتحنا التبويب
     if (t === 'permissions') renderAdminPermRequests();
+
+    // تحديث قائمة المجموعات لو فتحنا التبويب
+    if (t === 'groups') {
+        updateMembersSelector();
+        renderGroupsTable();
+    }
+
+    // تحديث قائمة الصلاة وترتيب الدور لو فتحنا المراقبة
+    if (t === 'monitor') {
+        populateQueueSelect();
+        renderPrayerQueue();
+    }
 }
                             
                         function startGlobalTimer() {
@@ -2611,7 +2754,13 @@ function renderMonitorTable() {
                     <div style="display:flex; align-items:center;">
                         ${imgTag}
                         <div>
-                            <div style="font-weight:bold;">${u.realName || u.username} ${u.isVIP ? '⭐' : ''}</div>
+                            <div style="font-weight:bold;">
+                                ${u.realName || u.username} ${u.isVIP ? '⭐' : ''}
+                                <!-- إضافة تاج صغير يوضح اسم المجموعة -->
+                                <span style="font-size: 0.65rem; color: #6366f1; background: rgba(99, 102, 241, 0.1); padding: 2px 6px; border-radius: 4px; margin-right: 8px; border: 1px solid rgba(99, 102, 241, 0.2);">
+                                    📁 ${u.groupName || 'بلا مجموعة'}
+                                </span>
+                            </div>
                             <div style="font-size:0.75rem;">${onlineDot} | ${deviceIcon}</div>
                         </div>
                     </div>
@@ -2667,15 +2816,20 @@ function renderMonitorTable() {
                                         const dur = parseInt(s.duration) || 0;
                                         let deleteBtnHTML = ""; if(['mahmoud', 'ahmed'].includes(currentUser.username)) deleteBtnHTML = `<button onclick="deleteSpecificSession('${un}', '${k}')" style="background:var(--danger); border:none; color:white; border-radius:5px; padding:2px 6px; cursor:pointer; font-size:0.7rem; margin-right:5px;">حذف</button>`;
                                         
-                                        const startTimeDisplay = s.startTime ? `<span style="color:#aaa; margin-left:8px;">[${s.startTime}]</span>` : "";
+                                        const timeDisplay = s.startTime ?
+                                            `<span style="color:#aaa; margin-left:8px; font-size:0.7rem;">
+                                                (خروج: ${s.startTime} | رجوع: ${s.endTime || '---'})
+                                            </span>` : "";
 
                                         grouped[s.date].acts.push(`
-    <div style="font-size:0.75rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; background:rgba(255,255,255,0.02); padding:5px; border-radius:4px; border-right:3px solid var(--primary);">
-        <span>
-            ${startTimeDisplay} 
-            <b style="color:var(--primary)">${s.type}</b>: 
-            ${Math.round(dur/60)}د 
-            <small style="opacity:0.7">(${s.reason||'--'})</small>
+    <div style="font-size:0.8rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; background:rgba(255,255,255,0.03); padding:10px; border-radius:8px; border-right:4px solid var(--primary);">
+        <span style="flex:1;">
+            <b style="color:var(--primary); font-size:0.9rem;">${s.type}</b> 
+            <span style="margin:0 10px;">⬅</span>
+            ${timeDisplay}
+            <span style="margin-right:15px; color:#fff;">المدة: <b>${Math.round(dur/60)}د</b></span>
+            <br>
+            <small style="opacity:0.6; display:block; margin-top:4px;">📌 السبب: ${s.reason||'--'}</small>
         </span>
         ${deleteBtnHTML}
     </div>
@@ -2696,87 +2850,161 @@ function renderMonitorTable() {
 
                             function deleteSpecificSession(un, key) { if(!['mahmoud', 'ahmed'].includes(currentUser.username)) return; if(confirm("حذف السجل؟")) db.ref(`users/${un}/sessions/${key}`).remove().then(() => renderUserReport()); }
 
-                            window.adminStart = (un) => { 
-                                const type = adminSelectBuffer[un] || 'بريك عام', r = adminTypingBuffer[un] || 'بدء إداري';
-                                db.ref('users/'+un).update({ isOnBreak: true, breakType: type, lastStartTime: getServerTime(), lastReason: r }).then(() => triggerGlobalRefresh()); 
-                            };
-                            window.adminStop = (un) => { 
-                                const u = allUsersData[un], d = Math.floor((getServerTime() - u.lastStartTime)/1000); 
-                                db.ref('users/'+un+'/sessions').push({ 
-                                    date: getServerDateString(), 
-                                    type: u.breakType, 
-                                    reason: u.lastReason || 'إيقاف إداري', 
-                                    duration: d,
-                                    startTime: new Date(u.lastStartTime).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})
-                                }); 
-                                const up = { isOnBreak: false, lastStartTime: null, lastEndedTime: getServerTime(), lastEndedType: u.breakType }; 
-                                if(u.breakType==='بريك عام' || u.breakType==='طوارئ') { up.usedSeconds = (u.usedSeconds||0)+d; if(u.breakType==='طوارئ') up.emRequest = null; } 
-                                else if(u.breakType==='صلاة') up.prayerSeconds = (u.prayerSeconds||0)+d; 
-                                else if(u.breakType==='ميتنج') { up.meetingSeconds = (u.meetingSeconds||0)+d; up.meetingRequest = null; }
-                                else if(u.breakType==='متابع عميل') up.followUpSeconds = (u.followUpSeconds||0)+d; 
-                                else if(u.breakType==='استراحة VIP') up.vipSeconds = (u.vipSeconds||0)+d;
-                                db.ref('users/'+un).update(up).then(() => triggerGlobalRefresh()); 
-                            };
+                            window.adminStart = (un) => {
+                                const type = adminSelectBuffer[un] || 'بريك عام';
+                                const reason = adminTypingBuffer[un] || 'بدء إداري';
 
-                            function startMyBreak(t) {
-                                if(currentUser.isOnBreak) return;
+                                // 1. جلب بيانات كل الموظفين للفحص
+                                db.ref('users').once('value', (snapshot) => {
+                                    const allUsers = snapshot.val() || {};
+                                    const targetUser = allUsers[un];
+                                    const groupName = targetUser.groupName;
 
-                                db.ref('users').get().then((snapshot) => {
-                                    const latestUsers = snapshot.val() || {};
-                                    const myData = latestUsers[currentUser.username];
+                                    // 2. إذا كان الموظف ينتمي لمجموعة، نفحص زملاءه
+                                    if (groupName) {
+                                        const activeInGroup = Object.values(allUsers).filter(u =>
+                                            u.isOnBreak &&
+                                            u.groupName === groupName &&
+                                            u.username !== un && // استثناء الموظف نفسه
+                                            (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')
+                                        );
 
-                                    // التحقق من الزحمة في البريك العام
-                                    const currentActiveBreaks = Object.values(latestUsers).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
-
-                                    // ---[ منطق الصلاة الجديد ]---
-                                    if (t === 'صلاة') {
-                                        // 1. هل الصلاة مفتوحة؟
-                                        if (!isPrayerWindowOpen) {
-                                            alert("🛑 وقت الصلاة مغلق حالياً، انتظر المشرف.");
-                                            return;
-                                        }
-
-                                        // 2. هل عنده رصيد؟
-                                        const limit = myData.prayerLimit || 0; // الرصيد اللي المشرف نزله
-                                        const used = myData.prayerSeconds || 0; // اللي الموظف استهلكه
-
-                                        // الشرط: لو المستهلك أكبر من أو يساوي الرصيد
-                                        if (used >= limit) {
-                                            // الرسالة دي هتوضحلك السبب بالظبط
-                                            alert(`⚠️ رصيد الصلاة انتهى!\n\nالمستخدم: ${Math.floor(used/60)} دقيقة\nالرصيد الكلي: ${Math.floor(limit/60)} دقيقة\n\nانتظر المشرف يزود الوقت.`);
-                                            return;
+                                        if (activeInGroup.length >= 1) {
+                                            const outPerson = activeInGroup[0].realName || activeInGroup[0].username;
+                                            alert(`⚠️ تنبيه للمشرف: \n الموظف (${un}) ينتمي لمجموعة (${groupName})، والزميل (${outPerson}) في الخارج بالفعل. \n لا يسمح بخروج اثنين من نفس المجموعة.`);
+                                            return; // إيقاف العملية
                                         }
                                     }
-                                    // -----------------------------
 
-                                    // التحقق من زحمة البريك العام
-                                    if ((t === 'بريك عام' || t === 'طوارئ' || t === 'ميتنج' || t === 'متابع عميل') && currentActiveBreaks >= maxBreaksAllowed) {
-                                        return alert(`العدد مكتمل حالياً في البريك، انتظر قليلاً..`);
-                                    }
-
-                                    let r = document.getElementById('breakReason').value.trim();
-                                    if(t === 'صلاة') r = "صلاة";
-
-                                    db.ref('users/'+currentUser.username).update({
+                                    // 3. إذا كان الطريق خالياً أو الموظف بلا مجموعة، يتم التنفيذ
+                                    db.ref('users/'+un).update({
                                         isOnBreak: true,
-                                        breakType: t,
+                                        breakType: type,
                                         lastStartTime: getServerTime(),
-                                        lastReason: r || t
-                                    }).catch(error => {
-                                        console.error('Error starting break:', error);
-                                        alert('حدث خطأ في بدء النشاط، حاول مرة أخرى.');
-                                    });
+                                        lastReason: reason
+                                    }).then(() => triggerGlobalRefresh());
                                 });
-                            }
+                            };
+window.adminStop = (un) => {
+    const u = allUsersData[un], d = Math.floor((getServerTime() - u.lastStartTime)/1000);
+    db.ref('users/'+un+'/sessions').push({
+        date: getServerDateString(),
+        type: u.breakType,
+        reason: u.lastReason || 'إيقاف إداري',
+        duration: d,
+        startTime: new Date(u.lastStartTime).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'}),
+        // أضف هذا السطر الجديد بالأسفل
+        endTime: getServerTimeString()
+    });
+    const up = { isOnBreak: false, lastStartTime: null, lastEndedTime: getServerTime(), lastEndedType: u.breakType };
+    if(u.breakType==='بريك عام' || u.breakType==='طوارئ') { up.usedSeconds = (u.usedSeconds||0)+d; if(u.breakType==='طوارئ') up.emRequest = null; }
+    else if(u.breakType==='صلاة') up.prayerSeconds = (u.prayerSeconds||0)+d;
+    else if(u.breakType==='ميتنج') { up.meetingSeconds = (u.meetingSeconds||0)+d; up.meetingRequest = null; }
+    else if(u.breakType==='متابع عميل') up.followUpSeconds = (u.followUpSeconds||0)+d;
+    else if(u.breakType==='استراحة VIP') up.vipSeconds = (u.vipSeconds||0)+d;
+    db.ref('users/'+un).update(up).then(() => {
+        // إزالة الموظف من الطابور إذا كان في صلاة وهو الأول
+        if(u.breakType === 'صلاة') {
+            db.ref('settings/prayerQueue').once('value', (snap) => {
+                let queue = snap.val() || [];
+                // إذا كان الموظف الذي أوقفه المشرف هو الأول في الطابور
+                if (queue[0] === un) {
+                    queue.shift();
+                    db.ref('settings/prayerQueue').set(queue);
+                }
+            });
+        }
+        triggerGlobalRefresh();
+    });
+};
+
+function startMyBreak(t) {
+    if (currentUser.isOnBreak) return;
+
+    // --- 1. منطق الصلاة (طابور + حد عددي) ---
+    if (t === 'صلاة') {
+        const myIndex = (currentQueue || []).indexOf(currentUser.username);
+
+        // فحص هل الموظف في الطابور؟
+        if (myIndex === -1) {
+            alert("🛑 اسمك غير موجود في طابور الصلاة حالياً!");
+            return;
+        }
+
+        // فحص هل ترتيبه يسمح له بالخروج بناءً على الرقم اللي حدده المدير (maxPrayersAllowed)
+        if (myIndex >= maxPrayersAllowed) {
+            alert(`⏳ لم يحن دورك بعد! أنت رقم (${myIndex + 1}) والمدير يسمح بخروج أول (${maxPrayersAllowed}) فقط.`);
+            return;
+        }
+
+        // فحص الحد العددي الفعلي (كم واحد بره حالياً)
+        const activePrayers = Object.values(allUsersData).filter(u => u.isOnBreak && u.breakType === 'صلاة').length;
+        if (activePrayers >= maxPrayersAllowed) {
+            alert(`🛑 عذراً.. الحد المسموح به حالياً هو (${maxPrayersAllowed}) موظف، وهناك بالفعل ${activePrayers} بالخارج.`);
+            return;
+        }
+    }
+
+    // --- 2. منطق البريك العام (جروبات + حد عام) ---
+    if (t === 'بريك عام' || t === 'طوارئ') {
+        // فحص المجموعة
+        if (currentUser.groupName) {
+            const inMyGroup = Object.values(allUsersData).filter(u =>
+                u.groupName === currentUser.groupName && u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')
+            );
+            if (inMyGroup.length >= 1) {
+                alert(`🛑 مجموعتك (${currentUser.groupName}) فيها زميل بالخارج فعلاً.`);
+                return;
+            }
+        }
+        // فحص الحد العام للبريك
+        const totalInBreak = Object.values(allUsersData).filter(u => u.isOnBreak && (u.breakType === 'بريك عام' || u.breakType === 'طوارئ')).length;
+        if (totalInBreak >= maxBreaksAllowed) {
+            alert(`🛑 حد البريك العام ممتلئ حالياً (${maxBreaksAllowed}/${maxBreaksAllowed}).`);
+            return;
+        }
+    }
+
+    // --- 3. التنفيذ الفعلي (بما في ذلك VIP الذي يتخطى القيود) ---
+    let reason = document.getElementById('breakReason').value.trim() || t;
+
+    db.ref('users/' + currentUser.username).update({
+        isOnBreak: true,
+        breakType: t,
+        lastStartTime: getServerTime(),
+        lastReason: reason
+    }).then(() => {
+        // إذا بدأ صلاة، نتأكد من وجود رصيد الـ 15 دقيقة الافتراضي
+        if (t === 'صلاة' && (!currentUser.prayerLimit || currentUser.prayerLimit === 0)) {
+            db.ref('users/' + currentUser.username).update({ prayerLimit: 900 });
+        }
+        console.log(`بدأ ${t} بنجاح`);
+    }).catch(err => {
+        alert("خطأ في الاتصال بقاعدة البيانات");
+    });
+}
+
+// دالة مساعدة لتنفيذ بدء البريك
+function executeBreakStart(t) {
+    let r = document.getElementById('breakReason').value.trim();
+    db.ref('users/'+currentUser.username).update({
+        isOnBreak: true,
+        breakType: t,
+        lastStartTime: getServerTime(),
+        lastReason: r || t
+    });
+}
 
                             function stopMyBreak() {
                                 const u = currentUser, d = Math.floor((getServerTime() - u.lastStartTime)/1000);
-                                db.ref('users/'+u.username+'/sessions').push({ 
-                                    date: getServerDateString(), 
-                                    type: u.breakType, 
-                                    reason: u.lastReason, 
+                                db.ref('users/'+u.username+'/sessions').push({
+                                    date: getServerDateString(),
+                                    type: u.breakType,
+                                    reason: u.lastReason,
                                     duration: d,
-                                    startTime: new Date(u.lastStartTime).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})
+                                    startTime: new Date(u.lastStartTime).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'}),
+                                    // أضف هذا السطر الجديد بالأسفل
+                                    endTime: getServerTimeString()
                                 });
                                 const up = { isOnBreak: false, lastStartTime: null, lastEndedTime: getServerTime(), lastEndedType: u.breakType };
                                 if(u.breakType==='بريك عام' || u.breakType==='طوارئ') { up.usedSeconds = (u.usedSeconds||0)+d; if(u.breakType === 'طوارئ') up.emRequest = null; }
@@ -2790,6 +3018,28 @@ function renderMonitorTable() {
                                 else if(u.breakType==='متابع عميل') up.followUpSeconds = (u.followUpSeconds||0)+d;
                                 else if(u.breakType==='استراحة VIP') up.vipSeconds = (u.vipSeconds||0)+d;
                                 db.ref('users/'+u.username).update(up); document.getElementById('breakReason').value = "";
+                            }
+
+                            function updatePrayerButton() {
+                                const prayerBtn = document.querySelector("button[onclick=\"startMyBreak('صلاة')\"]");
+                                if (!prayerBtn || !currentUser || currentUser.role === 'admin') return;
+
+                                const myIndex = (currentQueue || []).indexOf(currentUser.username);
+
+                                // التعديل هنا: الزرار يفتح لو ترتيبك (0 أو 1 أو 2...) أصغر من الليميت اللي الإدارة حددته
+                                const isMyTurn = (myIndex !== -1 && myIndex < maxPrayersAllowed);
+
+                                if (!isMyTurn) {
+                                    prayerBtn.disabled = true;
+                                    prayerBtn.style.opacity = "0.5";
+                                    prayerBtn.style.cursor = "not-allowed";
+                                    prayerBtn.title = "انتظر دورك في الطابور أو وصول العدد المسموح";
+                                } else {
+                                    prayerBtn.disabled = false;
+                                    prayerBtn.style.opacity = "1";
+                                    prayerBtn.style.cursor = "pointer";
+                                    prayerBtn.title = "تفضل، دورك متاح الآن";
+                                }
                             }
 
                             function updateUserUI() {
@@ -2856,11 +3106,27 @@ function renderMonitorTable() {
                                     }
                                 }
 
+                                // --- إضافة منطق الطابور (الحالة والتحكم) ---
+                                // --- التعديل الجديد لمنطق الطابور المرن ---
+                                let queuePosition = (currentQueue || []).indexOf(u.username);
+                                // الموظف مسموح له لو ترتيبه في الطابور أقل من العدد المسموح به (مثلاً 0 و 1 لو الحد 2)
+                                let isMyTurn = true;
+                                if (currentQueue && currentQueue.length > 0) {
+                                    if (queuePosition !== -1) {
+                                        // لو الموظف جوه الطابور، بنشوف هل ترتيبه ضمن المسموح بهم؟
+                                        isMyTurn = (queuePosition < maxPrayersAllowed);
+                                    } else {
+                                        // لو مش في الطابور خالص، الأزرار تفتح عادي (إلا لو المدير قافل الصلاة)
+                                        isMyTurn = true;
+                                    }
+                                }
+
                                 // --- ثانياً: تحديث العداد والوقت ---
                                 if (u.isOnBreak) {
                                     welcomeArea.innerHTML = "";
                                     msg.innerText = "أنت الآن في: " + u.breakType;
                                     const elap = Math.floor((getServerTime() - u.lastStartTime) / 1000);
+                                    document.getElementById('elapsedTime').innerText = `مدة البريك الحالية: ${formatTime(elap)}`;
 
                                     // لو الموظف في حالة صلاة
                                     if (u.breakType === 'صلاة') {
@@ -2925,10 +3191,23 @@ function renderMonitorTable() {
                                     timerText.innerText = rem >= 0 ? formatTime(rem) : "00:00";
                                     timerText.style.color = "white";
                                     lbl.innerText = "رصيد البريك";
-                                    msg.innerText = "متاح للعمل ✅";
                                     let pct = (rem / allowTotal); if (pct < 0) pct = 0;
                                     circle.style.strokeDashoffset = circ - (pct * circ);
                                     circle.style.stroke = "var(--primary)";
+
+                                    const myIndex = (currentQueue || []).indexOf(u.username);
+                                    const isMyTurn = (myIndex !== -1 && myIndex < maxPrayersAllowed); // التعديل هنا
+
+                                    if (isMyTurn) {
+                                        msg.innerText = "🌟 دورك الآن في الصلاة! تفضل بالبدء ✅";
+                                        msg.style.color = "#10b981";
+                                    } else if (myIndex >= maxPrayersAllowed) {
+                                        msg.innerText = `⏳ أنت رقم (${myIndex + 1}) في الطابور.. انتظر خروج زملائك`;
+                                        msg.style.color = "#f59e0b";
+                                    } else {
+                                        msg.innerText = "متاح للعمل ✅";
+                                        msg.style.color = "var(--success)";
+                                    }
 
                                     if (u.lastEndedTime && (Math.floor((getServerTime() - u.lastEndedTime) / 1000) < 300)) {
                                         const userTitle = u.funTitle || 'يا بطل';
@@ -2958,6 +3237,9 @@ function renderMonitorTable() {
                                         welcomeArea.innerHTML = `<div class="welcome-back-msg" style="animation: bounceIn 0.8s ease;">${customMsg}</div>`;
                                     } else welcomeArea.innerHTML = "";
                                 }
+
+                                // تحديث زر الصلاة
+                                updatePrayerButton();
                             }
 
                             function formatTime(s) { if(isNaN(s) || s < 0) return "00:00"; return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`; }
@@ -3292,8 +3574,9 @@ window.handlePerm = (un, app) => {
                                 const funTitle = document.getElementById('newFunTitle').value.trim();
                                 const profilePic = document.getElementById('newProfilePic').value.trim();
                                 const isCS = document.getElementById('isCSAgent').checked; // القيمة الجديدة
+                                const group = document.getElementById('newUserGroup').value;
                                 if(!un || !pass || !name) return alert("أكمل البيانات");
-                                const data = { realName: name, password: pass, allowance: allow, isVIP: isVIP, canFollowUp: follow, isCS: isCS, funTitle: funTitle, profilePic: profilePic };
+                                const data = { realName: name, password: pass, allowance: allow, isVIP: isVIP, canFollowUp: follow, isCS: isCS, funTitle: funTitle, profilePic: profilePic, groupName: group };
                                 if (editingUserKey) db.ref('users/' + editingUserKey).update(data).then(() => { triggerGlobalRefresh(); alert("تم التحديث"); resetUserForm(); });
                                 else db.ref('users/' + un).set({...data, username: un, role: 'employee', usedSeconds: 0, prayerSeconds: 0, meetingSeconds: 0, followUpSeconds: 0, vipSeconds: 0, isOnBreak: false}).then(() => { triggerGlobalRefresh(); alert("تمت الإضافة"); resetUserForm(); });
                             };
@@ -3306,9 +3589,10 @@ window.handlePerm = (un, app) => {
                                 document.getElementById('newProfilePic').value = u.profilePic || '';
                                 document.getElementById('isVIPUser').checked = !!u.isVIP; document.getElementById('canFollowUp').checked = !!u.canFollowUp;
                                 document.getElementById('isCSAgent').checked = !!u.isCS;
+                                document.getElementById('newUserGroup').value = u.groupName || '';
                             };
                             
-                            function resetUserForm() { editingUserKey = null; document.getElementById('newUsername').disabled = false; document.getElementById('newUsername').value = ''; document.getElementById('newRealName').value = ''; document.getElementById('newPassword').value = ''; document.getElementById('newAllowance').value = '45'; document.getElementById('newFunTitle').value = ''; document.getElementById('newProfilePic').value = ''; }
+                            function resetUserForm() { editingUserKey = null; document.getElementById('newUsername').disabled = false; document.getElementById('newUsername').value = ''; document.getElementById('newRealName').value = ''; document.getElementById('newPassword').value = ''; document.getElementById('newAllowance').value = '45'; document.getElementById('newFunTitle').value = ''; document.getElementById('newProfilePic').value = ''; document.getElementById('newUserGroup').value = ''; }
                             function deleteUser(un) {
                                 if(confirm("حذف الموظف؟")) {
                                     logDeletionAction("حذف موظف بالكامل", un, "تم مسح حساب الموظف من السيستم");
@@ -4413,6 +4697,33 @@ function clearAllArchiveLogs() {
                                 startGlobalTimer();
                             }
 
+                            function updateQueueSelect() {
+                                const sel = document.getElementById('queueUserSelect');
+                                if (!sel) return;
+
+                                // تصفير القائمة قبل وضع الأسماء
+                                let h = '<option value="">-- اختر الموظف لإضافته للدور --</option>';
+
+                                // تحويل الكائن إلى مصفوفة للفحص
+                                const usersArray = Object.values(allUsersData);
+
+                                console.log("عدد الموظفين الموجودين:", usersArray.length); // للتأكد من وجود بيانات
+
+                                usersArray.forEach(u => {
+                                    // الشروط: أن يكون له اسم مستخدم + ليس مديراً + ليس موجوداً بالفعل في الطابور
+                                    if (u.username && !MANAGERS.includes(u.username) && !currentQueue.includes(u.username)) {
+                                        h += `<option value="${u.username}">${u.realName || u.username}</option>`;
+                                    }
+                                });
+
+                                sel.innerHTML = h;
+                            }
+
+                            if (currentUser && currentUser.role === 'admin') {
+                                updateQueueSelect(); // تحديث قائمة الأسماء في الطابور
+                                renderQueueUI();     // رسم الطابور إذا كان هناك أسماء
+                            }
+
                             function autoCreateAdmins() {
                                 const admins = {
                                     'mahmoud': { realName: 'محمود', password: '112233' },
@@ -4683,8 +4994,155 @@ async function exportProfessionalExcel() {
     saveAs(new Blob([buffer]), `ELSHAMAA_Report_${startDateVal}.xlsx`);
 }
 
-                            // استدعيها مرة واحدة فقط أو اتركها لضمان عدم ضياع الحسابات
+// استدعيها مرة واحدة فقط أو اتركها لضمان عدم ضياع الحسابات
                             autoCreateAdmins();
+
+// 1. تحديث قائمة الموظفين للاختيار عند فتح تبويب المجموعات
+function updateMembersSelector() {
+    const list = document.getElementById('membersSelectorList');
+    list.innerHTML = '';
+    Object.values(allUsersData).forEach(u => {
+        if(u.username && !MANAGERS.includes(u.username)) {
+            list.innerHTML += `
+                <label style="display: block; margin-bottom: 8px; cursor: pointer;">
+                    <input type="checkbox" name="groupMember" value="${u.username}"> 
+                    👤 ${u.realName || u.username}
+                </label>`;
+        }
+    });
+}
+
+function createNewGroup() {
+    const groupName = document.getElementById('groupNameInput').value.trim();
+    const selectedMembers = Array.from(document.querySelectorAll('input[name="groupMember"]:checked')).map(el => el.value);
+
+    if(!groupName) return alert("يرجى كتابة اسم المجموعة");
+    if(selectedMembers.length === 0) return alert("يرجى اختيار أعضاء للمجموعة");
+
+    const groupId = db.ref('groups').push().key;
+
+    // 1. حفظ بيانات المجموعة في نود المجموعات
+    const groupData = {
+        name: groupName,
+        members: selectedMembers
+    };
+
+    const updates = {};
+    updates['groups/' + groupId] = groupData;
+
+    // 2. تحديث كل موظف مختار وإضافة اسم المجموعة لملفه الشخصي
+    selectedMembers.forEach(username => {
+        updates['users/' + username + '/groupName'] = groupName;
+    });
+
+    db.ref().update(updates).then(() => {
+        alert("تم إنشاء مجموعة (" + groupName + ") وربط الموظفين بها بنجاح ✅");
+        document.getElementById('groupNameInput').value = "";
+        // إعادة تحميل قائمة الاختيار
+        updateMembersSelector();
+    });
+}
+
+// 3. رسم جدول المجموعات وتحديث حالتها (متاحة أو في بريك)
+function renderGroupsTable() {
+    db.ref('groups').on('value', (snap) => {
+        const groups = snap.val() || {};
+        allGroupsData = groups; // Update global groups data
+        const tbody = document.getElementById('groupsManagementBody');
+        tbody.innerHTML = '';
+
+        Object.keys(groups).forEach(id => {
+            const g = groups[id];
+
+            // فحص حالة المجموعة: هل أي عضو فيها حالياً في البريك؟
+            let groupInBreak = false;
+            let membersDisplay = [];
+
+            g.members.forEach(mUsername => {
+                const user = allUsersData[mUsername];
+                if(user) {
+                    membersDisplay.push(user.realName || user.username);
+                    if(user.isOnBreak) groupInBreak = true;
+                }
+            });
+
+            // الحالة الآن (Checkbox أخضر أو نص أحمر)
+            const statusCell = groupInBreak
+                ? `<span style="color: #f43f5e; font-weight: bold;">🚫 المجموعة في بريك</span>`
+                : `<span style="color: #10b981;">✅ المجموعة متاحة <input type="checkbox" checked disabled></span>`;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td style="color: #6366f1; font-weight: bold;">${g.name}</td>
+                    <td>${membersDisplay.join(' - ')}</td>
+                    <td>${statusCell}</td>
+                    <td>
+                        <button onclick="deleteGroup('${id}')" class="btn btn-danger btn-sm">حذف</button>
+                    </td>
+                </tr>`;
+        });
+    });
+}
+
+// 4. حذف مجموعة
+function deleteGroup(id) {
+    if(confirm("هل تريد حذف هذه المجموعة؟")) {
+        db.ref('groups/' + id).remove();
+    }
+}
+
+// دالة لتحديث قائمة المجموعات المنسدلة في شاشة إضافة الموظفين
+function updateAllGroupSelects() {
+    db.ref('groups').on('value', (snap) => {
+        const groups = snap.val() || {};
+        const groupSelect = document.getElementById('newUserGroup'); // تأكد أن هذا هو ID القائمة
+
+        if (!groupSelect) return;
+
+        // الاحتفاظ بالقيمة المختارة حالياً قبل التحديث
+        const currentVal = groupSelect.value;
+
+        let h = '<option value="">-- اختر المجموعة --</option>';
+        Object.values(groups).forEach(g => {
+            // إضافة كل مجموعة موجودة في الجدول كخيار في القائمة
+            h += `<option value="${g.name}">${g.name}</option>`;
+        });
+
+        groupSelect.innerHTML = h;
+
+        // إعادة القيمة المختارة لو كانت موجودة
+        if (currentVal) groupSelect.value = currentVal;
+    });
+}
+
+// هذه الدالة تراقب نود المجموعات في Firebase وتحدث القائمة فوراً عند أي تغيير
+function syncGroupsToSelect() {
+    db.ref('groups').on('value', (snap) => {
+        const groups = snap.val() || {};
+        const groupSelect = document.getElementById('newUserGroup');
+        
+        if (!groupSelect) return;
+
+        // حفظ القيمة المختارة حالياً عشان متتمسحش أثناء التحديث
+        const currentSelection = groupSelect.value;
+
+        // تنظيف القائمة والبدء من جديد
+        let optionsHTML = '<option value="">-- اختر المجموعة --</option>';
+        
+        Object.values(groups).forEach(g => {
+            // هنا بنضيف اسم المجموعة اللي في الجدول للقائمة
+            optionsHTML += `<option value="${g.name}">${g.name}</option>`;
+        });
+
+        groupSelect.innerHTML = optionsHTML;
+        
+        // إعادة اختيار المجموعة لو كانت محددة مسبقاً
+        if (currentSelection) groupSelect.value = currentSelection;
+    });
+}
+
+// استدعاء الدالة لتبدأ العمل فور فتح الصفحة
+syncGroupsToSelect();
 
 function exportMonthlyExcel() {
     const startDateVal = document.getElementById('filterStartDate').value;
@@ -4813,6 +5271,9 @@ async function exportProfessionalExcel() {
     // 2. إنشاء ورقة التفاصيل (التفنيدة)
     const detailsSheet = workbook.addWorksheet('سجل التفاصيل اليومي', { views: [{ rightToLeft: true }] });
 
+    // 3. إنشاء ورقة تقرير الموظفين المفصل
+    const employeeReportSheet = workbook.addWorksheet('تقرير الموظفين المفصل', { views: [{ rightToLeft: true }] });
+
     let summaryRows = [];
     let detailedLogs = [];
     let totals = { days: 0, ox: 0, ot: 0, perm: 0, cash: 0, count: 0 };
@@ -4832,11 +5293,11 @@ async function exportProfessionalExcel() {
                     const durMin = Math.round(dur/60);
 
                     detailedLogs.push([
-                        s.date, 
-                        uS.name, 
-                        s.type, 
-                        durMin + " دقيقة", 
-                        (s.startTime ? "بداية: " + s.startTime + " | " : "") + (s.reason || "بدون سبب")
+                        s.date,
+                        uS.name,
+                        s.type,
+                        durMin + " دقيقة",
+                        (s.startTime ? "بداية: " + s.startTime : "") + (s.endTime ? " | نهاية: " + s.endTime : "") + " | " + (s.reason || "بدون سبب")
                     ]);
 
                     if (s.type === 'بريك عام' || s.type === 'طوارئ') daily[s.date] = (daily[s.date] || 0) + dur;
@@ -4941,11 +5402,140 @@ async function exportProfessionalExcel() {
     detailsSheet.getColumn(4).width = 15;
     detailsSheet.getColumn(5).width = 45;
 
+    // --- تنسيق ورقة تقرير الموظفين المفصل ---
+    employeeReportSheet.mergeCells('A1:E1');
+    employeeReportSheet.getCell('A1').value = 'تقرير الموظفين المفصل (مثل الواجهة)';
+    employeeReportSheet.getCell('A1').font = { size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+    employeeReportSheet.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF7C3AED' } };
+    employeeReportSheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'center' };
+
+    let currentRow = 3;
+
+    Object.values(allUsersData).forEach(u => {
+        if (!u.username || MANAGERS.includes(u.username)) return;
+
+        // عنوان الموظف
+        employeeReportSheet.mergeCells(`A${currentRow}:E${currentRow}`);
+        employeeReportSheet.getCell(`A${currentRow}`).value = `الموظف: ${u.realName || u.username}`;
+        employeeReportSheet.getCell(`A${currentRow}`).font = { size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+        employeeReportSheet.getCell(`A${currentRow}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF374151' } };
+        employeeReportSheet.getCell(`A${currentRow}`).alignment = { horizontal: 'center' };
+        currentRow++;
+
+        if (u.sessions) {
+            const grouped = {};
+            Object.keys(u.sessions).forEach(k => {
+                const s = u.sessions[k], cD = s.date.split('/').reverse().join('-');
+                if (cD >= startDateVal && cD <= endDateVal) {
+                    if(!grouped[s.date]) grouped[s.date] = { acts: [] };
+                    const timeDisplay = s.startTime ? `[${s.startTime}${s.endTime ? ' - ' + s.endTime : ''}]` : "";
+                    grouped[s.date].acts.push(`${timeDisplay} ${s.type}: ${Math.round(parseInt(s.duration)/60)}د (${s.reason||'--'})`);
+                }
+            });
+
+            Object.keys(grouped).sort((a,b)=>b.localeCompare(a)).forEach(d => {
+                employeeReportSheet.addRow([d, '', grouped[d].acts.join(' | '), '', '']);
+                currentRow++;
+            });
+        }
+
+        // صف فارغ بين الموظفين
+        currentRow++;
+    });
+
+    employeeReportSheet.getColumn(1).width = 15;
+    employeeReportSheet.getColumn(2).width = 10;
+    employeeReportSheet.getColumn(3).width = 60;
+    employeeReportSheet.getColumn(4).width = 10;
+    employeeReportSheet.getColumn(5).width = 10;
+
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), `ELSHAMAA_Report_${startDateVal}.xlsx`);
 }
 </script>
 <!-- مكتبة SheetJS لتصدير الإكسيل -->
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<script>
+// Prayer Queue Functions
+function populateQueueSelect() {
+    const select = document.getElementById('queueUserSelect');
+    select.innerHTML = '<option value="">-- اختر الموظف لإضافته للدور --</option>';
+    Object.values(allUsersData).forEach(u => {
+        if (!MANAGERS.includes(u.username)) {
+            const option = document.createElement('option');
+            option.value = u.username;
+            option.textContent = u.realName || u.username;
+            select.appendChild(option);
+        }
+    });
+}
+
+function addToQueue() {
+    const select = document.getElementById('queueUserSelect');
+    const username = select.value;
+    if (!username) return alert('اختر موظف أولاً');
+    db.ref('settings/prayerQueue').once('value', (snap) => {
+        let queue = snap.val() || [];
+        if (queue.includes(username)) return alert('الموظف موجود بالفعل في الدور');
+        queue.push(username);
+        db.ref('settings/prayerQueue').set(queue).then(() => {
+            renderPrayerQueue();
+            select.value = '';
+        });
+    });
+}
+
+function clearQueue() {
+    if (!confirm('هل تريد تصفير الدور بالكامل؟')) return;
+    db.ref('settings/prayerQueue').set([]).then(() => {
+        renderPrayerQueue();
+    });
+}
+
+function renderPrayerQueue() {
+    const display = document.getElementById('queueDisplay');
+    db.ref('settings/prayerQueue').once('value', (snap) => {
+        const queue = snap.val() || [];
+        display.innerHTML = '';
+        queue.forEach((username, index) => {
+            const u = allUsersData[username];
+            if (u) {
+                const card = document.createElement('div');
+                card.style.cssText = 'background: rgba(99, 102, 241, 0.2); border: 1px solid var(--primary); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; align-items: center; min-width: 80px;';
+                card.innerHTML = `
+                    <img src="${u.profilePic || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--primary);">
+                    <div style="font-size: 0.8rem; text-align: center; margin-top: 5px;">${u.realName || u.username}</div>
+                    <div style="font-size: 0.7rem; color: var(--accent);">#${index + 1}</div>
+                    <button onclick="removeFromQueue(${index})" style="background: var(--danger); border: none; color: white; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 0.7rem; margin-top: 5px;">×</button>
+                `;
+                display.appendChild(card);
+            }
+        });
+    });
+}
+
+function removeFromQueue(index) {
+    db.ref('settings/prayerQueue').once('value', (snap) => {
+        let queue = snap.val() || [];
+        queue.splice(index, 1);
+        db.ref('settings/prayerQueue').set(queue).then(() => {
+            renderPrayerQueue();
+        });
+    });
+}
+
+// Listener for prayerQueue
+db.ref('settings/prayerQueue').on('value', () => {
+    if (currentUser && currentUser.role === 'admin') renderPrayerQueue();
+});
+
+// الاستماع لتغييرات الطابور وتحديث المتغير العالمي
+db.ref('settings/prayerQueue').on('value', (snap) => {
+    currentQueue = snap.val() || [];
+    if (currentUser && currentUser.role !== 'admin') {
+        updateUserUI(); // تحديث أزرار وحالة الموظف فوراً
+    }
+});
+</script>
 </body>
 </html> 
