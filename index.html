@@ -1,4 +1,4 @@
-    
+محتوى الملف:    
                         <!DOCTYPE html>
                         <html lang="ar" dir="rtl">
                         <head>
@@ -1898,6 +1898,10 @@
                                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; max-width: 800px; margin: 0 auto;">
                                             <div style="border:1px solid var(--success); padding:8px; border-radius:15px;"><h4>🍔 بريك</h4><button onclick="startMyBreak('بريك عام')" class="btn btn-success" style="width:100%">ابدأ</button></div>
                                             <div style="border:1px solid var(--primary); padding:8px; border-radius:15px;"><h4>🕌 صلاة</h4><button onclick="startMyBreak('صلاة')" class="btn btn-primary" style="width:100%">ابدأ</button></div>
+                                            <!-- زر عرض سجل الترتيب للموظف -->
+                                            <button onclick="openPrayerCloudHistory()" class="btn btn-dark btn-sm" style="margin-top:10px; width:100%; border:1px solid var(--primary); background: rgba(99, 102, 241, 0.1);">
+                                                📜 عرض جدول ترتيب الصلاة
+                                            </button>
                                             <div style="border:1px solid var(--warning); padding:8px; border-radius:15px;"><h4>🤝 ميتنج</h4><div id="meetingStatusArea"><button onclick="sendMeetingRequest()" class="btn btn-warning" style="width:100%">طلب</button></div></div>
                                             <div id="followUpCard" class="hidden" style="border:1px solid #10b981; padding:8px; border-radius:15px;"><h4>📞 متابع</h4><button onclick="startMyBreak('متابع عميل')" class="btn btn-success" style="width:100%; background:#10b981;">ابدأ</button></div>
                                             <div style="border:1px solid var(--danger); padding:8px; border-radius:15px;"><h4>🚨 طوارئ</h4><div id="emStatusArea"><button onclick="sendEmRequest()" class="btn btn-danger" style="width:100%">طلب</button></div></div>
@@ -3505,13 +3509,11 @@ function saveCurrentOrderToHistory() {
     });
 }
 
-// 2. دالة عرض السجل السحابي
 function openPrayerCloudHistory() {
     document.getElementById('prayerCloudModal').classList.remove('hidden');
     const content = document.getElementById('cloudHistoryContent');
     content.innerHTML = '<p style="text-align:center; color:var(--primary);">جاري جلب السجلات من السحابة... ☁️</p>';
 
-    // جلب آخر 30 سجل
     db.ref('prayer_cloud_history').limitToLast(30).once('value', (snap) => {
         const data = snap.val();
         if (!data) {
@@ -3520,30 +3522,33 @@ function openPrayerCloudHistory() {
         }
 
         content.innerHTML = '';
-        // تحويل الكائن لمصفوفة وعكسها (الأحدث فوق)
         const entries = Object.entries(data).reverse();
 
         entries.forEach(([key, record]) => {
             let listItems = '';
             record.order.forEach(item => {
                 listItems += `
-                    <div style="display:flex; justify-content:space-between; padding:5px 10px; background:rgba(255,255,255,0.03); margin-bottom:3px; border-radius:5px; border-right:3px solid ${item.position === 1 ? '#10b981' : '#6366f1'}">
-                        <span style="font-size:0.85rem; font-weight:bold;">#${item.position} - ${item.realName}</span>
-                        ${item.position === 1 ? '<span style="color:#10b981; font-size:0.7rem;">(الأول)</span>' : ''}
+                    <div style="display:flex; justify-content:space-between; padding:8px 12px; background:rgba(255,255,255,0.03); margin-bottom:5px; border-radius:8px; border-right:4px solid ${item.position === 1 ? '#10b981' : '#6366f1'}">
+                        <span style="font-size:0.9rem; font-weight:bold;">#${item.position} - ${item.realName}</span>
+                        ${item.position === 1 ? '<span style="color:#10b981; font-size:0.75rem; font-weight:bold;">(الأول)</span>' : ''}
                     </div>
                 `;
             });
 
+            // هنا التعديل: زر الحذف يظهر للمديرين فقط
+            const deleteBtn = (currentUser.role === 'admin') ? 
+                `<div style="text-align:left; margin-top:5px;">
+                    <button onclick="deleteCloudPrayerLog('${key}')" style="background:none; border:none; color:#ef4444; font-size:0.7rem; cursor:pointer;">🗑 حذف السجل</button>
+                </div>` : '';
+
             content.innerHTML += `
-                <div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); border-radius:15px; padding:12px; margin-bottom:15px;">
-                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#aaa; border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:8px;">
+                <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:15px; padding:15px; margin-bottom:15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#aaa; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px; margin-bottom:10px;">
                         <span>📅 ${record.dateDisplay}</span>
                         <span>👤 المشرف: ${record.admin}</span>
                     </div>
                     <div>${listItems}</div>
-                    <div style="text-align:left; margin-top:5px;">
-                        <button onclick="deleteCloudPrayerLog('${key}')" style="background:none; border:none; color:#ef4444; font-size:0.7rem; cursor:pointer;">🗑 حذف السجل</button>
-                    </div>
+                    ${deleteBtn}
                 </div>
             `;
         });
