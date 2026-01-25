@@ -1781,6 +1781,10 @@
                                     <span id="profileNotificationBadge" class="hidden" style="position:absolute; top:-8px; left:-8px; background:red; color:white; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">0</span>
                                 </button>
 
+                                <button onclick="openPrayerCloudHistory()" class="btn btn-dark btn-sm" style="margin-top:8px; border:1px solid #6366f1;">
+                                    ☁️ سجل الصلوات السحابي
+                                </button>
+
                                 <button onclick="openFilePassModal(false)" class="btn btn-dark btn-sm" style="margin-top:8px; border:1px solid var(--accent); color:var(--accent);">
                                     🔑 تغيير قفل الملف
                                 </button>
@@ -3545,10 +3549,10 @@ function openPrayerCloudHistory() {
                 `;
             });
 
-            // هنا التعديل: زر الحذف يظهر للمديرين فقط
-            const deleteBtn = (currentUser.role === 'admin') ? 
+            // التعديل هنا: زر الحذف يظهر لمحمود فقط حصرياً
+            const deleteBtn = (currentUser.username === 'mahmoud') ? 
                 `<div style="text-align:left; margin-top:5px;">
-                    <button onclick="deleteCloudPrayerLog('${key}')" style="background:none; border:none; color:#ef4444; font-size:0.7rem; cursor:pointer;">🗑 حذف السجل</button>
+                    <button onclick="deleteCloudPrayerLog('${key}')" style="background:none; border:none; color:#ef4444; font-size:0.8rem; cursor:pointer; font-weight:bold;">🗑 حذف السجل النهائي</button>
                 </div>` : '';
 
             content.innerHTML += `
@@ -3567,8 +3571,19 @@ function openPrayerCloudHistory() {
 
 // 3. دالة حذف سجل صلاة (اختياري)
 function deleteCloudPrayerLog(key) {
-    if(confirm("هل تريد حذف هذا السجل من السحابة؟")) {
-        db.ref('prayer_cloud_history/' + key).remove().then(() => openPrayerCloudHistory());
+    // حماية برمجية: التأكد أن المستخدم هو محمود حصراً
+    if (currentUser.username !== 'mahmoud') {
+        alert("⛔ عذراً.. صلاحية حذف السجلات السحابية مقصورة على المدير (محمود) فقط.");
+        return;
+    }
+
+    if(confirm("هل أنت متأكد من حذف هذا الترتيب نهائياً من السحابة؟")) {
+        db.ref('prayer_cloud_history/' + key).remove()
+        .then(() => {
+            alert("تم الحذف بنجاح ✅");
+            openPrayerCloudHistory(); // تحديث القائمة
+        })
+        .catch(err => alert("خطأ في الحذف: " + err.message));
     }
 }
 
