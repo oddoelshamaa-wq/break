@@ -1474,13 +1474,12 @@
 
                                 <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 25px; padding: 20px; margin-bottom: 25px;">
                                     <h4 style="margin:0 0 15px 0; color:var(--danger)">📢 إرسال رسالة عاجلة للموظفين</h4>
-                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
-                                        <select id="broadcastTarget" multiple style="height: 100px; width: 100%;">
-                                            <option value="all" selected>📣 للجميع</option>
-                                        </select>
-                                        <textarea id="broadcastInput" style="height: 100px; width: 100%; resize: none;" placeholder="اكتب نص التنبيه هنا..."></textarea>
-                                        <textarea id="broadcastReason" style="height: 100px; width: 100%; resize: none;" placeholder="سبب التنبيه (مثل: اخباري)"></textarea>
-                                    </div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+        <select id="broadcastTarget" multiple style="height: 100px; width: 100%;">
+            <option value="all" selected>📣 للجميع</option>
+        </select>
+        <textarea id="broadcastInput" style="height: 100px; width: 100%; resize: none;" placeholder="اكتب نص التنبيه هنا..."></textarea>
+    </div>
                                     <button onclick="sendBroadcast()" class="btn btn-danger" style="width:100%; margin-top: 10px;">إرسال التنبيه الآن 🚀</button>
                                     <div id="adminBroadcastLog" style="max-height: 80px; overflow-y: auto; margin-top: 10px; font-size: 0.75rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px;"></div>
                                 </div>
