@@ -760,6 +760,16 @@
                                     display: none !important;
                                 }
 
+                                /* تنسيق خيارات القائمة المنسدلة */
+                                #broadcastTarget option {
+                                    padding: 8px;
+                                    border-bottom: 1px solid rgba(255,255,255,0.05);
+                                }
+                                #broadcastTarget option:checked {
+                                    background: var(--primary) !important;
+                                    color: white;
+                                }
+
                                 /* تأثير الوميض للزر عند وجود تنبيه */
                                 @keyframes glow-red {
                                     0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); border-color: #ef4444; }
@@ -1472,17 +1482,55 @@
                                     </div>
                                 </div>
 
-                                <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 25px; padding: 20px; margin-bottom: 25px;">
-                                    <h4 style="margin:0 0 15px 0; color:var(--danger)">📢 إرسال رسالة عاجلة للموظفين</h4>
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
-        <select id="broadcastTarget" multiple style="height: 100px; width: 100%;">
-            <option value="all" selected>📣 للجميع</option>
-        </select>
-        <textarea id="broadcastInput" style="height: 100px; width: 100%; resize: none;" placeholder="اكتب نص التنبيه هنا..."></textarea>
+<!-- لوحة التميز والأداء المحدثة -->
+<div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(6, 182, 212, 0.1)); border: 2px solid var(--primary); border-radius: 30px; padding: 25px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h4 style="margin:0; color:var(--primary); font-size: 1.2rem; font-weight: 900;">🏆 لوحة التميز والأداء (رفع سكرين شوت)</h4>
+        <div id="perfPreviewContainer" style="display:none; position:relative; animation: bounceIn 0.5s;">
+            <img id="perfPreviewImg" src="" style="width:50px; height:50px; border-radius:12px; border:2px solid var(--accent); object-fit:cover; box-shadow: 0 0 15px var(--accent);">
+            <button onclick="clearPerfImg()" style="position:absolute; top:-8px; right:-8px; background:#ef4444; color:white; border-radius:50%; width:22px; height:22px; border:none; cursor:pointer; font-weight:bold; font-size:12px;">×</button>
+        </div>
     </div>
-                                    <button onclick="sendBroadcast()" class="btn btn-danger" style="width:100%; margin-top: 10px;">إرسال التنبيه الآن 🚀</button>
-                                    <div id="adminBroadcastLog" style="max-height: 80px; overflow-y: auto; margin-top: 10px; font-size: 0.75rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px;"></div>
-                                </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px; margin-bottom: 15px;">
+        <!-- اختيار الموظفين -->
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 0.75rem; color: #aaa; margin-right: 10px;">🎯 اختيار الموظف/المجموعة:</label>
+            <select id="broadcastTarget" multiple class="form-control-glass" style="height: 100px; padding: 10px; font-size: 0.85rem; background: rgba(0,0,0,0.5);">
+                <option value="all" selected>📣 للجميع</option>
+            </select>
+        </div>
+        
+        <!-- نص الأداء -->
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 0.75rem; color: #aaa; margin-right: 10px;">📝 وصف التميز أو التنبيه:</label>
+            <textarea id="broadcastInput" class="form-control-glass" style="height: 100px; resize: none; font-size: 1rem; line-height: 1.5; background: rgba(0,0,0,0.5);" placeholder="اكتب هنا.. مثلاً: 'عاش يا بطل على أعلى مكالمة النهاردة!'"></textarea>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 12px;">
+        <!-- زر رفع السكرين -->
+        <label class="btn btn-dark" style="flex: 1; background: #1e293b; border: 1px solid var(--primary); display: flex; align-items: center; justify-content: center; gap: 10px; height: 50px; font-size: 0.9rem; cursor: pointer;">
+            📷 إرفاق سكرين شوت
+            <input type="file" id="performanceImgInput" accept="image/*" style="display:none" onchange="previewPerformanceImg(this)">
+        </label>
+
+        <!-- زر الإرسال -->
+        <button id="btnSendPerformance" onclick="uploadAndSendPerformance()" class="btn btn-primary" style="flex: 2; height: 50px; font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--accent)) !important;">
+            🚀 نشر في السجل وبث مباشر
+        </button>
+    </div>
+</div>
+
+
+
+
+
+                                <!-- زر جديد لفتح معرض الصور (للمشرف والموظف) -->
+                                <button onclick="openPerformanceGallery()" class="btn btn-vip" style="width: 100%; margin-bottom: 20px; background: linear-gradient(45deg, #06b6d4, #6366f1); color: white;">
+                                    🖼️ فتح معرض سجل الأداء (الصور السابقة)
+                                </button>
 
                                 <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 20px;">
                                     <button onclick="switchAdminTab('monitor')" class="btn btn-primary btn-sm">📡 المراقبة</button>
@@ -1519,17 +1567,22 @@
                                     </div>
 
                                     <!-- لوحة التحكم في وقت الصلاة (زر واحد للجميع) -->
-                                    <div style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 20px; border: 1px solid var(--success); margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
-                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 20px; border: 1px solid var(--success); margin-bottom: 20px;">
+                                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
                                             <span style="font-size: 1.8rem;">🕌</span>
                                             <div>
                                                 <h4 style="margin:0; color: var(--success);">وقت الصلاة</h4>
                                                 <small style="color: #ccc;">اضغط عند الأذان لإضافة 15 دقيقة للجميع</small>
                                             </div>
                                         </div>
-                                        <button onclick="addPrayerTimeGlobal()" class="btn btn-success" style="font-weight:bold; padding: 10px 20px;">
-                                            ➕ توزيع 15 دقيقة للكل
-                                        </button>
+                                        <div style="display: flex; gap: 10px;">
+                                            <button onclick="addPrayerTimeGlobal()" class="btn btn-success" style="font-weight:bold; padding: 10px 20px;">
+                                                ➕ توزيع 15 دقيقة للكل
+                                            </button>
+                                            <button onclick="forceResetPrayerOnly()" class="btn btn-dark btn-sm" style="border:1px solid #ef4444; color:#ef4444;">
+                                                🔄 تصفير عدادات الصلاة (حل المشاكل)
+                                            </button>
+                                        </div>
                                     </div>
 
 
@@ -1789,6 +1842,10 @@
                                     🔑 تغيير قفل الملف
                                 </button>
 
+                                <button onclick="openPerformanceGallery()" class="btn btn-dark btn-sm" style="margin-top:8px; border:1px solid #06b6d4; color:#06b6d4;">
+                                    🖼️ معرض التميز والأداء
+                                </button>
+
                                 <div class="header-wrapper">
 
                                     <!-- الجزء اليمين: الصورة والبيانات -->
@@ -1916,17 +1973,13 @@
                                             <div style="border:1px solid var(--success); padding:8px; border-radius:15px;"><h4>🍔 بريك</h4><button onclick="startMyBreak('بريك عام')" class="btn btn-success" style="width:100%">ابدأ</button></div>
                                             <div style="border:1px solid var(--primary); padding:8px; border-radius:15px;"><h4>🕌 صلاة</h4><button onclick="startMyBreak('صلاة')" class="btn btn-primary" style="width:100%">ابدأ</button></div>
 
-                                            <div style="border:1px solid var(--warning); padding:8px; border-radius:15px;"><h4>🤝 ميتنج</h4><div id="meetingStatusArea"><button onclick="sendMeetingRequest()" class="btn btn-warning" style="width:100%">طلب</button></div></div>
-                                            <div id="followUpCard" class="hidden" style="border:1px solid #10b981; padding:8px; border-radius:15px;"><h4>📞 متابع</h4><button onclick="startMyBreak('متابع عميل')" class="btn btn-success" style="width:100%; background:#10b981;">ابدأ</button></div>
+    <div style="border:1px solid var(--warning); padding:8px; border-radius:15px;"><h4>🤝 ميتنج</h4><div id="meetingStatusArea"><button onclick="sendMeetingRequest()" class="btn btn-warning" style="width:100%">طلب</button></div></div>
+
+    <div id="followUpCard" class="hidden" style="border:1px solid #10b981; padding:8px; border-radius:15px;"><h4>📞 متابع</h4><button onclick="startMyBreak('متابع عميل')" class="btn btn-success" style="width:100%; background:#10b981;">ابدأ</button></div>
                                             <div style="border:1px solid var(--danger); padding:8px; border-radius:15px;"><h4>🚨 طوارئ</h4><div id="emStatusArea"><button onclick="sendEmRequest()" class="btn btn-danger" style="width:100%">طلب</button></div></div>
                                         </div>
 
-                                        <!-- زر منطقة الألعاب - يظهر للموظف -->
-                                        <div id="gamesButtonArea" class="hidden" style="margin-top: 15px;">
-                                            <button onclick="openGamesModal()" class="btn" style="background: linear-gradient(45deg, #ff00cc, #3333ff); width: 100%; padding: 15px; font-size: 1.2rem; border-radius: 20px; box-shadow: 0 0 20px rgba(255, 0, 204, 0.3);">
-                                                🎮 منطقة الألعاب (تسلية البريك) 🕹️
-                                            </button>
-                                        </div>
+                          
 
                                         <!-- قسم الإضافي -->
                                         <div style="margin-top: 25px; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 25px; border: 1px solid var(--glass-border); max-width: 500px; margin: 25px auto 0;">
@@ -2559,9 +2612,9 @@ function activateSystemAndSound() {
                                         let targets = Array.isArray(b.target) ? b.target : [b.target];
                                         if(targets.includes(currentUser.username)) forMe = true;
                                     }
-                                    
+
                                     if(forMe) {
-                                        showBroadcastOverlay(b.message);
+                                        showBroadcastOverlay(b);
                                         // الصوت يعمل هنا فقط عند إضافة "ابن" جديد للنود وليس عند الحذف
                                         if (soundActive) document.getElementById('broadcastSound').play().catch(e => {});
                                     }
@@ -2599,9 +2652,9 @@ function activateSystemAndSound() {
                                                 if(targets.includes(currentUser.username)) forMe = true;
                                             }
 
-                                            if(forMe) {
-                                                showBroadcastOverlay(b.message); // هذه الدالة الآن تشغل الصوت تلقائياً
-                                            }
+                                    if(forMe) {
+                                        showBroadcastOverlay(b); // هذه الدالة الآن تشغل الصوت تلقائياً
+                                    }
                                         }
                                     }
                                 }
@@ -2611,22 +2664,23 @@ function activateSystemAndSound() {
                                 const data = cachedBroadcasts;
                                 const employeeLog = document.getElementById('employeeBroadcastLog');
                                 const adminLog = document.getElementById('adminBroadcastLog');
-                                
-                                if(employeeLog) employeeLog.innerHTML = ""; 
+
+                                if(employeeLog) employeeLog.innerHTML = "";
                                 if(adminLog) adminLog.innerHTML = "";
-                                
+
                                 // ترتيب الرسايل من الأحدث للأقدم
                                 const keys = Object.keys(data).sort((a, b) => data[b].timestamp - data[a].timestamp);
-                                
+
                                 keys.forEach(key => {
                                     const b = data[key];
                                     const timeStr = new Date(b.timestamp).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'});
-                                    
+
                                     // رسم لوحة الإدارة (الأدمن)
+                                    const adminImageTag = b.image ? `<br><img src="${b.image}" style="width:100px; border-radius:8px; margin-top:5px; cursor:pointer;" onclick="showZoomImage('${b.image}')">` : "";
                                     if (adminLog) {
-                                        adminLog.innerHTML += `<div style="padding:4px; border-bottom:1px solid rgba(255,255,255,0.1)"><b>[${timeStr}]</b> ${b.message} <button onclick="deleteBroadcast('${key}')" style="background:none; border:none; color:red; cursor:pointer;">🗑</button></div>`;
+                                        adminLog.innerHTML += `<div style="padding:4px; border-bottom:1px solid rgba(255,255,255,0.1)"><b>[${timeStr}]</b> ${b.message} ${adminImageTag} <button onclick="deleteBroadcast('${key}')" style="background:none; border:none; color:red; cursor:pointer;">🗑</button></div>`;
                                     }
-                                    
+
                                     // رسم لوحة الموظف (بشرط يكون مسجل دخول)
                                     if (employeeLog && currentUser) {
                                         let isForMe = (!b.target || b.target === 'all');
@@ -2634,9 +2688,10 @@ function activateSystemAndSound() {
                                             let targets = Array.isArray(b.target) ? b.target : (typeof b.target === 'object' ? Object.values(b.target) : [b.target]);
                                             if(targets.includes(currentUser.username)) isForMe = true;
                                         }
-                                        if(isForMe) {
-                                            employeeLog.innerHTML += `<div class="broadcast-item"><b>[${timeStr}]</b> ${b.message}</div>`;
-                                        }
+    if(isForMe) {
+        const imageTag = b.image ? `<br><img src="${b.image}" style="width:100px; border-radius:8px; margin-top:5px; cursor:pointer;" onclick="showZoomImage('${b.image}')">` : "";
+        employeeLog.innerHTML += `<div class="broadcast-item"><b>[${timeStr}]</b> ${b.message || ''} ${imageTag}</div>`;
+    }
                                     }
                                 });
                             }
@@ -2656,25 +2711,64 @@ function activateSystemAndSound() {
                                 updatePrayerButton();
                             });
 
-                            function sendBroadcast() {
+                            // معاينة الصورة قبل الإرسال
+                            function previewBroadcastImg(input) {
+                                if (input.files && input.files[0]) {
+                                    const reader = new FileReader();
+                                    reader.onload = function(e) {
+                                        document.getElementById('brImgPreview').src = e.target.result;
+                                        document.getElementById('brImgPreviewContainer').style.display = 'block';
+                                    }
+                                    reader.readAsDataURL(input.files[0]);
+                                }
+                            }
+
+                            // إزالة الصورة المختارة
+                            function removeBrImg() {
+                                document.getElementById('broadcastImageInput').value = "";
+                                document.getElementById('brImgPreviewContainer').style.display = 'none';
+                            }
+
+                            // إرسال البث مع الصورة
+                            async function sendBroadcastWithImage() {
                                 const msg = document.getElementById('broadcastInput').value.trim();
+                                const imageFile = document.getElementById('broadcastImageInput').files[0];
                                 const select = document.getElementById('broadcastTarget');
+                                const sendBtn = document.getElementById('sendBrBtn');
+
                                 let selectedValues = Array.from(select.selectedOptions).map(option => option.value);
                                 if (selectedValues.length === 0) selectedValues = ['all'];
-                                if (!msg) return alert("اكتب رسالة أولاً");
-                                // إضافة صوت تنبيه فوري للأدمن عند الإرسال
-                                if (soundActive) {
-                                    document.getElementById('notifySound').play().catch(e => {});
-                                }
-                                db.ref('broadcasts').push({
-                                    message: msg,
-                                    timestamp: getServerTime(),
-                                    sender: currentUser.username,
-                                    target: selectedValues.includes('all') ? 'all' : selectedValues
-                                });
 
-                                document.getElementById('broadcastInput').value = "";
-                                alert("تم إرسال التنبيه بنجاح ✅");
+                                if (!msg && !imageFile) return alert("اكتب رسالة أو ارفع صورة");
+
+                                // تغيير حالة الزر
+                                sendBtn.disabled = true;
+                                sendBtn.innerHTML = "⏳ جاري الرفع والإرسال...";
+
+                                try {
+                                    let imageUrl = "";
+                                    if (imageFile) {
+                                        imageUrl = await uploadToCloudinary(imageFile); // استخدام دالة الرفع الموجودة لديك
+                                    }
+
+                                    db.ref('broadcasts').push({
+                                        message: msg,
+                                        image: imageUrl,
+                                        timestamp: getServerTime(),
+                                        sender: currentUser.username,
+                                        target: selectedValues.includes('all') ? 'all' : selectedValues
+                                    });
+
+                                    // إعادة ضبط الحقول
+                                    document.getElementById('broadcastInput').value = "";
+                                    removeBrImg();
+                                    alert("تم إرسال الإعلان بنجاح ✅");
+                                } catch (e) {
+                                    alert("حدث خطأ أثناء الرفع");
+                                } finally {
+                                    sendBtn.disabled = false;
+                                    sendBtn.innerHTML = "إرسال التنبيه الآن 🚀";
+                                }
                             }
 
                             function setPrayerWindow(status) {
@@ -2687,43 +2781,29 @@ function activateSystemAndSound() {
 }
 
                             function addPrayerTimeGlobal() {
-    if(!confirm("إضافة 15 دقيقة رصيد صلاة للجميع؟")) return;
+                                if(!confirm("توزيع 15 دقيقة صلاة للكل؟")) return;
 
-    db.ref('users').once('value', (snapshot) => {
-        const users = snapshot.val();
-        if (!users) return;
+                                db.ref('users').once('value', (snap) => {
+                                    const users = snap.val();
+                                    const updates = {};
+                                    const timestamp = getServerTime();
 
-        const updates = {};
-        const maxLimit = 2700; // حد أقصى 45 دقيقة
+                                    Object.keys(users).forEach(un => {
+                                        if(!MANAGERS.includes(un)) {
+                                            updates[`users/${un}/prayerLimit`] = 900; // 15 دقيقة
+                                            updates[`users/${un}/prayerSeconds`] = 0;
+                                            // إضافة سجل صغير للمتابعة (اختياري)
+                                            updates[`users/${un}/lastPrayerDistribution`] = timestamp;
+                                        }
+                                    });
 
-        Object.keys(users).forEach(key => {
-            if (!MANAGERS.includes(key)) {
-                let currentLimit = parseInt(users[key].prayerLimit || 0);
-                if (currentLimit < maxLimit) {
-                    let newLimit = currentLimit + 900; // إضافة 15 دقيقة
-                    if (newLimit > maxLimit) newLimit = maxLimit;
-                    updates[`users/${key}/prayerLimit`] = newLimit;
-                }
-            }
-        });
+                                    updates['settings/prayerOpen'] = true;
 
-        // تشغيل الزر تلقائياً عند توزيع الوقت
-        updates['settings/prayerOpen'] = true;
-
-        // إرسال رسالة بسيطة (اختياري: إذا أردت أن تكون صامتة تماماً احذف السطور التالية)
-        const bKey = db.ref('broadcasts').push().key;
-        updates[`broadcasts/${bKey}`] = {
-            message: "تم تحديث رصيد الصلاة (إضافة 15 دقيقة) 🕌",
-            timestamp: getServerTime(),
-            sender: currentUser.username,
-            target: 'all'
-        };
-
-        db.ref().update(updates).then(() => {
-            alert("تم التوزيع بنجاح ✅");
-        });
-    });
-}
+                                    db.ref().update(updates).then(() => {
+                                        alert("🚀 تم توزيع الرصيد على الجميع بنجاح. يمكنك الآن رؤية العداد المحدث في الأعلى.");
+                                    });
+                                });
+                            }
 
                             function deleteBroadcast(key) {
     if(confirm("هل تريد حذف هذا التنبيه؟ (سيختفي من السجل ولن يصل إشعار للموظفين)")) {
@@ -2731,28 +2811,141 @@ function activateSystemAndSound() {
         db.ref('broadcasts/' + key).remove();
     }
 }
-function showBroadcastOverlay(msg) {
+function showBroadcastOverlay(data) {
     const overlay = document.getElementById('broadcastOverlay');
     const msgText = document.getElementById('broadcastMsgText');
     const sound = document.getElementById('broadcastSound');
 
-    msgText.innerText = msg;
+    // بناء المحتوى: صورة + نص
+    let contentHtml = "";
+    if (data.image) {
+        contentHtml += `<img src="${data.image}" style="max-width:100%; border-radius:20px; margin-bottom:20px; border:3px solid #6366f1; box-shadow:0 0 30px rgba(99, 102, 241, 0.5); cursor:pointer;" onclick="showZoomImage('${data.image}')">`;
+    }
+    contentHtml += `<h2 style="color:white; margin-bottom:10px;">${data.message || 'تنبيه إداري جديد'}</h2>`;
+    contentHtml += `<p style="color:#06b6d4; font-size:0.9rem;">بواسطة: ${data.sender || 'الإدارة'}</p>`;
+
+    msgText.innerHTML = contentHtml;
     overlay.style.display = 'flex';
 
     if (soundActive && sound) {
-        sound.muted = false; // إلغاء الكتم
-        sound.currentTime = 0; // البدء من البداية
-        sound.volume = 1.0;    // التأكد من أن الصوت بأعلى درجة
-        
-        let playPromise = sound.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(error => {
-                console.log("المتصفح منع الصوت: يرجى التفاعل مع الصفحة أولاً.");
-            });
-        }
+        sound.currentTime = 0;
+        sound.play().catch(e => console.log("Sound blocked"));
     }
 }
                             function acknowledgeBroadcast() { document.getElementById('broadcastOverlay').style.display = 'none'; const s = document.getElementById('broadcastSound'); s.pause(); s.currentTime = 0; }
+
+                            // 1. معاينة الصورة
+                            function previewPerformanceImg(input) {
+                                if (input.files && input.files[0]) {
+                                    const reader = new FileReader();
+                                    reader.onload = (e) => {
+                                        document.getElementById('perfPreviewImg').src = e.target.result;
+                                        document.getElementById('perfPreviewContainer').style.display = 'block';
+                                    };
+                                    reader.readAsDataURL(input.files[0]);
+                                }
+                            }
+
+                            function clearPerfImg() {
+                                document.getElementById('performanceImgInput').value = "";
+                                document.getElementById('perfPreviewContainer').style.display = 'none';
+                            }
+
+                            // 2. الرفع إلى Cloudinary والإرسال
+                            async function uploadAndSendPerformance() {
+                                const file = document.getElementById('performanceImgInput').files[0];
+                                const text = document.getElementById('performanceInput').value.trim();
+                                const btn = document.getElementById('btnSendPerformance');
+                                const target = Array.from(document.getElementById('performanceTarget').selectedOptions).map(o => o.value);
+
+                                if (!file && !text) return alert("يرجى اختيار صورة أو كتابة نص!");
+
+                                btn.disabled = true;
+                                btn.innerHTML = "⏳ جاري الرفع لـ Cloudinary...";
+
+                                try {
+                                    let imageUrl = "";
+                                    if (file) {
+                                        // استخدام دالة الرفع الموجودة في كودك الأصلي
+                                        imageUrl = await uploadToCloudinary(file);
+                                    }
+
+                                    const data = {
+                                        message: text || "",
+                                        image: imageUrl, // الرابط اللي راجع من كلوديناري
+                                        timestamp: getServerTime(),
+                                        sender: currentUser.realName || currentUser.username,
+                                        target: targets
+                                    };
+
+                                    // الحفظ في Firebase (سيظهر كبث فوري وسيُحفظ في السجل)
+                                    await db.ref('performance').push(data);
+                                    await db.ref('broadcasts').push(data);
+
+                                    alert("تم رفع الصورة وإرسالها للسجل بنجاح! ✅");
+                                    document.getElementById('performanceInput').value = "";
+                                    clearPerfImg();
+
+                                } catch (e) {
+                                    console.error(e);
+                                    alert("فشل الرفع، تأكد من إعدادات Cloudinary");
+                                } finally {
+                                    btn.disabled = false;
+                                    btn.innerHTML = "🚀 إرسال للأرشيف والبث";
+                                }
+                            }
+
+                            // 3. فتح معرض الصور وجلب البيانات
+function openPerformanceGallery() {
+    const modal = document.getElementById('performanceGalleryModal');
+    const grid = document.getElementById('galleryGrid');
+
+    if(!modal || !grid) return alert("خطأ في تعريف حاوية المعرض");
+
+    // إظهار النافذة
+    modal.classList.remove('hidden');
+    grid.innerHTML = '<p style="color:#06b6d4; text-align:center; grid-column: 1 / -1; padding: 100px; font-size:1.2rem; animation:pulse 1.5s infinite;">⏳ جاري فحص سجل الصور...</p>';
+
+    // سحب البيانات من Firebase (نود البث)
+    db.ref('broadcasts').once('value', (snap) => {
+        const data = snap.val();
+
+        if(!data) {
+            grid.innerHTML = '<p style="color:#666; text-align:center; grid-column: 1 / -1; padding: 100px;">لا توجد صور في السجل حالياً 📂</p>';
+            return;
+        }
+
+        grid.innerHTML = ""; // تصفير المحتوى
+        let hasAnyImages = false;
+
+        // ترتيب الصور من الأحدث للأقدم
+        const keys = Object.keys(data).sort((a, b) => data[b].timestamp - data[a].timestamp);
+
+        keys.forEach(key => {
+            const b = data[key];
+
+            // التأكد من أن المنشور يحتوي على صورة مرفوعة على كلوديناري
+            if(b.image && b.image.includes('cloudinary')) {
+                hasAnyImages = true;
+
+                grid.innerHTML += `
+                    <div class="gallery-item" style="background:#0f172a; border-radius:20px; overflow:hidden; border:1px solid rgba(255,255,255,0.05); transition:0.3s; position:relative; aspect-ratio:1/1; cursor:pointer;" onclick="showZoomImage('${b.image}')">
+                        <img src="${b.image}" style="width:100%; height:100%; object-fit:cover; transition:0.5s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+
+                        <div style="position:absolute; bottom:0; left:0; width:100%; background:linear-gradient(transparent, rgba(0,0,0,0.9)); padding:12px; pointer-events:none;">
+                            <div style="color:#06b6d4; font-size:0.8rem; font-weight:bold;">👤 ${b.sender || 'Admin'}</div>
+                            <div style="color:#888; font-size:0.7rem;">📅 ${new Date(b.timestamp).toLocaleDateString('ar-EG')}</div>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        if (!hasAnyImages) {
+            grid.innerHTML = '<p style="color:#666; text-align:center; grid-column: 1 / -1; padding: 100px;">السجل يحتوي على نصوص فقط.. لا توجد صور 🖼️</p>';
+        }
+    });
+}
 
 db.ref('settings/limits').on('value', (snap) => {
     const limits = snap.val() || { breaks: 3, prayers: 2 };
@@ -3256,6 +3449,10 @@ function renderMonitorTable() {
         // تنبيه الأكسدة
         const alertClass = (u.isOnBreak && u.breakType==='بريك عام' && rem < 300 && rem > 0) ? 'وضع-التنبيه' : '';
 
+        const prayerCreditStatus = u.prayerLimit > 0
+            ? `<small style="color:#10b981; display:block;">(رصيد: ${formatTime(u.prayerLimit)}) ✅</small>`
+            : `<small style="color:#64748b; display:block;">(لا يوجد رصيد) ⚪</small>`;
+
         tbody.innerHTML += `
             <tr class="${alertClass}" style="${rowStyle}">
                 <td style="text-align:right;">
@@ -3275,20 +3472,34 @@ function renderMonitorTable() {
                 </td>
                 <td>${statusCell}<br><small>${u.lastReason || ''}</small></td>
                 <td><span id="rem_${u.username}" style="font-weight:bold; font-size:1.1rem; color:${rem>=0?'white':'var(--danger)'}">${rem>=0?formatTime(rem):'-'+formatTime(Math.abs(rem))}</span></td>
-                <td><span id="pray_${u.username}">${formatTime(lp)}</span><br><small>متبع: <span id="follow_${u.username}">${formatTime(lf)}</span></small></td>
+                <td><span id="pray_${u.username}">${formatTime(lp)}</span><br>${prayerCreditStatus}<small>متبع: <span id="follow_${u.username}">${formatTime(lf)}</span></small></td>
                 <td><span id="meet_${u.username}">${formatTime(lm)}</span><br><small>VIP: <span id="vip_${u.username}">${formatTime(lv)}</span></small></td>
                 <td>${ctrl}</td>
             </tr>`;
+    });
+
+    // حساب إحصائيات الصلاة
+    let usersWithCredit = 0; // اللي استلموا الـ 15 دقيقة
+    let usersFinishedPrayer = 0; // اللي خلصوا صلاتهم
+
+    Object.values(allUsersData).forEach(u => {
+        if (u.username && !MANAGERS.includes(u.username)) {
+            if (u.prayerLimit > 0) usersWithCredit++;
+            if (u.prayerCountToday > 0) usersFinishedPrayer++;
+        }
     });
 
     // تحديث شريط الحالة العلوي
     const statusDisplay = document.getElementById('statusCountersDisplay');
     if(statusDisplay) {
         statusDisplay.innerHTML = `
-            <span style="color:#10b981; margin-left:15px;">🟢 متواجد: ${onlineCount}</span>
-            <span style="color:#64748b; margin-left:15px;">⚫ غير متصل: ${totalCount - onlineCount}</span>
-            <span style="border-right:2px solid #555; padding-right:15px;">🍔 بريك: (${actB}/${maxBreaksAllowed})</span>
-            <span>🕌 صلاة: (${actP}/${maxPrayersAllowed})</span>
+            <div style="display:flex; gap:15px; flex-wrap:wrap; justify-content:center;">
+                <span style="color:#10b981;">🟢 متواجد: ${onlineCount}</span>
+                <span style="color:#6366f1;">🍔 بريك: (${actB}/${maxBreaksAllowed})</span>
+                <span style="color:#06b6d4;">🕌 صلاة الآن: (${actP}/${maxPrayersAllowed})</span>
+                <span style="color:#ffd700; border-right: 2px solid #444; padding-right:15px;">📥 استلموا الرصيد: ${usersWithCredit}</span>
+                <span style="color:#f43f5e;">✅ أتموا الصلاة: ${usersFinishedPrayer}</span>
+            </div>
         `;
     }
 }
@@ -4279,49 +4490,54 @@ window.handlePerm = (un, app) => {
                                 }
                             }
                             function endDay() {
-    // التحقق من أن المستخدم مشرف (أي مشرف في القائمة)
     if (!MANAGERS.includes(currentUser.username)) {
         alert("⛔ عذراً، هذه الصلاحية خاصة بالمشرفين فقط.");
         return;
     }
 
-    if(confirm("⚠️ هل أنت متأكد من تصفير العدادات وبدء يوم جديد لجميع الموظفين؟")) {
-        logDeletionAction("تصفير اليوم (End Day)", "الكل", "قام المشرف بتصفير عدادات جميع الموظفين");
+    if(confirm("⚠️ هل أنت متأكد من تصفير العدادات (بما فيها الصلاة) وبدء يوم جديد؟")) {
+        logDeletionAction("تصفير اليوم (End Day)", "الكل", "تم تصفير كافة العدادات بما فيها رصيد الصلاة");
+
+        const updates = {};
         Object.keys(allUsersData).forEach(un => {
             if(!MANAGERS.includes(un)) {
-                db.ref('users/'+un).update({
-                    // تصفير جميع الأوقات
-                    usedSeconds: 0,
-                    prayerSeconds: 0,
-                    meetingSeconds: 0,
-                    followUpSeconds: 0,
-                    vipSeconds: 0,
-                    prayerLimit: 0,
-                    isOnBreak: false,
-                    lastStartTime: null,
-                    // مسح الطلبات المعلقة
-                    otRequest: null,
-                    emRequest: null,
-                    meetingRequest: null
-                });
+                updates[`users/${un}/usedSeconds`] = 0;
+                updates[`users/${un}/prayerSeconds`] = 0;
+                updates[`users/${un}/prayerLimit`] = 0; // تصفير رصيد الصلاة
+                updates[`users/${un}/prayerCountToday`] = 0; // تصفير عدد المرات
+                updates[`users/${un}/meetingSeconds`] = 0;
+                updates[`users/${un}/followUpSeconds`] = 0;
+                updates[`users/${un}/vipSeconds`] = 0;
+                updates[`users/${un}/isOnBreak`] = false;
+                updates[`users/${un}/lastStartTime`] = null;
+                updates[`users/${un}/otRequest`] = null;
+                updates[`users/${un}/emRequest`] = null;
+                updates[`users/${un}/meetingRequest`] = null;
+                updates[`users/${un}/permRequest`] = null;
             }
         });
-        triggerGlobalRefresh(); // تحديث الصفحات عند الجميع
-        alert("تم تقفيل اليوم بنجاح بواسطة: " + (currentUser.realName || currentUser.username));
+
+        // إغلاق زر الصلاة تلقائياً عند تقفيل اليوم
+        updates['settings/prayerOpen'] = false;
+
+        db.ref().update(updates).then(() => {
+            triggerGlobalRefresh();
+            alert("✅ تم تصفير اليوم بالكامل وتصفير رصيد الصلاة للجميع.");
+        });
     }
 }
                             function forceResetPrayerOnly() {
-                                if(!confirm("تصفير بيانات الصلاة فقط للجميع (إصلاح الأخطاء)؟")) return;
+                                if(!confirm("هل تريد تصفير بيانات الصلاة لجميع الموظفين؟ (يستخدم في حالة تعليق العدادات)")) return;
 
-                                db.ref('users').once('value', snapshot => {
-                                    const users = snapshot.val();
+                                db.ref('users').once('value', snap => {
+                                    const users = snap.val();
                                     const updates = {};
-                                    Object.keys(users).forEach(key => {
-                                        updates[`users/${key}/prayerLimit`] = 0;   // تصفير الرصيد
-                                        updates[`users/${key}/prayerSeconds`] = 0; // تصفير المستهلك
-                                        updates[`users/${key}/prayerCountToday`] = 0;
+                                    Object.keys(users).forEach(k => {
+                                        updates[`users/${k}/prayerLimit`] = 0;
+                                        updates[`users/${k}/prayerSeconds`] = 0;
+                                        updates[`users/${k}/prayerCountToday`] = 0;
                                     });
-                                    db.ref().update(updates).then(() => alert("تم تصفير عدادات الصلاة. ابدأ التوزيع من جديد الآن."));
+                                    db.ref().update(updates).then(() => alert("✅ تم تصفير كافة بيانات الصلاة. يمكنك التوزيع الآن بشكل صحيح."));
                                 });
                             }
                             function deleteAllReports() { if(!['mahmoud', 'ahmed'].includes(currentUser.username)) return; if(confirm("حذف كل الأرشيف؟")) { Object.keys(allUsersData).forEach(u => { db.ref(`users/${u}/sessions`).remove(); db.ref(`users/${u}/overtimeHistory`).remove(); }); triggerGlobalRefresh(); } }
@@ -5829,6 +6045,123 @@ async function exportProfessionalExcel() {
 // استدعيها مرة واحدة فقط أو اتركها لضمان عدم ضياع الحسابات
                             autoCreateAdmins();
 
+// معاينة الصورة عند الاختيار
+function previewPerformanceImg(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById('perfPreviewImg').src = e.target.result;
+            document.getElementById('perfPreviewContainer').style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// مسح الصورة المختارة
+function clearPerfImg() {
+    document.getElementById('performanceImgInput').value = "";
+    document.getElementById('perfPreviewContainer').style.display = 'none';
+}
+
+// الوظيفة الرئيسية: الرفع لـ Cloudinary ثم النشر
+async function uploadAndSendPerformance() {
+    const file = document.getElementById('performanceImgInput').files[0];
+    const text = document.getElementById('broadcastInput').value.trim();
+    const btn = document.getElementById('btnSendPerformance');
+    const select = document.getElementById('broadcastTarget');
+    let targets = Array.from(select.selectedOptions).map(o => o.value);
+
+    if (!file && !text) return alert("اكتب وصفاً أو ارفع صورة أولاً ⚠️");
+
+    // قفل الزرار
+    btn.disabled = true;
+    btn.innerHTML = "⏳ جاري الرفع للسحابة...";
+
+    try {
+        let imageUrl = "";
+        if (file) {
+            // استخدام دالة الرفع الموجودة أصلاً في الكود الخاص بك
+            imageUrl = await uploadToCloudinary(file);
+        }
+
+        const data = {
+            message: text || "⭐ تم تسجيل لقطة أداء مميزة!",
+            image: imageUrl,
+            timestamp: getServerTime(),
+            sender: currentUser.realName || currentUser.username,
+            target: targets.includes('all') ? 'all' : targets
+        };
+
+        // الإرسال لـ Firebase
+        await db.ref('broadcasts').push(data);
+
+        alert("تم النشر بنجاح لجميع الموظفين! 🏆");
+        
+        // تصفير الحقول
+        document.getElementById('broadcastInput').value = "";
+        clearPerfImg();
+
+    } catch (e) {
+        console.error(e);
+        alert("فشل الرفع.. تأكد من اتصال الإنترنت ❌");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = "🚀 نشر في السجل وبث مباشر";
+    }
+}
+
+// فتح معرض الصور (الأرشيف)
+function openPerformanceGallery() {
+    const modal = document.getElementById('performanceGalleryModal');
+    const grid = document.getElementById('galleryGrid');
+
+    if(!modal || !grid) return alert("خطأ في تعريف حاوية المعرض");
+
+    // إظهار النافذة
+    modal.classList.remove('hidden');
+    grid.innerHTML = '<p style="color:#06b6d4; text-align:center; grid-column: 1 / -1; padding: 100px; font-size:1.2rem; animation:pulse 1.5s infinite;">⏳ جاري فحص سجل الصور...</p>';
+
+    // سحب البيانات من Firebase (نود البث)
+    db.ref('broadcasts').once('value', (snap) => {
+        const data = snap.val();
+
+        if(!data) {
+            grid.innerHTML = '<p style="color:#666; text-align:center; grid-column: 1 / -1; padding: 100px;">لا توجد صور في السجل حالياً 📂</p>';
+            return;
+        }
+
+        grid.innerHTML = ""; // تصفير المحتوى
+        let hasAnyImages = false;
+
+        // ترتيب الصور من الأحدث للأقدم
+        const keys = Object.keys(data).sort((a, b) => data[b].timestamp - data[a].timestamp);
+
+        keys.forEach(key => {
+            const b = data[key];
+
+            // التأكد من أن المنشور يحتوي على صورة مرفوعة على كلوديناري
+            if(b.image && b.image.includes('cloudinary')) {
+                hasAnyImages = true;
+
+                grid.innerHTML += `
+                    <div class="gallery-item" style="background:#0f172a; border-radius:20px; overflow:hidden; border:1px solid rgba(255,255,255,0.05); transition:0.3s; position:relative; aspect-ratio:1/1; cursor:pointer;" onclick="showZoomImage('${b.image}')">
+                        <img src="${b.image}" style="width:100%; height:100%; object-fit:cover; transition:0.5s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+
+                        <div style="position:absolute; bottom:0; left:0; width:100%; background:linear-gradient(transparent, rgba(0,0,0,0.9)); padding:12px; pointer-events:none;">
+                            <div style="color:#06b6d4; font-size:0.8rem; font-weight:bold;">👤 ${b.sender || 'Admin'}</div>
+                            <div style="color:#888; font-size:0.7rem;">📅 ${new Date(b.timestamp).toLocaleDateString('ar-EG')}</div>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        if (!hasAnyImages) {
+            grid.innerHTML = '<p style="color:#666; text-align:center; grid-column: 1 / -1; padding: 100px;">السجل يحتوي على نصوص فقط.. لا توجد صور 🖼️</p>';
+        }
+    });
+}
+
 // 1. تحديث قائمة الموظفين للاختيار عند فتح تبويب المجموعات
 function updateMembersSelector() {
     const list = document.getElementById('membersSelectorList');
@@ -6612,5 +6945,40 @@ function resetRotation() {
     </div>
 </div>
 
+<!-- نافذة معرض الأداء -->
+<div id="performanceGalleryModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:25000; padding:20px; overflow-y:auto; backdrop-filter: blur(10px);">
+    <div style="max-width:800px; margin:30px auto; background:#1e293b; border:2px solid var(--accent); border-radius:25px; padding:25px; box-shadow: 0 0 50px rgba(0,0,0,0.5);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:15px;">
+            <h3 style="color:var(--accent); margin:0;">🏆 معرض سجل الأداء (الصور السابقة)</h3>
+            <div id="galleryGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px;">
+                <!-- الصور تظهر هنا -->
+            </div>
+            <button onclick="document.getElementById('performanceGalleryModal').classList.add('hidden')" class="btn btn-dark">إغلاق ✖</button>
+        </div>
+        <div id="performanceGalleryContent" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+            <!-- الصور ستظهر هنا -->
+        </div>
+    </div>
+</div>
+
+<!-- نافذة ألبوم صور التميز والأداء -->
+<div id="performanceGalleryModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(2, 6, 23, 0.98); z-index:99999; padding:20px; overflow-y:auto; backdrop-filter:blur(20px);">
+    <div style="max-width:1100px; margin:20px auto; background:#1e293b; border:2px solid #06b6d4; border-radius:35px; padding:30px; box-shadow:0 0 80px rgba(6, 182, 212, 0.3);">
+        
+        <!-- رأس النافذة -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:20px;">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <span style="font-size:2.5rem;">🖼️</span>
+                <h2 style="color:#06b6d4; margin:0; font-size:1.8rem; font-weight:900; letter-spacing:1px;">سجل لقطات التميز والأداء</h2>
+            </div>
+            <button onclick="document.getElementById('performanceGalleryModal').classList.add('hidden')" class="btn btn-danger" style="border-radius:15px; padding:10px 25px; font-weight:bold;">إغلاق ×</button>
+        </div>
+
+        <!-- شبكة عرض الصور (سيتم ملؤها بروابط كلوديناري) -->
+        <div id="galleryGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;">
+            <p style="color:#aaa; text-align:center; grid-column: 1 / -1; padding: 100px; font-size:1.2rem;">جاري جلب الصور من السحابة... 📥</p>
+        </div>
+    </div>
+</div>
 </body>
 </html>
