@@ -1128,6 +1128,92 @@
                                     border: 3px solid #f472b6;
                                 }
                                 #funnyToast.show { transform: translateX(-50%) translateY(20px); }
+
+/* تنسيقات مطورة لمعرض الصور */
+#galleryGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 10px;
+}
+
+.gallery-card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    aspect-ratio: 1/1;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.gallery-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    border-color: var(--accent);
+    box-shadow: 0 15px 30px rgba(6, 182, 212, 0.2);
+}
+
+.gallery-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    cursor: zoom-in;
+    transition: 0.5s;
+}
+
+.gallery-card:hover .gallery-img {
+    filter: brightness(0.7);
+}
+
+.gallery-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 15px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.9));
+    transform: translateY(20px);
+    opacity: 0;
+    transition: 0.3s;
+    pointer-events: none;
+}
+
+.gallery-card:hover .gallery-info {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* زر الحذف داخل الكارت */
+.delete-gallery-btn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(244, 63, 94, 0.9);
+    color: white;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: 0.3s;
+    opacity: 0;
+    transform: translateX(-10px);
+}
+
+.gallery-card:hover .delete-gallery-btn {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.delete-gallery-btn:hover {
+    background: #ef4444;
+    transform: scale(1.1);
+}
                             </style>
                         </head>
                         <body>
@@ -6110,56 +6196,72 @@ async function uploadAndSendPerformance() {
     }
 }
 
-// فتح معرض الصور (الأرشيف)
+// فتح معرض الأداء بتصميم جديد ودعم الحذف للمشرفين
 function openPerformanceGallery() {
     const modal = document.getElementById('performanceGalleryModal');
     const grid = document.getElementById('galleryGrid');
-
-    if(!modal || !grid) return alert("خطأ في تعريف حاوية المعرض");
-
-    // إظهار النافذة
+    
     modal.classList.remove('hidden');
-    grid.innerHTML = '<p style="color:#06b6d4; text-align:center; grid-column: 1 / -1; padding: 100px; font-size:1.2rem; animation:pulse 1.5s infinite;">⏳ جاري فحص سجل الصور...</p>';
+    grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:50px;"><div class="btn-disabled">⏳ جاري تحميل اللحظات المميزة...</div></div>';
 
-    // سحب البيانات من Firebase (نود البث)
+    const isAdmin = (currentUser.role === 'admin');
+
     db.ref('broadcasts').once('value', (snap) => {
         const data = snap.val();
-
-        if(!data) {
-            grid.innerHTML = '<p style="color:#666; text-align:center; grid-column: 1 / -1; padding: 100px;">لا توجد صور في السجل حالياً 📂</p>';
+        if (!data) {
+            grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:#aaa;">لا توجد صور في السجل حالياً 📂</p>';
             return;
         }
 
-        grid.innerHTML = ""; // تصفير المحتوى
-        let hasAnyImages = false;
-
-        // ترتيب الصور من الأحدث للأقدم
+        grid.innerHTML = "";
         const keys = Object.keys(data).sort((a, b) => data[b].timestamp - data[a].timestamp);
+        let hasImages = false;
 
         keys.forEach(key => {
             const b = data[key];
-
-            // التأكد من أن المنشور يحتوي على صورة مرفوعة على كلوديناري
-            if(b.image && b.image.includes('cloudinary')) {
-                hasAnyImages = true;
+            if (b.image && b.image.includes('cloudinary')) {
+                hasImages = true;
+                
+                // زر الحذف يظهر فقط إذا كان المستخدم مشرف
+                const deleteBtn = isAdmin ? `
+                    <button class="delete-gallery-btn" onclick="deleteFromGallery('${key}')" title="حذف هذه الصورة">
+                        🗑️
+                    </button>
+                ` : '';
 
                 grid.innerHTML += `
-                    <div class="gallery-item" style="background:#0f172a; border-radius:20px; overflow:hidden; border:1px solid rgba(255,255,255,0.05); transition:0.3s; position:relative; aspect-ratio:1/1; cursor:pointer;" onclick="showZoomImage('${b.image}')">
-                        <img src="${b.image}" style="width:100%; height:100%; object-fit:cover; transition:0.5s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-
-                        <div style="position:absolute; bottom:0; left:0; width:100%; background:linear-gradient(transparent, rgba(0,0,0,0.9)); padding:12px; pointer-events:none;">
-                            <div style="color:#06b6d4; font-size:0.8rem; font-weight:bold;">👤 ${b.sender || 'Admin'}</div>
-                            <div style="color:#888; font-size:0.7rem;">📅 ${new Date(b.timestamp).toLocaleDateString('ar-EG')}</div>
+                    <div class="gallery-card">
+                        ${deleteBtn}
+                        <img src="${b.image}" class="gallery-img" onclick="showZoomImage('${b.image}')">
+                        <div class="gallery-info">
+                            <div style="color:var(--accent); font-weight:bold; font-size:0.9rem;">👤 ${b.sender || 'Admin'}</div>
+                            <div style="color:#ccc; font-size:0.75rem; margin-top:4px;">📅 ${new Date(b.timestamp).toLocaleDateString('ar-EG')}</div>
+                            <div style="color:white; font-size:0.8rem; margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${b.message || ''}</div>
                         </div>
                     </div>
                 `;
             }
         });
 
-        if (!hasAnyImages) {
-            grid.innerHTML = '<p style="color:#666; text-align:center; grid-column: 1 / -1; padding: 100px;">السجل يحتوي على نصوص فقط.. لا توجد صور 🖼️</p>';
+        if (!hasImages) {
+            grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:#aaa;">تم العثور على نصوص فقط.. لا توجد صور 🖼️</p>';
         }
     });
+}
+
+// دالة الحذف الخاصة بالمعرض
+function deleteFromGallery(key) {
+    if (!confirm("⚠️ هل أنت متأكد من حذف هذه الصورة نهائياً من المعرض والبث؟")) return;
+
+    // تسجيل العملية في الأرشيف للرقابة
+    logDeletionAction("حذف صورة من معرض الأداء", "الكل", "قام المشرف بحذف لقطة أداء مميزة من المعرض العام");
+
+    db.ref('broadcasts/' + key).remove()
+        .then(() => {
+            alert("تم الحذف بنجاح ✅");
+            openPerformanceGallery(); // إعادة تحميل المعرض لتحديث الشكل
+        })
+        .catch(err => alert("خطأ في الحذف: " + err.message));
 }
 
 // 1. تحديث قائمة الموظفين للاختيار عند فتح تبويب المجموعات
@@ -6961,22 +7063,20 @@ function resetRotation() {
     </div>
 </div>
 
-<!-- نافذة ألبوم صور التميز والأداء -->
-<div id="performanceGalleryModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(2, 6, 23, 0.98); z-index:99999; padding:20px; overflow-y:auto; backdrop-filter:blur(20px);">
-    <div style="max-width:1100px; margin:20px auto; background:#1e293b; border:2px solid #06b6d4; border-radius:35px; padding:30px; box-shadow:0 0 80px rgba(6, 182, 212, 0.3);">
-        
-        <!-- رأس النافذة -->
+<!-- نافذة ألبوم صور التميز والأداء المحدثة -->
+<div id="performanceGalleryModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(2, 6, 23, 0.95); z-index:99999; padding:20px; overflow-y:auto; backdrop-filter:blur(15px);">
+    <div style="max-width:1200px; margin:20px auto; background:var(--bg-deep); border:1px solid var(--accent); border-radius:35px; padding:30px; box-shadow:0 0 50px rgba(6, 182, 212, 0.2);">
+
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:20px;">
             <div style="display:flex; align-items:center; gap:15px;">
-                <span style="font-size:2.5rem;">🖼️</span>
-                <h2 style="color:#06b6d4; margin:0; font-size:1.8rem; font-weight:900; letter-spacing:1px;">سجل لقطات التميز والأداء</h2>
+                <span style="font-size:2rem;">🏆</span>
+                <h2 style="color:var(--accent); margin:0; font-size:1.5rem;">معرض لقطات التميز</h2>
             </div>
-            <button onclick="document.getElementById('performanceGalleryModal').classList.add('hidden')" class="btn btn-danger" style="border-radius:15px; padding:10px 25px; font-weight:bold;">إغلاق ×</button>
+            <button onclick="document.getElementById('performanceGalleryModal').classList.add('hidden')" class="btn btn-danger" style="border-radius:15px;">إغلاق المعرض ×</button>
         </div>
 
-        <!-- شبكة عرض الصور (سيتم ملؤها بروابط كلوديناري) -->
-        <div id="galleryGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;">
-            <p style="color:#aaa; text-align:center; grid-column: 1 / -1; padding: 100px; font-size:1.2rem;">جاري جلب الصور من السحابة... 📥</p>
+        <div id="galleryGrid">
+            <!-- الصور يتم توليدها هنا بواسطة الجافاسكريبت -->
         </div>
     </div>
 </div>
