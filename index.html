@@ -1960,7 +1960,7 @@
                                 <!-- ================= لوحة الموظف ================= -->
                                 <div id="employeeSection" class="hidden">
                                     <!-- الهيدر الجديد المنظم -->
-                                    <!-- زر 2: ملف الشكاوى (الخاص بالموظف) -->
+                                    <!-- صف الأزرار العلوي للموظف المحدث -->
                                     <button id="myProfileBtn" onclick="openMyProfile()" class="btn btn-dark btn-sm" style="margin-top:8px; position:relative; border:1px solid var(--glass-border);">
                                         📂 ملفي والشكاوى
                                         <span id="profileNotificationBadge" class="hidden" style="position:absolute; top:-8px; left:-8px; background:red; color:white; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">0</span>
@@ -1976,6 +1976,11 @@
 
                                     <button onclick="openPerformanceGallery()" class="btn btn-dark btn-sm" style="margin-top:8px; border:1px solid #06b6d4; color:#06b6d4;">
                                         🖼️ معرض التميز والأداء
+                                    </button>
+
+                                    <!-- الزر الجديد الذي طلبته هنا -->
+                                    <button onclick="document.getElementById('weeklyScheduleModal').classList.remove('hidden')" class="btn btn-dark btn-sm" style="margin-top:8px; border:1px solid #10b981; color:#10b981;">
+                                        🗓️ جدول الترتيب الأسبوعي
                                     </button>
 
                                     <div class="header-wrapper">
@@ -2044,22 +2049,6 @@
                                             <div id="employeeBroadcastLog" class="log-container"></div>
                                         </div>
                                     </div>
-
-<!-- حاوية الجدول الأسبوعي للموظف بتصميم الكروت الملونة -->
-<div class="hero-card" style="padding: 25px; border: 1px solid rgba(6, 182, 212, 0.3); background: rgba(15, 23, 42, 0.5); margin-top: 20px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h3 style="color: var(--accent); margin: 0; display: flex; align-items: center; gap: 10px;">
-            <span style="background: var(--accent); color: #000; padding: 5px; border-radius: 8px;">🗓️</span>
-            جدول الترتيب الأسبوعي للصلاة
-        </h3>
-        <span style="font-size: 0.7rem; color: #64748b; background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 10px;">تحديث تلقائي ⚡</span>
-    </div>
-
-    <!-- هذا هو المكان الذي سيتم فيه رسم الجدول تلقائياً -->
-    <div id="employeeWeeklyLog" style="display: flex; flex-direction: column; gap: 12px;">
-        <p style="text-align:center; color:#555;">جاري تحميل الجدول...</p>
-    </div>
-</div>
 
                                     <!-- قسم الشركاء -->
                                     <div class="partners-section" style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 25px; padding: 20px; margin: 20px 0; text-align: center;">
@@ -6359,67 +6348,61 @@
         return user ? (user.realName || username) : username;
     }
 
-    // دالة تحديث السجل (تستدعى عند أي تغيير في البيانات)
 function updateWeeklyLogDisplays() {
     const days = ["السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
-    
-    // دالة مساعدة للحصول على اليوم الحالي (السبت=0)
+
     function getCustomDayIndex() {
-        const d = new Date().getDay(); // 0=أحد, 1=اثنين ... 6=سبت
-        const mapping = {6:0, 0:1, 1:2, 2:3, 3:4, 4:5}; 
+        const d = new Date().getDay();
+        const mapping = {6:0, 0:1, 1:2, 2:3, 3:4, 4:5};
         return mapping[d] !== undefined ? mapping[d] : -1;
     }
 
     const todayIdx = getCustomDayIndex();
 
-    // الاستماع للبيانات من Firebase
     db.ref('settings/weeklySchedule').on('value', (snap) => {
         const schedule = snap.val() || {};
-        const empLog = document.getElementById('employeeWeeklyLog');
-        
-        if (!empLog) return;
-        empLog.innerHTML = ''; // تصفير المحتوى قبل الرسم
+        // استهداف الحاوية الجديدة داخل الـ Modal
+        const modalLog = document.getElementById('weeklyModalContent');
+
+        if (!modalLog) return;
+        modalLog.innerHTML = '';
 
         days.forEach((dayName, idx) => {
             const members = schedule[idx] || [];
             const isToday = (idx === todayIdx);
-            
-            // تحويل مصفوفة الـ Usernames إلى أسماء حقيقية ملونة
+
             const namesList = members.map((un, i) => {
                 const u = allUsersData[un];
                 const name = u ? (u.realName || un) : un;
-                const isMe = (un === currentUser.username);
-                
-                // تمييز اسم الموظف الحالي بلون ذهبي وخط عريض
+                const isMe = (currentUser && un === currentUser.username);
+
                 return `<span style="
-                    color: ${isMe ? '#ffd700' : '#fff'}; 
+                    color: ${isMe ? '#ffd700' : '#fff'};
                     font-weight: ${isMe ? '900' : 'normal'};
                     background: ${isMe ? 'rgba(255, 215, 0, 0.1)' : 'transparent'};
-                    padding: 2px 6px;
-                    border-radius: 5px;
+                    padding: 4px 10px;
+                    border-radius: 8px;
                     border: ${isMe ? '1px solid #ffd700' : 'none'};
                     display: inline-block;
                     margin: 2px;
                 ">${i + 1}. ${name}</span>`;
-            }).join(' <span style="color:#444">|</span> ');
+            }).join(' <span style="color:#334155">|</span> ');
 
-            // رسم الصف الخاص بكل يوم
-            empLog.innerHTML += `
+            modalLog.innerHTML += `
                 <div style="
-                    background: ${isToday ? 'linear-gradient(90deg, rgba(6, 182, 212, 0.2) 0%, rgba(15, 23, 42, 0) 100%)' : 'rgba(255,255,255,0.02)'}; 
-                    border-right: 4px solid ${isToday ? 'var(--accent)' : '#334155'};
-                    padding: 12px 15px; 
-                    border-radius: 12px; 
-                    display: flex; 
-                    align-items: center; 
-                    gap: 20px;
-                    transition: 0.3s;
-                    ${isToday ? 'box-shadow: 0 0 15px rgba(6, 182, 212, 0.1);' : ''}
+                    background: ${isToday ? 'linear-gradient(95deg, rgba(6, 182, 212, 0.15) 0%, rgba(15, 23, 42, 0.4) 100%)' : 'rgba(255,255,255,0.02)'};
+                    border: 1px solid ${isToday ? 'var(--accent)' : 'rgba(255,255,255,0.05)'};
+                    padding: 20px;
+                    border-radius: 20px;
+                    display: flex;
+                    align-items: center;
+                    gap: 25px;
+                    ${isToday ? 'box-shadow: 0 0 20px rgba(6, 182, 212, 0.05);' : ''}
                 ">
-                    <div style="min-width: 70px; font-weight: 800; color: ${isToday ? 'var(--accent)' : '#64748b'}; font-size: 0.9rem;">
+                    <div style="min-width: 90px; font-weight: 900; color: ${isToday ? 'var(--accent)' : '#64748b'}; font-size: 1.1rem; border-left: 2px solid ${isToday ? 'var(--accent)' : '#334155'}; padding-left: 15px;">
                         ${dayName}
                     </div>
-                    <div style="font-size: 0.85rem; line-height: 1.6; color: #cbd5e1; flex: 1;">
+                    <div style="font-size: 1rem; line-height: 1.8; color: #cbd5e1; flex: 1;">
                         ${namesList || '<span style="color:#444; font-style:italic;">لا يوجد ترتيب مسجل</span>'}
                     </div>
                 </div>
@@ -7378,9 +7361,33 @@ function updateWeeklyLogDisplays() {
             </div>
 
             <div id="galleryGrid">
-                <!-- الصور يتم توليدها هنا بواسطة الجافاسكريبت -->
+            <!-- الصور يتم توليدها هنا بواسطة الجافاسكريبت -->
             </div>
         </div>
     </div>
+
+    <!-- نافذة جدول الصلاة الأسبوعي (Standalone Page) -->
+    <div id="weeklyScheduleModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:25000; padding:20px; overflow-y:auto; backdrop-filter: blur(15px);">
+        <div style="max-width:900px; margin:20px auto; background:#0f172a; border:1px solid var(--accent); border-radius:35px; padding:30px; box-shadow: 0 0 50px rgba(6, 182, 212, 0.2);">
+
+            <!-- الهيدر الخاص بالنافذة -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:20px;">
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <span style="font-size:2rem; background:var(--accent); color:#000; padding:10px; border-radius:15px;">🗓️</span>
+                    <div>
+                        <h2 style="color:var(--accent); margin:0; font-size:1.6rem;">جدول الترتيب الأسبوعي</h2>
+                        <small style="color:#64748b;">يتم تحديث الترتيب تلقائياً بناءً على إعدادات المشرف</small>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('weeklyScheduleModal').classList.add('hidden')" class="btn btn-danger" style="border-radius:15px; padding:10px 20px;">إغلاق ×</button>
+            </div>
+
+            <!-- الحاوية التي سيظهر فيها الجدول -->
+            <div id="weeklyModalContent" style="display: flex; flex-direction: column; gap: 15px;">
+                <!-- سيتم ملء البيانات هنا بواسطة JS -->
+            </div>
+        </div>
+    </div>
+
     </body>
     </html>
