@@ -1494,6 +1494,27 @@
                                 <img id="zoomedImg" src="" style="max-width:90%; max-height:90%; border-radius:10px; box-shadow:0 0 50px rgba(255,255,255,0.2);">
                             </div>
 
+                            <!-- نافذة معرض الصور الدائم -->
+                            <div id="performanceGalleryModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:99999; align-items:center; justify-content:center; backdrop-filter:blur(10px);">
+                                <div style="max-width:1000px; width:95%; height:90%; background:#1e293b; border:2px solid var(--accent); border-radius:35px; padding:30px; position:relative; overflow-y:auto;">
+
+                                    <!-- زر الإغلاق في الزاوية -->
+                                    <button onclick="document.getElementById('performanceGalleryModal').classList.add('hidden')"
+                                            style="position:absolute; top:20px; left:20px; background:#ef4444; color:white; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer; font-weight:bold; z-index:100;">
+                                        ✕
+                                    </button>
+
+                                    <div style="text-align:center; margin-bottom:30px;">
+                                        <h2 style="color:var(--accent); margin:0;">🏆 معرض سجل الأداء الدائم</h2>
+                                        <p style="color:#aaa;">الصور هنا لا تختفي عند مسح التوجيهات</p>
+                                    </div>
+
+                                    <div id="galleryGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
+                                        <!-- الصور تظهر هنا -->
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- نافذة إدخال باسورد فتح الملف (بديلة للـ prompt) -->
                             <div id="accessFileModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:17000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
                                 <div style="background:#1e293b; border:2px solid var(--primary); border-radius:20px; padding:30px; width:90%; max-width:350px; text-align:center;">
@@ -3001,7 +3022,8 @@
                                     const file = document.getElementById('performanceImgInput').files[0];
                                     const text = document.getElementById('performanceInput').value.trim();
                                     const btn = document.getElementById('btnSendPerformance');
-                                    const target = Array.from(document.getElementById('performanceTarget').selectedOptions).map(o => o.value);
+                                    const select = document.getElementById('performanceTarget');
+                                    let targets = Array.from(select.selectedOptions).map(o => o.value);
 
                                     if (!file && !text) return alert("يرجى اختيار صورة أو كتابة نص!");
 
