@@ -1577,6 +1577,16 @@
                                                 <span>🔊 الصوت: مفعل</span>
                                             </button>
 
+                                            <!-- زر الانتقال لنظام الشيفات والحضور -->
+                                            <button onclick="window.location.href='attendance.html'" class="btn" style="background: linear-gradient(135deg, #6366f1, #a855f7); color: white; border: 1px solid rgba(255,255,255,0.2); height: 45px; padding: 0 20px;">
+                                                📅 جدول الشيفات والحضور
+                                            </button>
+
+                                            <!-- زر الانتقال لمعرض الصور -->
+                                            <button onclick="window.location.href='gallery.html'" class="btn" style="background: linear-gradient(135deg, #06b6d4, #6366f1); color: white; border: 1px solid rgba(255,255,255,0.2); height: 45px; padding: 0 20px;">
+                                                🖼️ معرض الصور
+                                            </button>
+
                                             <!-- زر تسجيل الخروج للمشرفين -->
                                             <button onclick="logout()" class="btn btn-danger btn-sm" style="padding: 8px 20px; border-radius: 12px; display: flex; align-items: center; gap: 8px;">
                                                 <span>تسجيل خروج</span>
@@ -1635,7 +1645,7 @@
 
 
                                     <!-- زر جديد لفتح معرض الصور (للمشرف والموظف) -->
-                                    <button onclick="openPerformanceGallery()" class="btn btn-vip" style="width: 100%; margin-bottom: 20px; background: linear-gradient(45deg, #06b6d4, #6366f1); color: white;">
+                                    <button onclick="onclick=window.location.href='gallery.html'" class="btn btn-vip" style="width: 100%; margin-bottom: 20px; background: linear-gradient(45deg, #06b6d4, #6366f1); color: white;">
                                         🖼️ فتح معرض سجل الأداء (الصور السابقة)
                                     </button>
 
@@ -1686,22 +1696,7 @@
     </div>
 
     <!-- لوحة عرض الجدول الأسبوعي للمشرف -->
-    <div id="adminWeeklyBoard" style="margin-top: 25px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--accent); border-radius: 25px; padding: 20px;">
-        <h4 style="color:var(--accent); text-align: center; margin-bottom: 20px;">📋 السجل العام لجدول الصلاة الأسبوعي</h4>
-        <div class="table-responsive">
-            <table style="min-width: 100%; border-collapse: separate; border-spacing: 0 10px;">
-                <thead>
-                    <tr style="background: rgba(6, 182, 212, 0.2);">
-                        <th style="padding: 12px; border-radius: 12px 0 0 12px;">اليوم</th>
-                        <th style="padding: 12px; border-radius: 0 12px 12px 0;">ترتيب الموظفين (بالتسلسل)</th>
-                    </tr>
-                </thead>
-                <tbody id="adminWeeklyLogBody">
-                    <!-- سيتم ملؤه تلقائياً -->
-                </tbody>
-            </table>
-        </div>
-    </div>
+
 
                                     <div id="tab-monitor">
                                         <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 25px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; align-items: center;">
@@ -1994,16 +1989,14 @@
                                         <span id="profileNotificationBadge" class="hidden" style="position:absolute; top:-8px; left:-8px; background:red; color:white; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">0</span>
                                     </button>
 
-                                    <button onclick="openPrayerCloudHistory()" class="btn btn-dark btn-sm" style="margin-top:8px; border:1px solid #6366f1;">
-                                        ☁️ سجل الصلوات السحابي
-                                    </button>
+                                 
 
                                     <button onclick="openFilePassModal(false)" class="btn btn-dark btn-sm" style="margin-top:8px; border:1px solid var(--accent); color:var(--accent);">
                                         🔑 تغيير قفل الملف
                                     </button>
 
-                                    <button onclick="openPerformanceGallery()" class="btn btn-dark btn-sm" style="margin-top:8px; border:1px solid #06b6d4; color:#06b6d4;">
-                                        🖼️ معرض التميز والأداء
+                                      <button onclick="window.location.href='gallery.html'" class="btn" style="background: linear-gradient(135deg, #06b6d4, #6366f1); color: white; border: 1px solid rgba(255,255,255,0.2); height: 45px; padding: 0 20px;">
+                                        🖼️ معرض الصور
                                     </button>
 
                                     <!-- الزر الجديد الذي طلبته هنا -->
@@ -2011,6 +2004,14 @@
                                         🗓️ جدول الترتيب الأسبوعي
                                     </button>
 
+                                 
+
+                                    <!-- زر الانتقال لنظام الشيفات والحضور -->
+                                    <button onclick="window.location.href='attendance.html'" class="btn" style="background: linear-gradient(135deg, #6366f1, #a855f7); color: white; border: 1px solid rgba(255,255,255,0.2); height: 45px; padding: 0 20px;">
+                                        📅 جدول الشيفات والحضور
+                                    </button>
+
+                                
                                     <div class="header-wrapper">
 
                                         <!-- الجزء اليمين: الصورة والبيانات -->
@@ -2839,6 +2840,9 @@
 
                                     keys.forEach(key => {
                                         const b = data[key];
+                                        if (data[key].adminDeleted) {
+                                            return; // تخطي العنصر إذا تم حذفه إدارياً (يبقى في المعرض بس)
+                                        }
                                         const timeStr = new Date(b.timestamp).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'});
 
                                         // رسم لوحة الإدارة (الأدمن)
@@ -2972,11 +2976,22 @@
                                 }
 
                                 function deleteBroadcast(key) {
-        if(confirm("هل تريد حذف هذا التنبيه؟ (سيختفي من السجل ولن يصل إشعار للموظفين)")) {
-            logDeletionAction("حذف تنبيه عام", "الكل", "تم حذف رسالة برودكاست");
-            db.ref('broadcasts/' + key).remove();
-        }
-    }
+                                    // رسالة توضح إنها هتفضل في المعرض
+                                    if(!confirm("⚠️ هل تريد إخفاء هذا التنبيه من سجل الإدارة؟\n\nسيتم إخفاؤه من هذه اللوحة (البريك) فقط، وسيظل موجوداً ومنشوراً في \"معرض الإنجازات\" العام.")) return;
+                                    
+                                    // تسجيل العملية في الأرشيف
+                                    logDeletionAction("إخفاء من لوحة الإدارة", "البث", "قام المشرف بإخفاء الصورة من اللوحة الإدارية، لكنها تُركت في المعرض العام.");
+                                    
+                                    // التحديث: إضافة وسم الحذف الإداري (بدل الحذف النهائي)
+                                    db.ref('broadcasts/' + key).update({
+                                        adminDeleted: true, // ده الوصف السحري
+                                        deletedBy: currentUser.realName || currentUser.username,
+                                        deletedAt: Date.now()
+                                    }).then(() => {
+                                        alert("تم الإخفاء من اللوحة بنجاح ✅\n(لا تزال موجودة في المعرض)");
+                                        triggerGlobalRefresh(); // تحديث الشاشة
+                                    });
+                                }
     function showBroadcastOverlay(data) {
         const overlay = document.getElementById('broadcastOverlay');
         const msgText = document.getElementById('broadcastMsgText');
