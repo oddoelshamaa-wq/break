@@ -173,6 +173,27 @@
             .sched-status-sick { background: rgba(236, 72, 153, 0.2); color: #f472b6; border: 1px solid #f472b6; }
             .sched-status-absent { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
 
+            /* تمييز اليوم الحالي */
+            .today-highlight {
+                background: rgba(99, 102, 241, 0.2) !important; /* لون بنفسجي شفاف */
+                border: 2px solid var(--primary) !important;
+                position: relative;
+            }
+
+            .today-highlight::after {
+                content: "اليوم";
+                position: absolute;
+                top: -10px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: var(--primary);
+                color: white;
+                font-size: 0.6rem;
+                padding: 2px 6px;
+                border-radius: 10px;
+                font-weight: bold;
+            }
+
             /* حالات الحضور */
             .status-badge {
                 padding: 4px 10px;
@@ -896,23 +917,28 @@
 
             // 5. Rendering
             function renderTables(filterStart = null, filterEnd = null) {
+                // حساب تاريخ اليوم الحالي للمقارنة
+                const realToday = new Date();
+                const realTodayStr = `${realToday.getDate().toString().padStart(2, '0')}/${(realToday.getMonth() + 1).toString().padStart(2, '0')}`;
+
                 // A. Shift Table
-                // Calculate week dates
                 let weekStart;
                 if (currentUser.role === 'employee' && currentWeek) {
                     const firstDay = new Date(currentWeek.year, currentWeek.month, 1);
                     weekStart = new Date(firstDay);
-                    weekStart.setDate(firstDay.getDate() + (currentWeek.week - 1) * 7);
+                    
+                    // تعديل الحساب ليكون دائماً يوم سبت للموظف أيضاً
+                    weekStart.setDate(firstDay.getDate() - (firstDay.getDay() + 1) % 7);
+                    weekStart.setDate(weekStart.getDate() + (currentWeek.week - 1) * 7);
                 } else {
                     const weekStartInput = document.getElementById('weekStartDate').value;
                     weekStart = new Date();
                     if (weekStartInput) {
                         weekStart = new Date(weekStartInput);
                     } else {
-                        // Default to current week, starting from Saturday
                         const today = new Date();
-                        const dayOfWeek = today.getDay(); // 0 = Sunday
-                        const daysToSaturday = (dayOfWeek + 1) % 7; // Days back to Saturday
+                        const dayOfWeek = today.getDay();
+                        const daysToSaturday = (dayOfWeek + 1) % 7;
                         weekStart = new Date(today);
                         weekStart.setDate(today.getDate() - daysToSaturday);
                     }
@@ -926,12 +952,15 @@
                     weekDates.push(dateStr);
                 }
 
-                // Update header with dates
+                // تحديث الهيدر مع إضافة كلاس التمييز إذا كان التاريخ هو اليوم
                 const schedHead = document.getElementById('scheduleHead');
                 schedHead.innerHTML = `
                     <tr>
                         <th>الموظف</th>
-                        ${DAYS.map((day, i) => `<th>${day} <span class="date-label">${weekDates[i]}</span></th>`).join('')}
+                        ${DAYS.map((day, i) => {
+                            const isToday = (weekDates[i] === realTodayStr);
+                            return `<th class="${isToday ? 'today-highlight' : ''}">${day} <span class="date-label">${weekDates[i]}</span></th>`;
+                        }).join('')}
                     </tr>
                 `;
 
@@ -950,6 +979,9 @@
                         let cellContent = '<span class="empty-slot">--</span>';
                         const val = (allScheduleData[u.username] && allScheduleData[u.username][i]) ? allScheduleData[u.username][i] : null;
 
+                        // تحديد ما إذا كانت هذه الخلية تخص اليوم الحالي
+                        const isToday = (weekDates[i] === realTodayStr);
+
                         if (val) {
                             if (val === 'Off') {
                                 cellContent = `<span class="sched-status-badge sched-status-off">Off</span>`;
@@ -960,7 +992,6 @@
                             } else if (val === 'Absent') {
                                 cellContent = `<span class="sched-status-badge sched-status-absent">Absent</span>`;
                             } else {
-                                // افتراض أنه وقت
                                 const times = val.split(' - ');
                                 if (times.length === 2) {
                                     cellContent = `<div class="time-slot"><span class="time-in">${times[0]}</span><span class="time-separator">-</span><span class="time-out">${times[1]}</span></div>`;
@@ -969,7 +1000,8 @@
                                 }
                             }
                         }
-                        row += `<td>${cellContent}</td>`;
+                        // إضافة كلاس today-highlight للخلية إذا كانت توافق اليوم
+                        row += `<td class="${isToday ? 'today-highlight' : ''}">${cellContent}</td>`;
                     }
                     row += `</tr>`;
                     schedBody.innerHTML += row;
@@ -981,10 +1013,10 @@
 
                 if (!isFilterMode) {
                     const todayKey = getServerDateString().replace(/\//g, '-');
-                    
+
                     usersToShow.forEach(u => {
                         const todayData = (u.attendance && u.attendance[todayKey]) ? u.attendance[todayKey] : null;
-                        
+
                         let statusDisplay = '<span style="color:#aaa;">-</span>';
                         if (todayData && todayData.status) {
                             const s = todayData.status;
@@ -999,7 +1031,7 @@
 
                         const clockIn = todayData ? (todayData.clockIn || '--:--') : '--:--';
                         const clockOut = todayData ? (todayData.clockOut || '--:--') : '--:--';
-                        
+
                         attendBody.innerHTML += `
                             <tr>
                                 <td style="font-weight:bold;">${u.realName || u.username}</td>
@@ -1012,7 +1044,7 @@
                 } else {
                     const startDate = new Date(filterStart);
                     const endDate = new Date(filterEnd);
-                    
+
                     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
                         const dateKey = `${d.getDate().toString().padStart(2, '0')}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getFullYear()}`;
                         const dateDisplay = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
@@ -1050,7 +1082,7 @@
                             }
                         });
                     }
-                    
+
                     if(attendBody.innerHTML === '') {
                         attendBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#64748b;">لا توجد سجلات في هذا النطاق</td></tr>';
                     }
@@ -1095,12 +1127,15 @@
                 const monthNum = parseInt(document.getElementById('monthSelect').value);
                 const year = parseInt(document.getElementById('yearSelect').value);
 
-                // First day of the selected month
+                // أول يوم في الشهر المختار
                 const firstDay = new Date(year, monthNum, 1);
 
-                // Week start: firstDay + (weekNum - 1) * 7
-                const weekStart = new Date(firstDay);
-                weekStart.setDate(firstDay.getDate() + (weekNum - 1) * 7);
+                // حساب أول يوم سبت (سواء كان في بداية الشهر أو السبت الذي يسبقه مباشرة)
+                let weekStart = new Date(firstDay);
+                weekStart.setDate(firstDay.getDate() - (firstDay.getDay() + 1) % 7);
+
+                // الانتقال للأسبوع المطلوب (الأول، الثاني، إلخ) بناءً على أول سبت محسوب
+                weekStart.setDate(weekStart.getDate() + (weekNum - 1) * 7);
 
                 document.getElementById('weekStartDate').value = weekStart.toISOString().split('T')[0];
                 renderTables();
