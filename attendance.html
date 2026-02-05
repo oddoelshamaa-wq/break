@@ -171,6 +171,7 @@
             .sched-status-off { background: rgba(100, 116, 139, 0.2); color: #94a3b8; border: 1px solid #94a3b8; }
             .sched-status-annual { background: rgba(139, 92, 246, 0.2); color: #a78bfa; border: 1px solid #a78bfa; }
             .sched-status-sick { background: rgba(236, 72, 153, 0.2); color: #f472b6; border: 1px solid #f472b6; }
+            .sched-status-absent { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
 
             /* حالات الحضور */
             .status-badge {
@@ -408,6 +409,7 @@
                                     <option value="Off">🌴 إجازة (Off)</option>
                                     <option value="Annual Leave">🔖 إجازة سنوية (Annual)</option>
                                     <option value="Sick Leave">🏥 إجازة مرضية (Sick)</option>
+                                    <option value="Absent">❌ غياب (Absent)</option>
                                 </select>
 
                                 <!-- حقول الوقت -->
@@ -955,6 +957,8 @@
                                 cellContent = `<span class="sched-status-badge sched-status-annual">Annual</span>`;
                             } else if (val === 'Sick Leave') {
                                 cellContent = `<span class="sched-status-badge sched-status-sick">Sick</span>`;
+                            } else if (val === 'Absent') {
+                                cellContent = `<span class="sched-status-badge sched-status-absent">Absent</span>`;
                             } else {
                                 // افتراض أنه وقت
                                 const times = val.split(' - ');
