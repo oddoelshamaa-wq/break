@@ -237,6 +237,91 @@
             .card-start { background: var(--btn-start-bg); }
             .card-action { background: var(--btn-action-bg); }
 
+/* تنسيقات جدول الموظفين */
+.attendance-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 20px;
+    background: var(--card-bg);
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.05);
+    overflow-x: auto; /* للتجاوب مع الموبايل */
+}
+
+.attendance-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    text-align: center;
+}
+
+.attendance-table th {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--accent);
+    padding: 15px;
+    font-weight: 900;
+    border-radius: 10px;
+}
+
+.attendance-table td {
+    padding: 15px;
+    color: var(--text-main);
+    vertical-align: middle;
+}
+
+/* اسم الموظف */
+.emp-name {
+    font-weight: bold;
+    color: white;
+    text-align: right;
+    padding-right: 20px;
+}
+
+/* شكل كبسولة الوقت (أفقي - بجانب بعض) */
+.time-slot {
+    display: inline-flex;
+    flex-direction: row; /* جعل العناصر بجانب بعضها */
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* مسافة بين وقت الدخول والخروج */
+    border: 1px solid var(--accent);
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: rgba(6, 182, 212, 0.05);
+    min-width: 130px; /* زيادة العرض ليتناسب مع السطر الواحد */
+}
+
+.time-in {
+    color: var(--accent);
+    font-weight: bold;
+}
+
+/* فاصل صغير بين الوقتين */
+.time-separator {
+    color: var(--text-muted);
+    opacity: 0.5;
+    font-size: 0.8rem;
+}
+
+.time-out {
+    color: #fff; /* لون أبيض لوقت الانصراف للتمييز */
+    font-weight: bold;
+}
+
+/* الخانة الفارغة */
+.empty-slot {
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+/* التاريخ تحت اليوم */
+.date-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--primary);
+    margin-top: 5px;
+}
+
         </style>
     </head>
     <body>
@@ -335,6 +420,47 @@
                             </div>
                         </div>
 
+                        <!-- 3. تحديد الأسبوع النشط -->
+                        <div class="control-box">
+                            <h4>📅 تحديد الأسبوع النشط للموظفين</h4>
+
+                            <div class="date-filter-box" style="margin-bottom: 15px;">
+                                <div class="date-filter-group">
+                                    <label>السنة:</label>
+                                    <select id="currentYearSelect"></select>
+                                </div>
+                                <div class="date-filter-group">
+                                    <label>الشهر:</label>
+                                    <select id="currentMonthSelect">
+                                        <option value="0">يناير</option>
+                                        <option value="1">فبراير</option>
+                                        <option value="2">مارس</option>
+                                        <option value="3">إبريل</option>
+                                        <option value="4">مايو</option>
+                                        <option value="5">يونيو</option>
+                                        <option value="6">يوليو</option>
+                                        <option value="7">أغسطس</option>
+                                        <option value="8">سبتمبر</option>
+                                        <option value="9">أكتوبر</option>
+                                        <option value="10">نوفمبر</option>
+                                        <option value="11">ديسمبر</option>
+                                    </select>
+                                </div>
+                                <div class="date-filter-group">
+                                    <label>الأسبوع:</label>
+                                    <select id="currentWeekSelect">
+                                        <option value="1">الأسبوع الأول</option>
+                                        <option value="2">الأسبوع الثاني</option>
+                                        <option value="3">الأسبوع الثالث</option>
+                                        <option value="4">الأسبوع الرابع</option>
+                                        <option value="5">الأسبوع الخامس</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button class="btn" onclick="saveCurrentWeek()" style="background:var(--accent);">حفظ الأسبوع النشط</button>
+                        </div>
+
                         <!-- 2. الحضور -->
                     
                             
@@ -358,7 +484,7 @@
                             <div class="section-title">📅 جدول الشيفات الأسبوعي (يظهر Off والحالات)</div>
 
                             <!-- اختيار الأسبوع -->
-                            <div class="date-filter-box" style="margin-bottom: 15px;">
+                            <div class="date-filter-box" id="scheduleFilterBox" style="margin-bottom: 15px;">
                                 <div class="date-filter-group">
                                     <label>اختر السنة:</label>
                                     <select id="yearSelect" onchange="setWeekStart()"></select>
@@ -396,18 +522,18 @@
                                 </div>
                             </div>
 
-                            <div class="table-container">
-                                <table>
+                            <div class="attendance-container">
+                                <table class="attendance-table">
                                     <thead id="scheduleHead">
                                         <tr>
                                             <th>الموظف</th>
-                                            <th>السبت</th>
-                                            <th>الأحد</th>
-                                            <th>الاثنين</th>
-                                            <th>الثلاثاء</th>
-                                            <th>الأربعاء</th>
-                                            <th>الخميس</th>
-                                            <th>الجمعة</th>
+                                            <th>السبت <span class="date-label">31/01</span></th>
+                                            <th>الأحد <span class="date-label">01/02</span></th>
+                                            <th>الاثنين <span class="date-label">02/02</span></th>
+                                            <th>الثلاثاء <span class="date-label">03/02</span></th>
+                                            <th>الأربعاء <span class="date-label">04/02</span></th>
+                                            <th>الخميس <span class="date-label">05/02</span></th>
+                                            <th>الجمعة <span class="date-label">06/02</span></th>
                                         </tr>
                                     </thead>
                                     <tbody id="scheduleBody"></tbody>
@@ -439,12 +565,13 @@
             };
 
             firebase.initializeApp(firebaseConfig);
-            const db = firebase.database();
+            const db = firebase .database();
 
             let currentUser = null;
             let allUsersData = {};
             let allScheduleData = {};
             let isFilterMode = false;
+            let currentWeek = null;
             
             const MANAGERS = ['mahmoud', 'abutamim', 'ahmed'];
             const DAYS = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
@@ -469,6 +596,10 @@
                 if(allUsersData[u] && allUsersData[u].password === p) {
                     currentUser = allUsersData[u];
                     currentUser.role = MANAGERS.includes(u) ? 'admin' : 'employee';
+
+                    if(currentUser.role === 'employee') {
+                        document.getElementById('scheduleFilterBox').style.display = 'none';
+                    }
                     
                     // حفظ البيانات في المتصفح
                     localStorage.setItem('elshamaa_user', u);
@@ -501,6 +632,10 @@
                         const daysSinceFirstDay = now.getDate() - 1;
                         const weekNum = Math.floor(daysSinceFirstDay / 7) + 1;
                         document.getElementById('schedWeekSelect').value = Math.min(weekNum, 5);
+
+                        // Set default for current week selects
+                        document.getElementById('currentMonthSelect').value = now.getMonth();
+                        document.getElementById('currentWeekSelect').value = Math.min(weekNum, 5);
 
                         // Set default filter to current month
                         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -556,13 +691,16 @@
                 // Populate year select
                 const yearSel = document.getElementById('yearSelect');
                 const schedYearSel = document.getElementById('schedYearSelect');
+                const currentYearSel = document.getElementById('currentYearSelect');
                 const currentYear = new Date().getFullYear();
                 yearSel.innerHTML = '';
                 schedYearSel.innerHTML = '';
+                currentYearSel.innerHTML = '';
                 for (let y = currentYear - 5; y <= currentYear + 5; y++) {
                     const option = `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`;
                     yearSel.innerHTML += option;
                     schedYearSel.innerHTML += option;
+                    currentYearSel.innerHTML += option;
                 }
             }
 
@@ -602,6 +740,19 @@
                         alert("✅ تم تحديث حالة اليوم");
                     });
                 }
+            }
+
+            // 2.1 Save Current Week
+            function saveCurrentWeek() {
+                const year = parseInt(document.getElementById('currentYearSelect').value);
+                const month = parseInt(document.getElementById('currentMonthSelect').value);
+                const week = parseInt(document.getElementById('currentWeekSelect').value);
+
+                db.ref('settings/currentWeek').set({year, month, week}).then(() => {
+                    currentWeek = {year, month, week};
+                    renderTables();
+                    alert("تم حفظ الأسبوع النشط");
+                });
             }
 
             // 3. Attendance Logic
@@ -745,17 +896,24 @@
             function renderTables(filterStart = null, filterEnd = null) {
                 // A. Shift Table
                 // Calculate week dates
-                const weekStartInput = document.getElementById('weekStartDate').value;
-                let weekStart = new Date();
-                if (weekStartInput) {
-                    weekStart = new Date(weekStartInput);
+                let weekStart;
+                if (currentUser.role === 'employee' && currentWeek) {
+                    const firstDay = new Date(currentWeek.year, currentWeek.month, 1);
+                    weekStart = new Date(firstDay);
+                    weekStart.setDate(firstDay.getDate() + (currentWeek.week - 1) * 7);
                 } else {
-                    // Default to current week, starting from Saturday
-                    const today = new Date();
-                    const dayOfWeek = today.getDay(); // 0 = Sunday
-                    const daysToSaturday = (dayOfWeek + 1) % 7; // Days back to Saturday
-                    weekStart = new Date(today);
-                    weekStart.setDate(today.getDate() - daysToSaturday);
+                    const weekStartInput = document.getElementById('weekStartDate').value;
+                    weekStart = new Date();
+                    if (weekStartInput) {
+                        weekStart = new Date(weekStartInput);
+                    } else {
+                        // Default to current week, starting from Saturday
+                        const today = new Date();
+                        const dayOfWeek = today.getDay(); // 0 = Sunday
+                        const daysToSaturday = (dayOfWeek + 1) % 7; // Days back to Saturday
+                        weekStart = new Date(today);
+                        weekStart.setDate(today.getDate() - daysToSaturday);
+                    }
                 }
 
                 const weekDates = [];
@@ -771,7 +929,7 @@
                 schedHead.innerHTML = `
                     <tr>
                         <th>الموظف</th>
-                        ${DAYS.map((day, i) => `<th>${day}<br>${weekDates[i]}</th>`).join('')}
+                        ${DAYS.map((day, i) => `<th>${day} <span class="date-label">${weekDates[i]}</span></th>`).join('')}
                     </tr>
                 `;
 
@@ -785,9 +943,9 @@
                 usersToShow.sort((a,b) => (a.realName || a.username).localeCompare(b.realName || b.username));
 
                 usersToShow.forEach(u => {
-                    let row = `<tr><td style="font-weight:bold;">${u.realName || u.username}</td>`;
+                    let row = `<tr><td class="emp-name">${u.realName || u.username}</td>`;
                     for(let i=0; i<7; i++) {
-                        let cellContent = '--';
+                        let cellContent = '<span class="empty-slot">--</span>';
                         const val = (allScheduleData[u.username] && allScheduleData[u.username][i]) ? allScheduleData[u.username][i] : null;
 
                         if (val) {
@@ -799,7 +957,12 @@
                                 cellContent = `<span class="sched-status-badge sched-status-sick">Sick</span>`;
                             } else {
                                 // افتراض أنه وقت
-                                cellContent = `<span class="shift-badge">${val}</span>`;
+                                const times = val.split(' - ');
+                                if (times.length === 2) {
+                                    cellContent = `<div class="time-slot"><span class="time-in">${times[0]}</span><span class="time-separator">-</span><span class="time-out">${times[1]}</span></div>`;
+                                } else {
+                                    cellContent = `<span class="shift-badge">${val}</span>`;
+                                }
                             }
                         }
                         row += `<td>${cellContent}</td>`;
@@ -969,6 +1132,12 @@
 
                 db.ref('schedules').on('value', snap => {
                     allScheduleData = snap.val() || {};
+                    if(currentUser) renderTables();
+                });
+
+                db.ref('settings').on('value', snap => {
+                    const settings = snap.val() || {};
+                    currentWeek = settings.currentWeek || null;
                     if(currentUser) renderTables();
                 });
             }
