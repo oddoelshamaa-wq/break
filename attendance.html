@@ -1,1187 +1,800 @@
-    <!DOCTYPE html>
-    <html lang="ar" dir="rtl">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>ELSHAMAA | الشيفات والحضور المتكامل</title>
-        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELSHAMAA | نظام البصمة والشيفات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-        <style>
-            :root {
-                --bg-deep: #020617;
-                --primary: #6366f1;
-                --accent: #06b6d4;
-                --success: #10b981;
-                --warning: #f59e0b;
-                --danger: #ef4444;
-                --glass: rgba(15, 23, 42, 0.6);
-                --glass-border: rgba(255,255,255,0.08);
-                --text-light: #f1f5f9;
+    <style>
+        :root {
+            --bg-deep: #020617;
+            --primary: #6366f1;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --glass: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255,255,255,0.08);
+            --text-light: #f1f5f9;
+        }
+
+        body { 
+            font-family: 'Cairo', sans-serif; 
+            background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%); 
+            margin: 0; padding: 20px; min-height: 100vh; color: var(--text-light);
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        .main-card {
+            background: var(--glass);
+            backdrop-filter: blur(30px);
+            border-radius: 30px;
+            border:1px solid var(--glass-border);
+            padding: 30px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+
+        h2 { margin-top: 0; text-align: center; color: var(--accent); margin-bottom: 20px; }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: white;
+            font-family: 'Cairo';
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            outline: none;
+        }
+        input:focus, select:focus { border-color: var(--primary); }
+        
+        input:disabled {
+            background: rgba(255,255,255,0.05);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .btn {
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            transition: 0.3s;
+            font-family: 'Cairo';
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .btn:disabled { opacity: 0.5; cursor: default; transform: none !important; }
+        .btn-danger { background: var(--danger); }
+        .btn-success { background: var(--success); }
+        .btn-accent { background: var(--accent); color: #0f172a; font-weight: 900; }
+
+        /* منطقة البصمة */
+        .fingerprint-section {
+            text-align: center; padding: 40px;
+            background: rgba(255,255,255,0.02); border-radius: 20px;
+            border: 1px dashed var(--accent); margin-bottom: 30px;
+        }
+
+        .actions-container {
+            display: flex; justify-content: center; gap: 20px; margin-top: 20px; flex-wrap: wrap;
+        }
+
+        .finger-btn {
+            width: 130px; height: 130px; border-radius: 50%; background: var(--bg-deep);
+            border: 4px solid var(--accent); color: var(--accent); font-size: 3rem;
+            cursor: pointer; transition: 0.3s; display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+        }
+        .finger-btn span { font-size: 0.9rem; margin-top: 5px; font-weight: bold; }
+        .finger-btn:hover { transform: scale(1.05); box-shadow: 0 0 40px rgba(6, 182, 212, 0.5); }
+        
+        .finger-btn:active, .finger-btn.scanning {
+            background: var(--accent); color: var(--bg-deep);
+            animation: pulse 1s infinite;
+        }
+        
+        .absent-btn {
+            width: 130px; height: 130px; border-radius: 50%; background: var(--bg-deep);
+            border: 4px solid var(--danger); color: var(--danger); font-size: 3rem;
+            cursor: pointer; transition: 0.3s; display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+        }
+        .absent-btn span { font-size: 0.9rem; margin-top: 5px; font-weight: bold; }
+        .absent-btn:hover { transform: scale(1.05); box-shadow: 0 0 40px rgba(239, 68, 68, 0.5); }
+        .absent-btn:active { background: var(--danger); color: white; }
+
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(6, 182, 212, 0); } 100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); } }
+
+        .scan-status { margin-top: 20px; font-size: 1.2rem; font-weight: bold; min-height: 40px; }
+        .current-status-badge {
+            background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 50px;
+            border: 1px solid var(--glass-border); display: inline-block; margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        /* التبويبات */
+        .tabs-nav { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; overflow-x: auto; }
+        .tab-btn { background: transparent; border: 1px solid var(--glass-border); color: #94a3b8; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-family: 'Cairo'; transition: 0.3s; white-space: nowrap; }
+        .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .tab-content { display: none; animation: fadeIn 0.4s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* الجداول */
+        .table-container {
+            overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 20px;
+            padding: 15px; border: 1px solid var(--glass-border); margin-top: 20px;
+            margin-bottom: 40px;
+        }
+        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; min-width: 800px; }
+        th { background: rgba(99, 102, 241, 0.15); color: var(--accent); padding: 15px; text-align: center; font-weight: bold; border-radius: 8px; white-space: nowrap; }
+        tbody tr { background: rgba(255,255,255,0.02); transition: 0.2s; }
+        tbody tr:hover { background: rgba(255,255,255,0.05); }
+        td { padding: 15px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        td:first-child { border-top-right-radius: 10px; border-bottom-right-radius: 10px; text-align: right; padding-right: 20px; font-weight: bold;}
+        td:last-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+
+        /* الشارات */
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; display: inline-block;}
+        .bg-success { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); }
+        .bg-danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+        .bg-warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid var(--warning); }
+        .bg-info { background: rgba(6, 182, 212, 0.2); color: var(--accent); border: 1px solid var(--accent); }
+        .bg-off { background: rgba(100, 116, 139, 0.2); color: #94a3b8; border: 1px solid #94a3b8; }
+
+        /* الإشعارات */
+        #toast-container { position: fixed; top: 20px; left: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; width: 320px; }
+        .toast { background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px); border-right: 5px solid var(--accent); color: white; padding: 15px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 12px; transform: translateX(-120%); transition: transform 0.4s; }
+        .toast.show { transform: translateX(0); }
+        .toast.success { border-color: var(--success); }
+
+        .hidden { display: none !important; }
+        .section-title { font-size: 1.3rem; color: var(--primary); margin-bottom: 15px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+
+        /* لوحة تحكم المشرف للشيفات */
+        .admin-controls {
+            background: rgba(99, 102, 241, 0.1); /* لون بنفسجي خفيف */
+            border: 1px solid var(--primary);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            display: none; /* مخفي افتراضياً */
+        }
+        .admin-controls.visible { display: block; }
+        
+        .grid-2-col {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+        }
+        @media(max-width: 600px) { .grid-2-col { grid-template-columns: 1fr; } }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="toast-container"></div>
+
+        <div class="main-card">
+            <h2>🔹 نظام البصمة والشيفات المتكامل</h2>
+
+            <!-- تسجيل الدخول -->
+            <div id="loginSection" style="max-width: 400px; margin: 50px auto; text-align: center; background: rgba(0,0,0,0.3); padding: 30px; border-radius: 20px;">
+                <input type="text" id="usernameInput" placeholder="اسم المستخدم">
+                <input type="password" id="passwordInput" placeholder="كلمة المرور">
+                <button class="btn btn-success" onclick="attemptLogin()">دخول للنظام</button>
+            </div>
+
+            <!-- لوحة التحكم -->
+            <div id="dashboardSection" class="hidden">
                 
-                /* ألوان الأزرار */
-                --btn-off-bg: #475569;
-                --btn-start-bg: #ec4899; /* وردي */
-                --btn-action-bg: #8b5cf6; /* بنفسجي */
-            }
-
-            body { 
-                font-family: 'Cairo', sans-serif; 
-                background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%); 
-                margin: 0; padding: 20px; min-height: 100vh; color: var(--text-light);
-            }
-
-            .container { max-width: 1400px; margin: 0 auto; }
-
-            .main-card {
-                background: var(--glass);
-                backdrop-filter: blur(30px);
-                border-radius: 30px;
-                border:1px solid var(--glass-border);
-                padding: 30px;
-                box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-            }
-
-            h2 { margin-top: 0; text-align: center; color: var(--accent); }
-            
-            .login-box { max-width: 400px; margin: 50px auto; text-align: center; background: rgba(0,0,0,0.3); padding: 30px; border-radius: 20px; }
-
-            input, select {
-                width: 100%;
-                padding: 12px;
-                background: rgba(0,0,0,0.3);
-                border: 1px solid var(--glass-border);
-                border-radius: 12px;
-                color: white;
-                font-family: 'Cairo';
-                margin-bottom: 10px;
-                box-sizing: border-box;
-                outline: none;
-            }
-            input:focus, select:focus { border-color: var(--primary); }
-
-            .btn {
-                color: white;
-                padding: 12px 20px;
-                border: none;
-                border-radius: 12px;
-                cursor: pointer;
-                font-weight: bold;
-                width: 100%;
-                transition: 0.3s;
-                font-family: 'Cairo';
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                gap: 8px;
-            }
-            .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
-            
-            .btn-off { background: var(--btn-off-bg); }
-            .btn-start { background: var(--btn-start-bg); }
-            .btn-action { background: var(--btn-action-bg); }
-            .btn-danger { background: var(--danger); }
-            .btn-success { background: var(--success); }
-
-            /* الشبكة الخاصة بلوحة التحكم */
-            .admin-controls-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr; 
-                gap: 20px;
-                margin-bottom: 30px;
-            }
-
-            @media (max-width: 900px) { .admin-controls-grid { grid-template-columns: 1fr; } }
-
-            .control-box {
-                background: rgba(255,255,255,0.03);
-                border: 1px solid var(--glass-border);
-                border-radius: 20px;
-                padding: 20px;
-            }
-
-            .control-box h4 { margin-top: 0; color: var(--accent); display: flex; align-items: center; gap: 8px; }
-
-            /* الجدول */
-            .tables-wrapper {
-                display: grid;
-                grid-template-columns: 1.5fr 1fr; 
-                gap: 25px;
-            }
-
-            @media (max-width: 1100px) { .tables-wrapper { grid-template-columns: 1fr; } }
-
-            .table-container {
-                overflow-x: auto;
-                background: rgba(0,0,0,0.2);
-                border-radius: 20px;
-                padding: 10px;
-                border: 1px solid var(--glass-border);
-            }
-
-            .section-title {
-                font-size: 1.1rem;
-                font-weight: bold;
-                color: var(--primary);
-                margin-bottom: 15px;
-                border-bottom: 2px solid var(--glass-border);
-                padding-bottom: 10px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-
-            table { width: 100%; border-collapse: separate; border-spacing: 0 5px; min-width: 600px; }
-            
-            th {
-                background: rgba(99, 102, 241, 0.2);
-                color: var(--accent);
-                padding: 12px;
-                text-align: center;
-                font-weight: bold;
-                border-radius: 8px;
-                font-size: 0.9rem;
-                white-space: nowrap;
-            }
-
-            tbody tr { background: rgba(255,255,255,0.02); }
-            tbody tr:hover { background: rgba(255,255,255,0.05); }
-            td { padding: 12px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.9rem; }
-
-            /* شيفات */
-            .shift-badge {
-                background: rgba(6, 182, 212, 0.15);
-                color: var(--accent);
-                border: 1px solid var(--accent);
-                padding: 4px 8px;
-                border-radius: 8px;
-                font-size: 0.8rem;
-            }
-
-            /* حالات الشيفات */
-            .sched-status-badge {
-                padding: 4px 10px;
-                border-radius: 20px;
-                font-size: 0.75rem;
-                font-weight: bold;
-                display: inline-block;
-            }
-            .sched-status-off { background: rgba(100, 116, 139, 0.2); color: #94a3b8; border: 1px solid #94a3b8; }
-            .sched-status-annual { background: rgba(139, 92, 246, 0.2); color: #a78bfa; border: 1px solid #a78bfa; }
-            .sched-status-sick { background: rgba(236, 72, 153, 0.2); color: #f472b6; border: 1px solid #f472b6; }
-            .sched-status-absent { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
-
-            /* تمييز اليوم الحالي */
-            .today-highlight {
-                background: rgba(99, 102, 241, 0.2) !important; /* لون بنفسجي شفاف */
-                border: 2px solid var(--primary) !important;
-                position: relative;
-            }
-
-            .today-highlight::after {
-                content: "اليوم";
-                position: absolute;
-                top: -10px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: var(--primary);
-                color: white;
-                font-size: 0.6rem;
-                padding: 2px 6px;
-                border-radius: 10px;
-                font-weight: bold;
-            }
-
-            /* حالات الحضور */
-            .status-badge {
-                padding: 4px 10px;
-                border-radius: 20px;
-                font-size: 0.8rem;
-                font-weight: bold;
-                display: inline-block;
-            }
-            .status-present { background: rgba(16, 185, 129, 0.2); color: var(--success); }
-            .status-late { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
-            .status-absent { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
-            .status-annual { background: rgba(139, 92, 246, 0.2); color: #a78bfa; border: 1px solid #a78bfa; }
-            .status-sick { background: rgba(236, 72, 153, 0.2); color: #f472b6; border: 1px solid #f472b6; }
-            .status-off { background: rgba(100, 116, 139, 0.2); color: #94a3b8; border: 1px solid #94a3b8; }
-
-            .hidden { display: none !important; }
-            .logout { background: var(--danger); width: auto; padding: 8px 15px; font-size: 0.9rem; }
-
-            /* ==================== ميزات الصور المطلوبة ==================== */
-
-            /* 1. قسم الفلترة */
-            .date-filter-box {
-                background: rgba(30, 41, 59, 0.4);
-                border: 1px solid var(--glass-border);
-                border-radius: 15px;
-                padding: 15px;
-                margin-bottom: 15px;
-                display: flex;
-                flex-wrap: wrap;
-                gap: 15px;
-                align-items: flex-end;
-            }
-            .date-filter-group { flex: 1; min-width: 200px; }
-            .date-filter-group label { display: block; margin-bottom: 5px; font-size: 0.85rem; color: #cbd5e1; }
-            .filter-btn { background: var(--accent); color: #0f172a; width: auto; padding: 10px 25px; font-weight: 800; }
-            .filter-btn:hover { background: #22d3ee; color: #000; }
-            .reset-btn { background: transparent; border: 1px solid var(--danger); color: var(--danger); width: auto; padding: 10px 15px; }
-            .reset-btn:hover { background: var(--danger); color: white; }
-
-            /* 2. أزرار الإجراءات السريعة */
-            .quick-actions-flex { display: flex; gap: 10px; margin-top: 15px; }
-            
-            .action-card-btn {
-                flex: 1;
-                padding: 15px;
-                border-radius: 12px;
-                color: white;
-                text-align: center;
-                cursor: pointer;
-                transition: 0.2s;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                gap: 5px;
-                font-size: 0.9rem;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            }
-            .action-card-btn i { font-size: 1.2rem; }
-            .action-card-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 12px rgba(0,0,0,0.3); }
-
-            .card-off { background: var(--btn-off-bg); }
-            .card-start { background: var(--btn-start-bg); }
-            .card-action { background: var(--btn-action-bg); }
-
-/* تنسيقات جدول الموظفين */
-.attendance-container {
-    max-width: 1200px;
-    margin: 40px auto;
-    padding: 20px;
-    background: var(--card-bg);
-    border-radius: 20px;
-    border: 1px solid rgba(255,255,255,0.05);
-    overflow-x: auto; /* للتجاوب مع الموبايل */
-}
-
-.attendance-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 10px;
-    text-align: center;
-}
-
-.attendance-table th {
-    background: rgba(99, 102, 241, 0.1);
-    color: var(--accent);
-    padding: 15px;
-    font-weight: 900;
-    border-radius: 10px;
-}
-
-.attendance-table td {
-    padding: 15px;
-    color: var(--text-main);
-    vertical-align: middle;
-}
-
-/* اسم الموظف */
-.emp-name {
-    font-weight: bold;
-    color: white;
-    text-align: right;
-    padding-right: 20px;
-}
-
-/* شكل كبسولة الوقت (أفقي - بجانب بعض) */
-.time-slot {
-    display: inline-flex;
-    flex-direction: row; /* جعل العناصر بجانب بعضها */
-    align-items: center;
-    justify-content: center;
-    gap: 8px; /* مسافة بين وقت الدخول والخروج */
-    border: 1px solid var(--accent);
-    padding: 6px 12px;
-    border-radius: 8px;
-    background: rgba(6, 182, 212, 0.05);
-    min-width: 130px; /* زيادة العرض ليتناسب مع السطر الواحد */
-}
-
-.time-in {
-    color: var(--accent);
-    font-weight: bold;
-}
-
-/* فاصل صغير بين الوقتين */
-.time-separator {
-    color: var(--text-muted);
-    opacity: 0.5;
-    font-size: 0.8rem;
-}
-
-.time-out {
-    color: #fff; /* لون أبيض لوقت الانصراف للتمييز */
-    font-weight: bold;
-}
-
-/* الخانة الفارغة */
-.empty-slot {
-    color: var(--text-muted);
-    opacity: 0.5;
-}
-
-/* التاريخ تحت اليوم */
-.date-label {
-    display: block;
-    font-size: 0.75rem;
-    color: var(--primary);
-    margin-top: 5px;
-}
-
-        </style>
-    </head>
-    <body>
-
-        <div class="container">
-            <div class="main-card">
-                <h2>🔹 نظام الشيفات والحضور الكامل</h2>
-
-                <!-- تسجيل الدخول -->
-                <div id="loginSection" class="login-box">
-                    <input type="text" id="usernameInput" placeholder="اسم المستخدم">
-                    <input type="password" id="passwordInput" placeholder="كلمة المرور">
-                    <button class="btn" onclick="attemptLogin()">دخول للنظام</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h3 id="welcomeMsg">أهلاً</h3>
+                    <button class="btn btn-danger" onclick="logout()" style="width:auto; font-size:0.9rem;">خروج</button>
                 </div>
 
-                <!-- لوحة العرض -->
-                <div id="dashboardSection" class="hidden">
+                <!-- التبويبات -->
+                <div class="tabs-nav">
+                    <button class="tab-btn active" onclick="switchTab('attendance')">📊 الحضور والبصمة</button>
+                    <button class="tab-btn" onclick="switchTab('shifts')">📅 جدول الشيفات</button>
+                </div>
+
+                <!-- ================= التبويب 1: الحضور ================= -->
+                <div id="tab-attendance" class="tab-content active">
                     
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                        <h3 id="welcomeMsg" style="margin:0;">أهلاً</h3>
-                        <div style="display:flex; gap:10px;">
-                            <!-- زر العودة لنظام البريك -->
-                            <button class="btn" onclick="window.location.href='index.html'" style="background: var(--accent); color: #0f172a; width: auto; padding: 8px 15px; font-size: 0.9rem; font-weight: bold; border-radius: 12px;">
-                                ☕ العودة لنظام البريك
-                            </button>
-                            <!-- زر الخروج الأصلي -->
-                            <button class="btn logout" onclick="logout()">خروج</button>
+                    <!-- منطقة البصمة -->
+                    <div class="fingerprint-section">
+                        <p style="color: #94a3b8; margin-bottom: 20px;">سجل حضورك أو أخبرنا بأنك غائب</p>
+                        
+                        <!-- عرض الحالة الحالية -->
+                        <div id="myCurrentStatus" class="current-status-badge" style="margin-bottom:20px;">
+                            <i class="fa fa-info-circle"></i> <span>لم تسجل دخول اليوم</span>
                         </div>
+
+                        <div class="actions-container">
+                            <!-- زر البصمة -->
+                            <div class="finger-btn" onclick="scanFingerprint()">
+                                <i class="fa-solid fa-fingerprint"></i>
+                                <span>بصمة<br>Fingerprint</span>
+                            </div>
+
+                            <!-- زر الغائب -->
+                            <div class="absent-btn" onclick="markSelfAbsent()">
+                                <i class="fa-solid fa-user-xmark"></i>
+                                <span>غائب<br>Absent</span>
+                            </div>
+                        </div>
+
+                        <div id="scanStatus" class="scan-status"></div>
                     </div>
 
-                    <!-- ========================================================== -->
-                    <!-- لوحة التحكم (للمديرين) -->
-                    <!-- ========================================================== -->
-                    <div id="adminPanel" class="admin-controls-grid hidden">
+                    <!-- فلتر التاريخ -->
+                    <div style="display:flex; gap:10px; margin-bottom:15px; align-items:center;">
+                        <label id="dateLabel" for="attendanceDateView">تاريخ العرض:</label>
+                        <input type="date" id="attendanceDateView" style="width: auto; display:inline-block;" onchange="renderAttendanceTable()">
+                    </div>
 
-                        <!-- 1. الشيفات -->
-                        <div class="control-box">
-                            <h4>📅 تثبيت الشيفات الأسبوعية</h4>
+                    <!-- جدول الحضور -->
+                    <div class="table-container">
+                        <div class="section-title">📋 سجل الحضور اليومي</div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>الموظف</th>
+                                    <th>الحالة</th>
+                                    <th>وقت الدخول</th>
+                                    <th>وقت الخروج</th>
+                                    <th class="admin-only">تحكم</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendanceTableBody"></tbody>
+                        </table>
+                    </div>
 
-                            <!-- اختيار الأسبوع للشيفات -->
-                            <div class="date-filter-box" style="margin-bottom: 15px;">
-                                <div class="date-filter-group">
-                                    <label>السنة:</label>
-                                    <select id="schedYearSelect" onchange="setSchedWeekStart()"></select>
+                </div>
+
+                <!-- ================= التبويب 2: جدول الشيفات ================= -->
+                <div id="tab-shifts" class="tab-content">
+                    <div class="table-container">
+                        
+                        <!-- تحكم في تاريخ الأسبوع للشيفات -->
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                            <div>
+                                <div class="section-title" id="shiftTableTitle" style="margin-bottom:0; border:none;">📅 جدول شيفات الأسبوع</div>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <label id="shiftDateLabel" for="shiftDateView">اختر الأسبوع:</label>
+                                <input type="date" id="shiftDateView" style="width: auto; display:inline-block;" onchange="renderShiftsTable()">
+                            </div>
+                        </div>
+                        <p style="color:#94a3b8; margin-bottom:15px;" id="shiftTableDesc">يعرض مواعيد العمل والإجازات</p>
+
+                        <!-- لوحة تحكم المشرف لإضافة/تعديل الشيفات (جديدة) -->
+                        <div id="adminShiftControls" class="admin-controls">
+                            <h4 style="margin-top:0; color:var(--accent); display:flex; align-items:center; gap:8px;">
+                                <i class="fa fa-pen-to-square"></i> تحرير جدول الشيفات (للمدير)
+                            </h4>
+                            <div class="grid-2-col">
+                                <div>
+                                    <label style="font-size:0.85rem; color:#cbd5e1;">الموظف:</label>
+                                    <select id="schedUserSelect"></select>
                                 </div>
-                                <div class="date-filter-group">
-                                    <label>الشهر:</label>
-                                    <select id="schedMonthSelect" onchange="setSchedWeekStart()">
-                                        <option value="0">يناير</option>
-                                        <option value="1">فبراير</option>
-                                        <option value="2">مارس</option>
-                                        <option value="3">إبريل</option>
-                                        <option value="4">مايو</option>
-                                        <option value="5">يونيو</option>
-                                        <option value="6">يوليو</option>
-                                        <option value="7">أغسطس</option>
-                                        <option value="8">سبتمبر</option>
-                                        <option value="9">أكتوبر</option>
-                                        <option value="10">نوفمبر</option>
-                                        <option value="11">ديسمبر</option>
-                                    </select>
-                                </div>
-                                <div class="date-filter-group">
-                                    <label>الأسبوع:</label>
-                                    <select id="schedWeekSelect" onchange="setSchedWeekStart()">
-                                        <option value="1">الأسبوع الأول</option>
-                                        <option value="2">الأسبوع الثاني</option>
-                                        <option value="3">الأسبوع الثالث</option>
-                                        <option value="4">الأسبوع الرابع</option>
-                                        <option value="5">الأسبوع الخامس</option>
+                                <div>
+                                    <label style="font-size:0.85rem; color:#cbd5e1;">اليوم:</label>
+                                    <select id="schedDaySelect">
+                                        <option value="0">السبت (Saturday)</option>
+                                        <option value="1">الأحد (Sunday)</option>
+                                        <option value="2">الاثنين (Monday)</option>
+                                        <option value="3">الثلاثاء (Tuesday)</option>
+                                        <option value="4">الأربعاء (Wednesday)</option>
+                                        <option value="5">الخميس (Thursday)</option>
+                                        <option value="6">الجمعة (Friday)</option>
                                     </select>
                                 </div>
                             </div>
-
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
-                                <select id="schedUser"></select>
-                                <select id="schedDay">
-                                    <option value="0">السبت</option><option value="1">الأحد</option><option value="2">الاثنين</option><option value="3">الثلاثاء</option><option value="4">الأربعاء</option><option value="5">الخميس</option><option value="6">الجمعة</option>
-                                </select>
-
-                                <!-- اختيار الحالة (كلمات إنجليزية) -->
-                                <select id="schedStatus" onchange="toggleSchedInputs()" style="grid-column: span 2;">
-                                    <option value="work">⏰ شيفات (Work)</option>
+                            
+                            <div style="margin-top:10px;">
+                                <label style="font-size:0.85rem; color:#cbd5e1;">الحالة:</label>
+                                <select id="schedStatusSelect" onchange="toggleSchedInputs()">
+                                    <option value="work">⏰ دوام عمل (Work)</option>
                                     <option value="Off">🌴 إجازة (Off)</option>
                                     <option value="Annual Leave">🔖 إجازة سنوية (Annual)</option>
                                     <option value="Sick Leave">🏥 إجازة مرضية (Sick)</option>
-                                    <option value="Absent">❌ غياب (Absent)</option>
                                 </select>
-
-                                <!-- حقول الوقت -->
-                                <div id="timeInputsGroup" style="grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                                    <input type="time" id="schedStart">
-                                    <input type="time" id="schedEnd">
-                                </div>
-
-                                <button class="btn" onclick="saveShift()" style="background:var(--accent); grid-column: span 2;">حفظ الشيفة</button>
                             </div>
+
+                            <!-- حقول الوقت تظهر فقط مع حالة العمل -->
+                            <div id="schedTimeInputs" class="grid-2-col" style="display:none;">
+                                <div>
+                                    <label style="font-size:0.85rem; color:#cbd5e1;">من:</label>
+                                    <input type="time" id="schedStartTime">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.85rem; color:#cbd5e1;">إلى:</label>
+                                    <input type="time" id="schedEndTime">
+                                </div>
+                            </div>
+
+                            <button class="btn btn-accent" style="margin-top:15px;" onclick="saveShiftToDB()">
+                                <i class="fa fa-save"></i> حفظ في الجدول
+                            </button>
                         </div>
 
-                        <!-- 3. تحديد الأسبوع النشط -->
-                        <div class="control-box">
-                            <h4>📅 تحديد الأسبوع النشط للموظفين</h4>
-
-                            <div class="date-filter-box" style="margin-bottom: 15px;">
-                                <div class="date-filter-group">
-                                    <label>السنة:</label>
-                                    <select id="currentYearSelect"></select>
-                                </div>
-                                <div class="date-filter-group">
-                                    <label>الشهر:</label>
-                                    <select id="currentMonthSelect">
-                                        <option value="0">يناير</option>
-                                        <option value="1">فبراير</option>
-                                        <option value="2">مارس</option>
-                                        <option value="3">إبريل</option>
-                                        <option value="4">مايو</option>
-                                        <option value="5">يونيو</option>
-                                        <option value="6">يوليو</option>
-                                        <option value="7">أغسطس</option>
-                                        <option value="8">سبتمبر</option>
-                                        <option value="9">أكتوبر</option>
-                                        <option value="10">نوفمبر</option>
-                                        <option value="11">ديسمبر</option>
-                                    </select>
-                                </div>
-                                <div class="date-filter-group">
-                                    <label>الأسبوع:</label>
-                                    <select id="currentWeekSelect">
-                                        <option value="1">الأسبوع الأول</option>
-                                        <option value="2">الأسبوع الثاني</option>
-                                        <option value="3">الأسبوع الثالث</option>
-                                        <option value="4">الأسبوع الرابع</option>
-                                        <option value="5">الأسبوع الخامس</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <button class="btn" onclick="saveCurrentWeek()" style="background:var(--accent);">حفظ الأسبوع النشط</button>
-                        </div>
-
-                        <!-- 2. الحضور -->
-                    
-                            
-                                <select id="attendUser"></select>
-                                
-
-                                                            <
-
-                           
-                        
-
-                    </div>
-
-                    <!-- ========================================== -->
-                    <!-- عرض الجدولين -->
-                    <!-- ========================================== -->
-                    <div class="tables-wrapper">
-
-                        <!-- جدول الشيفات -->
-                        <div>
-                            <div class="section-title">📅 جدول الشيفات الأسبوعي (يظهر Off والحالات)</div>
-
-                            <!-- اختيار الأسبوع -->
-                            <div class="date-filter-box" id="scheduleFilterBox" style="margin-bottom: 15px;">
-                                <div class="date-filter-group">
-                                    <label>اختر السنة:</label>
-                                    <select id="yearSelect" onchange="setWeekStart()"></select>
-                                </div>
-                                <div class="date-filter-group">
-                                    <label>اختر الشهر:</label>
-                                    <select id="monthSelect" onchange="setWeekStart()">
-                                        <option value="0">يناير</option>
-                                        <option value="1">فبراير</option>
-                                        <option value="2">مارس</option>
-                                        <option value="3">إبريل</option>
-                                        <option value="4">مايو</option>
-                                        <option value="5">يونيو</option>
-                                        <option value="6">يوليو</option>
-                                        <option value="7">أغسطس</option>
-                                        <option value="8">سبتمبر</option>
-                                        <option value="9">أكتوبر</option>
-                                        <option value="10">نوفمبر</option>
-                                        <option value="11">ديسمبر</option>
-                                    </select>
-                                </div>
-                                <div class="date-filter-group">
-                                    <label>اختر الأسبوع في الشهر:</label>
-                                    <select id="weekSelect" onchange="setWeekStart()">
-                                        <option value="1">الأسبوع الأول</option>
-                                        <option value="2">الأسبوع الثاني</option>
-                                        <option value="3">الأسبوع الثالث</option>
-                                        <option value="4">الأسبوع الرابع</option>
-                                        <option value="5">الأسبوع الخامس</option>
-                                    </select>
-                                </div>
-                                <div class="date-filter-group">
-                                    <label>بداية الأسبوع:</label>
-                                    <input type="date" id="weekStartDate" onchange="renderTables()">
-                                </div>
-                            </div>
-
-                            <div class="attendance-container">
-                                <table class="attendance-table">
-                                    <thead id="scheduleHead">
-                                        <tr>
-                                            <th>الموظف</th>
-                                            <th>السبت <span class="date-label">31/01</span></th>
-                                            <th>الأحد <span class="date-label">01/02</span></th>
-                                            <th>الاثنين <span class="date-label">02/02</span></th>
-                                            <th>الثلاثاء <span class="date-label">03/02</span></th>
-                                            <th>الأربعاء <span class="date-label">04/02</span></th>
-                                            <th>الخميس <span class="date-label">05/02</span></th>
-                                            <th>الجمعة <span class="date-label">06/02</span></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="scheduleBody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                       
-                                    <tbody id="attendanceBody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
+                        <!-- الجدول -->
+                        <table id="shiftsTable">
+                            <thead>
+                                <!-- سيتم توليد الأيام والتواريخ هنا -->
+                            </thead>
+                            <tbody id="shiftsTableBody"></tbody>
+                        </table>
                     </div>
                 </div>
+
             </div>
         </div>
+    </div>
 
-        <script>
-            const firebaseConfig = {
-                apiKey: "AIzaSyBojsAZ73wpf-4cD8TviULncyxIIOUO2qY",
-                authDomain: "brak-nagaf.firebaseapp.com",
-                projectId: "brak-nagaf",
-                storageBucket: "brak-nagaf.firebasestorage.app",
-                messagingSenderId: "149166416863",
-                appId: "1:149166416863:web:e94fe392f868da07bbda6a",
-                measurementId: "G-Z82Y7NHNGE",
-                databaseURL: "https://brak-nagaf-default-rtdb.firebaseio.com/"
-            };
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBojsAZ73wpf-4cD8TviULncyxIIOUO2qY",
+            authDomain: "brak-nagaf.firebaseapp.com",
+            projectId: "brak-nagaf",
+            storageBucket: "brak-nagaf.firebasestorage.app",
+            messagingSenderId: "149166416863",
+            appId: "1:149166416863:web:e94fe392f868da07bbda6a",
+            measurementId: "G-Z82Y7NHNGE",
+            databaseURL: "https://brak-nagaf-default-rtdb.firebaseio.com/"
+        };
 
-            firebase.initializeApp(firebaseConfig);
-            const db = firebase .database();
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-            let currentUser = null;
-            let allUsersData = {};
-            let allScheduleData = {};
-            let isFilterMode = false;
-            let currentWeek = null;
+        let currentUser = null;
+        let allUsersData = {};
+        let allScheduleData = {};
+        const MANAGERS = ['mahmoud', 'abutamim', 'ahmed'];
+        
+        // تعيين تاريخ اليوم
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+        document.getElementById('attendanceDateView').value = todayStr;
+        document.getElementById('shiftDateView').value = todayStr;
+
+        // ================= دوال النظام =================
+
+        function attemptLogin(savedU = null, savedP = null) {
+            const u = savedU || document.getElementById('usernameInput').value.trim().toLowerCase();
+            const p = savedP || document.getElementById('passwordInput').value.trim();
+
+            if(allUsersData[u] && allUsersData[u].password === p) {
+                currentUser = allUsersData[u];
+                currentUser.role = MANAGERS.includes(u) ? 'admin' : 'employee';
+
+                const datePicker = document.getElementById('attendanceDateView');
+                const dateLabel = document.getElementById('dateLabel');
+                const shiftDatePicker = document.getElementById('shiftDateView');
+                const shiftDateLabel = document.getElementById('shiftDateLabel');
+                const shiftTitle = document.getElementById('shiftTableTitle');
+                const shiftDesc = document.getElementById('shiftTableDesc');
+                const adminControls = document.getElementById('adminShiftControls');
+
+                if(currentUser.role === 'employee') {
+                    // للموظف
+                    datePicker.disabled = true;
+                    datePicker.value = todayStr;
+                    dateLabel.innerText = "تاريخ اليوم (مقفول):";
+                    
+                    shiftDatePicker.disabled = true;
+                    shiftDatePicker.value = todayStr;
+                    shiftDateLabel.innerText = "الأسبوع الحالي:";
+                    
+                    shiftTitle.innerText = "📅 جدول شيفاتي للأسبوع";
+                    shiftDesc.innerText = "تظهر شيفاتك فقط";
+                    
+                    adminControls.classList.remove('visible'); // إخفاء أدوات المدير
+                    document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+                } else {
+                    // للمشرف
+                    datePicker.disabled = false;
+                    dateLabel.innerText = "اختر التاريخ للعرض:";
+                    
+                    shiftDatePicker.disabled = false;
+                    shiftDateLabel.innerText = "اختر الأسبوع للعرض:";
+                    
+                    shiftTitle.innerText = "📅 جدول شيفات جميع الموظفين";
+                    shiftDesc.innerText = "يعرض مواعيد العمل والإجازات لكل موظف";
+
+                    adminControls.classList.add('visible'); // إظهار أدوات المدير
+                    populateUserSelect(); // ملء قائمة الموظفين
+                    document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+                    startAttendanceListener();
+                }
+
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('dashboardSection').classList.remove('hidden');
+                document.getElementById('welcomeMsg').innerText = `أهلاً، ${currentUser.realName || currentUser.username}`;
+
+                localStorage.setItem('elshamaa_user', u);
+                localStorage.setItem('elshamaa_pass', p);
+                
+                updateMyStatusDisplay(); 
+                renderAttendanceTable();
+                renderShiftsTable();
+            } else {
+                if(!savedU) alert("بيانات خاطئة");
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('elshamaa_user');
+            localStorage.removeItem('elshamaa_pass');
+            location.reload();
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            event.target.classList.add('active');
             
-            const MANAGERS = ['mahmoud', 'abutamim', 'ahmed'];
-            const DAYS = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
+            if(tabName === 'shifts') renderShiftsTable();
+        }
 
-            // Helper Functions
-            function getServerDateString() {
-                const d = new Date();
-                return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
-            }
+        function getFbDateKey(dateObj) {
+            const d = dateObj.getDate().toString().padStart(2, '0');
+            const m = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+            const y = dateObj.getFullYear();
+            return `${y}-${m}-${d}`;
+        }
 
-            function convertHtmlDateToFbKey(dateStr) {
-                if(!dateStr) return "";
-                const parts = dateStr.split('-');
-                return `${parts[2]}-${parts[1]}-${parts[0]}`;
-            }
+        // ================= البصمة =================
 
-            function attemptLogin(savedU = null, savedP = null) {
-                // إذا كانت البيانات قادمة من التخزين المحلي نستخدمها، وإلا نأخذها من الحقول
-                const u = savedU || document.getElementById('usernameInput').value.trim().toLowerCase();
-                const p = savedP || document.getElementById('passwordInput').value.trim();
+        function scanFingerprint() {
+            const btn = document.querySelector('.finger-btn');
+            const statusTxt = document.getElementById('scanStatus');
+            
+            if(btn.classList.contains('scanning')) return;
 
-                if(allUsersData[u] && allUsersData[u].password === p) {
-                    currentUser = allUsersData[u];
-                    currentUser.role = MANAGERS.includes(u) ? 'admin' : 'employee';
+            btn.classList.add('scanning');
+            statusTxt.innerText = "جاري قراءة البصمة...";
+            statusTxt.style.color = "var(--warning)";
 
-                    if(currentUser.role === 'employee') {
-                        document.getElementById('scheduleFilterBox').style.display = 'none';
-                    }
-                    
-                    // حفظ البيانات في المتصفح
-                    localStorage.setItem('elshamaa_user', u);
-                    localStorage.setItem('elshamaa_pass', p);
-
-                    document.getElementById('loginSection').classList.add('hidden');
-                    document.getElementById('dashboardSection').classList.remove('hidden');
-                    document.getElementById('welcomeMsg').innerText = `أهلاً، ${currentUser.realName || currentUser.username}`;
-
-                    if(currentUser.role === 'admin') {
-                        document.getElementById('adminPanel').classList.remove('hidden');
-                        document.getElementById('adminQuickActions').classList.remove('hidden');
-                        populateSelects();
-                        const now = new Date();
-                        document.getElementById('attendDate').valueAsDate = now;
-
-                        // Set default month to current month
-                        document.getElementById('monthSelect').value = now.getMonth();
-                        document.getElementById('schedMonthSelect').value = now.getMonth();
-
-                        // Set default week start to current Saturday
-                        const dayOfWeek = now.getDay(); // 0 = Sunday
-                        const daysToSaturday = (dayOfWeek + 1) % 7; // Days back to Saturday
-                        const currentSaturday = new Date(now);
-                        currentSaturday.setDate(now.getDate() - daysToSaturday);
-                        document.getElementById('weekStartDate').value = currentSaturday.toISOString().split('T')[0];
-
-                        // Set default week for scheduling
-                        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                        const daysSinceFirstDay = now.getDate() - 1;
-                        const weekNum = Math.floor(daysSinceFirstDay / 7) + 1;
-                        document.getElementById('schedWeekSelect').value = Math.min(weekNum, 5);
-
-                        // Set default for current week selects
-                        document.getElementById('currentMonthSelect').value = now.getMonth();
-                        document.getElementById('currentWeekSelect').value = Math.min(weekNum, 5);
-
-                        // Set default filter to current month
-                        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-                        document.getElementById('filterDateStart').value = startOfMonth.toISOString().split('T')[0];
-                        document.getElementById('filterDateEnd').value = endOfMonth.toISOString().split('T')[0];
-                        applyFilter();
-                    }
-                    renderTables();
-                } else {
-                    if(!savedU) alert("بيانات الدخول غير صحيحة"); // لا تظهر تنبيه في حالة الدخول التلقائي الفاشل
-                }
-            }
-
-            function logout() {
-                localStorage.removeItem('elshamaa_user');
-                localStorage.removeItem('elshamaa_pass');
-                location.reload();
-            }
-
-            function populateSelects() {
-                const schedSel = document.getElementById('schedUser');
-                const attendSel = document.getElementById('attendUser');
-
-                // تفريغ القوائم مع وضع خيار افتراضي
-                schedSel.innerHTML = '<option value="">-- اختر اسم الشيف --</option>';
-                attendSel.innerHTML = '<option value="">-- اختر اسم الموظف --</option>';
-
-                // تحويل البيانات لصفوف لترتيبها أبجدياً
-                const userKeys = Object.keys(allUsersData);
-
-                // ترتيب الأسماء أبجدياً بناءً على الاسم الحقيقي أو اليوزر
-                userKeys.sort((a, b) => {
-                    const nameA = allUsersData[a].realName || a;
-                    const nameB = allUsersData[b].realName || b;
-                    return nameA.localeCompare(nameB, 'ar');
-                });
-
-                userKeys.forEach(username => {
-                    // استثناء المديرين من القائمة (محمود، أبو تميم، أحمد)
-                    if(!MANAGERS.includes(username.toLowerCase())) {
-                        const user = allUsersData[username];
-                        const displayName = user.realName || username; // إظهار الاسم الحقيقي إذا وجد، وإلا اليوزر
-
-                        const option = `<option value="${username}">${displayName}</option>`;
-                        schedSel.innerHTML += option;
-                        attendSel.innerHTML += option;
-                    }
-                });
-
-                console.log("تم تحميل " + (userKeys.length - MANAGERS.length) + " اسم من قاعدة البيانات");
-
-                // Populate year select
-                const yearSel = document.getElementById('yearSelect');
-                const schedYearSel = document.getElementById('schedYearSelect');
-                const currentYearSel = document.getElementById('currentYearSelect');
-                const currentYear = new Date().getFullYear();
-                yearSel.innerHTML = '';
-                schedYearSel.innerHTML = '';
-                currentYearSel.innerHTML = '';
-                for (let y = currentYear - 5; y <= currentYear + 5; y++) {
-                    const option = `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`;
-                    yearSel.innerHTML += option;
-                    schedYearSel.innerHTML += option;
-                    currentYearSel.innerHTML += option;
-                }
-            }
-
-            // 1.5 Toggle Inputs for Schedule
-            function toggleSchedInputs() {
-                const status = document.getElementById('schedStatus').value;
-                const timeGroup = document.getElementById('timeInputsGroup');
-                
-                if (status === 'work') {
-                    timeGroup.style.display = 'grid';
-                } else {
-                    timeGroup.style.display = 'none';
-                }
-            }
-
-            // 2. Shift Logic
-            function saveShift() {
-                const u = document.getElementById('schedUser').value;
-                const d = document.getElementById('schedDay').value;
-                const status = document.getElementById('schedStatus').value;
-
-                if(!u) return alert("اختر الموظف");
-
-                if (status === 'work') {
-                    const s = document.getElementById('schedStart').value;
-                    const e = document.getElementById('schedEnd').value;
-                    if(!s || !e) return alert("أكمل بيانات الوقت");
-                    
-                    db.ref(`schedules/${u}/${d}`).set(`${s} - ${e}`).then(() => {
-                        renderTables();
-                        alert("✅ تم حفظ الشيفة");
-                    });
-                } else {
-                    // Save Status String (Off, Annual, Sick) - English words
-                    db.ref(`schedules/${u}/${d}`).set(status).then(() => {
-                        renderTables();
-                        alert("✅ تم تحديث حالة اليوم");
-                    });
-                }
-            }
-
-            // 2.1 Save Current Week
-            function saveCurrentWeek() {
-                const year = parseInt(document.getElementById('currentYearSelect').value);
-                const month = parseInt(document.getElementById('currentMonthSelect').value);
-                const week = parseInt(document.getElementById('currentWeekSelect').value);
-
-                db.ref('settings/currentWeek').set({year, month, week}).then(() => {
-                    currentWeek = {year, month, week};
-                    renderTables();
-                    alert("تم حفظ الأسبوع النشط");
-                });
-            }
-
-            // 3. Attendance Logic
-            function saveAttendance() {
-                const u = document.getElementById('attendUser').value;
-                const dateInput = document.getElementById('attendDate').value;
-                const status = document.getElementById('attendStatus').value;
-
-                if(!u || !dateInput) return alert("اختر الموظف والتاريخ");
-
-                const dateKey = convertHtmlDateToFbKey(dateInput);
-                const updates = {};
-                // Save Status (Present, Late, Absent) - English words
-                updates[`users/${u}/attendance/${dateKey}/status`] = status;
-
-                db.ref().update(updates).then(() => {
-                    renderTables();
-                    alert("✅ تم تحديث حالة الحضور");
-                });
-            }
-
-            // 3.1 Quick Actions (Admin)
-            function quickSave(leaveType) {
-                const u = document.getElementById('attendUser').value;
-                const dateInput = document.getElementById('attendDate').value;
-
-                if(!u) return alert("يرجى اختيار الموظف أولاً");
-                if(!dateInput) return alert("يرجى اختيار التاريخ");
-
-                if(!confirm(`هل تريد تسجيل "${leaveType}" للموظف؟`)) return;
-
-                const dateKey = convertHtmlDateToFbKey(dateInput);
-                const updates = {};
-                updates[`users/${u}/attendance/${dateKey}/status`] = leaveType;
-                updates[`users/${u}/attendance/${dateKey}/clockIn`] = null;
-                updates[`users/${u}/attendance/${dateKey}/clockOut`] = null;
-                const dateParts = dateKey.split('-');
-                updates[`users/${u}/attendance/${dateKey}/date`] = `${dateParts[0]}/${dateParts[1]}/${dateParts[2]}`;
-
-                db.ref().update(updates).then(() => {
-                    alert("✅ تم التسجيل");
-                    renderTables();
-                });
-            }
-
-            // 3.2 Employee Quick Actions
-            function quickSaveSelf(leaveType) {
-                const dateInput = getServerDateString().split('/').reverse().join('-');
-                if(!confirm(`هل تريد تسجيل نفسك "${leaveType}" لهذا اليوم؟`)) return;
-                
-                const dateKey = convertHtmlDateToFbKey(dateInput);
-                const updates = {};
-                updates[`users/${currentUser.username}/attendance/${dateKey}/status`] = leaveType;
-                updates[`users/${currentUser.username}/attendance/${dateKey}/clockIn`] = null;
-                updates[`users/${currentUser.username}/attendance/${dateKey}/clockOut`] = null;
-                
-                db.ref().update(updates).then(() => {
-                    alert(`✅ تم تسجيل "${leaveType}"`);
-                    renderTables();
-                });
-            }
-
-            function startWorkNow() {
-                const dateInput = getServerDateString().split('/').reverse().join('-');
+            setTimeout(() => {
                 const now = new Date();
                 const timeString = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-                
-                const dateKey = convertHtmlDateToFbKey(dateInput);
-                
-                db.ref(`users/${currentUser.username}/attendance/${dateKey}/clockIn`).once('value', snap => {
-                    if(snap.exists()) {
-                        alert("⚠️ لقد قمت بتسجيل الدخول بالفعل اليوم!");
-                    } else {
-                        const updates = {};
-                        updates[`users/${currentUser.username}/attendance/${dateKey}/status`] = 'Present'; // English
-                        updates[`users/${currentUser.username}/attendance/${dateKey}/clockIn`] = timeString;
-                        
-                        db.ref().update(updates).then(() => {
-                            alert("✅ تم تسجيل الدخول الآن " + timeString);
-                            renderTables();
-                        });
-                    }
-                });
-            }
+                const dateKeyFb = getFbDateKey(now); 
 
-            function endWorkNow() {
-                const dateInput = getServerDateString().split('/').reverse().join('-');
-                const now = new Date();
-                const timeString = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+                const todayAtt = (currentUser.attendance && currentUser.attendance[dateKeyFb]) ? currentUser.attendance[dateKeyFb] : null;
                 
-                const dateKey = convertHtmlDateToFbKey(dateInput);
+                const isCurrentlyAbsent = (todayAtt && todayAtt.status === 'Absent');
+                const hasClockIn = (todayAtt && todayAtt.clockIn);
+                const hasClockOut = (todayAtt && todayAtt.clockOut);
 
                 const updates = {};
-                updates[`users/${currentUser.username}/attendance/${dateKey}/clockOut`] = timeString;
-                
-                db.ref().update(updates).then(() => {
-                    alert("✅ تم تسجيل الخروج " + timeString);
-                    renderTables();
-                });
-            }
 
-            // 4. Filtering Logic
-            function applyFilter() {
-                const start = document.getElementById('filterDateStart').value;
-                const end = document.getElementById('filterDateEnd').value;
-
-                if(!start || !end) return alert("يرجى تحديد تاريخ البداية والنهاية");
-
-                isFilterMode = true;
-                const thead = document.getElementById('attendanceHead');
-                thead.innerHTML = `
-                    <tr>
-                        <th>الموظف</th>
-                        <th>التاريخ</th>
-                        <th>اليوم</th>
-                        <th>الحالة</th>
-                        <th>دخول</th>
-                        <th>خروج</th>
-                    </tr>
-                `;
-                renderTables(start, end);
-            }
-
-            function resetFilter() {
-                isFilterMode = false;
-                document.getElementById('filterDateStart').value = '';
-                document.getElementById('filterDateEnd').value = '';
-                const thead = document.getElementById('attendanceHead');
-                thead.innerHTML = `
-                    <tr>
-                        <th>الموظف</th>
-                        <th>الحالة</th>
-                        <th>دخول</th>
-                        <th>خروج</th>
-                    </tr>
-                `;
-                renderTables();
-            }
-
-            // 5. Rendering
-            function renderTables(filterStart = null, filterEnd = null) {
-                // حساب تاريخ اليوم الحالي للمقارنة
-                const realToday = new Date();
-                const realTodayStr = `${realToday.getDate().toString().padStart(2, '0')}/${(realToday.getMonth() + 1).toString().padStart(2, '0')}`;
-
-                // A. Shift Table
-                let weekStart;
-                if (currentUser.role === 'employee' && currentWeek) {
-                    const firstDay = new Date(currentWeek.year, currentWeek.month, 1);
-                    weekStart = new Date(firstDay);
+                if (!hasClockIn || isCurrentlyAbsent) {
+                    updates[`users/${currentUser.username}/attendance/${dateKeyFb}/clockIn`] = timeString;
+                    updates[`users/${currentUser.username}/attendance/${dateKeyFb}/status`] = 'Present';
+                    updates[`users/${currentUser.username}/attendance/${dateKeyFb}/date`] = dateKeyFb;
                     
-                    // تعديل الحساب ليكون دائماً يوم سبت للموظف أيضاً
-                    weekStart.setDate(firstDay.getDate() - (firstDay.getDay() + 1) % 7);
-                    weekStart.setDate(weekStart.getDate() + (currentWeek.week - 1) * 7);
-                } else {
-                    const weekStartInput = document.getElementById('weekStartDate').value;
-                    weekStart = new Date();
-                    if (weekStartInput) {
-                        weekStart = new Date(weekStartInput);
+                    if(isCurrentlyAbsent) {
+                        statusTxt.innerText = `✅ تم إلغاء الغياب وتسجيل الحضور: ${timeString}`;
                     } else {
-                        const today = new Date();
-                        const dayOfWeek = today.getDay();
-                        const daysToSaturday = (dayOfWeek + 1) % 7;
-                        weekStart = new Date(today);
-                        weekStart.setDate(today.getDate() - daysToSaturday);
+                        statusTxt.innerText = `✅ تم تسجيل الحضور: ${timeString}`;
                     }
+                    statusTxt.style.color = "var(--success)";
+                } else if (!hasClockOut) {
+                    updates[`users/${currentUser.username}/attendance/${dateKeyFb}/clockOut`] = timeString;
+                    statusTxt.innerText = `👋 تم تسجيل الخروج: ${timeString}`;
+                    statusTxt.style.color = "var(--accent)";
+                } else {
+                    statusTxt.innerText = "⚠️ لقد أتممت دوامك بالفعل اليوم!";
+                    statusTxt.style.color = "var(--text-light)";
                 }
 
-                const weekDates = [];
-                for (let i = 0; i < 7; i++) {
-                    const date = new Date(weekStart);
-                    date.setDate(weekStart.getDate() + i);
-                    const dateStr = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-                    weekDates.push(dateStr);
-                }
-
-                // تحديث الهيدر مع إضافة كلاس التمييز إذا كان التاريخ هو اليوم
-                const schedHead = document.getElementById('scheduleHead');
-                schedHead.innerHTML = `
-                    <tr>
-                        <th>الموظف</th>
-                        ${DAYS.map((day, i) => {
-                            const isToday = (weekDates[i] === realTodayStr);
-                            return `<th class="${isToday ? 'today-highlight' : ''}">${day} <span class="date-label">${weekDates[i]}</span></th>`;
-                        }).join('')}
-                    </tr>
-                `;
-
-                const schedBody = document.getElementById('scheduleBody');
-                schedBody.innerHTML = '';
-
-                let usersToShow = (currentUser.role === 'admin')
-                    ? Object.values(allUsersData).filter(u => u.username && !MANAGERS.includes(u.username))
-                    : [currentUser];
-
-                usersToShow.sort((a,b) => (a.realName || a.username).localeCompare(b.realName || b.username));
-
-                usersToShow.forEach(u => {
-                    let row = `<tr><td class="emp-name">${u.realName || u.username}</td>`;
-                    for(let i=0; i<7; i++) {
-                        let cellContent = '<span class="empty-slot">--</span>';
-                        const val = (allScheduleData[u.username] && allScheduleData[u.username][i]) ? allScheduleData[u.username][i] : null;
-
-                        // تحديد ما إذا كانت هذه الخلية تخص اليوم الحالي
-                        const isToday = (weekDates[i] === realTodayStr);
-
-                        if (val) {
-                            if (val === 'Off') {
-                                cellContent = `<span class="sched-status-badge sched-status-off">Off</span>`;
-                            } else if (val === 'Annual Leave') {
-                                cellContent = `<span class="sched-status-badge sched-status-annual">Annual</span>`;
-                            } else if (val === 'Sick Leave') {
-                                cellContent = `<span class="sched-status-badge sched-status-sick">Sick</span>`;
-                            } else if (val === 'Absent') {
-                                cellContent = `<span class="sched-status-badge sched-status-absent">Absent</span>`;
-                            } else {
-                                const times = val.split(' - ');
-                                if (times.length === 2) {
-                                    cellContent = `<div class="time-slot"><span class="time-in">${times[0]}</span><span class="time-separator">-</span><span class="time-out">${times[1]}</span></div>`;
-                                } else {
-                                    cellContent = `<span class="shift-badge">${val}</span>`;
-                                }
-                            }
-                        }
-                        // إضافة كلاس today-highlight للخلية إذا كانت توافق اليوم
-                        row += `<td class="${isToday ? 'today-highlight' : ''}">${cellContent}</td>`;
-                    }
-                    row += `</tr>`;
-                    schedBody.innerHTML += row;
-                });
-
-                // B. Attendance Table
-                const attendBody = document.getElementById('attendanceBody');
-                attendBody.innerHTML = '';
-
-                if (!isFilterMode) {
-                    const todayKey = getServerDateString().replace(/\//g, '-');
-
-                    usersToShow.forEach(u => {
-                        const todayData = (u.attendance && u.attendance[todayKey]) ? u.attendance[todayKey] : null;
-
-                        let statusDisplay = '<span style="color:#aaa;">-</span>';
-                        if (todayData && todayData.status) {
-                            const s = todayData.status;
-                            let badgeClass = 'status-present';
-                            if(s === 'Late') badgeClass = 'status-late'; // English Match
-                            if(s === 'Absent') badgeClass = 'status-absent'; // English Match
-                            if(s === 'Annual Leave') badgeClass = 'status-annual';
-                            if(s === 'Sick Leave') badgeClass = 'status-sick';
-                            if(s === 'Day Off' || s === 'Off') badgeClass = 'status-off';
-                            statusDisplay = `<span class="status-badge ${badgeClass}">${s}</span>`;
-                        }
-
-                        const clockIn = todayData ? (todayData.clockIn || '--:--') : '--:--';
-                        const clockOut = todayData ? (todayData.clockOut || '--:--') : '--:--';
-
-                        attendBody.innerHTML += `
-                            <tr>
-                                <td style="font-weight:bold;">${u.realName || u.username}</td>
-                                <td>${statusDisplay}</td>
-                                <td style="font-family:'Courier New';">${clockIn}</td>
-                                <td style="font-family:'Courier New';">${clockOut}</td>
-                            </tr>
-                        `;
+                if(Object.keys(updates).length > 0) {
+                    db.ref().update(updates).then(() => {
+                        setTimeout(() => {
+                            btn.classList.remove('scanning');
+                            if(!currentUser.attendance) currentUser.attendance = {};
+                            currentUser.attendance[dateKeyFb] = { 
+                                ...(currentUser.attendance[dateKeyFb] || {}), 
+                                ...updates[`users/${currentUser.username}/attendance/${dateKeyFb}`] 
+                            };
+                            updateMyStatusDisplay();
+                            renderAttendanceTable();
+                        }, 500);
                     });
                 } else {
-                    const startDate = new Date(filterStart);
-                    const endDate = new Date(filterEnd);
-
-                    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-                        const dateKey = `${d.getDate().toString().padStart(2, '0')}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getFullYear()}`;
-                        const dateDisplay = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
-                        const dayName = new Date(d).toLocaleDateString('ar-EG', {weekday: 'long'});
-
-                        usersToShow.forEach(u => {
-                            const record = (u.attendance && u.attendance[dateKey]) ? u.attendance[dateKey] : null;
-
-                            if (record) {
-                                let statusDisplay = '<span style="color:#aaa;">-</span>';
-                                if (record.status) {
-                                    const s = record.status;
-                                    let badgeClass = 'status-present';
-                                    if(s === 'Late') badgeClass = 'status-late';
-                                    if(s === 'Absent') badgeClass = 'status-absent';
-                                    if(s === 'Annual Leave') badgeClass = 'status-annual';
-                                    if(s === 'Sick Leave') badgeClass = 'status-sick';
-                                    if(s === 'Day Off' || s === 'Off') badgeClass = 'status-off';
-                                    statusDisplay = `<span class="status-badge ${badgeClass}">${s}</span>`;
-                                }
-
-                                const clockIn = record.clockIn || '--:--';
-                                const clockOut = record.clockOut || '--:--';
-
-                                attendBody.innerHTML += `
-                                    <tr>
-                                        <td style="font-weight:bold;">${u.realName || u.username}</td>
-                                        <td style="font-size:0.85rem; color:#cbd5e1;">${dateDisplay}</td>
-                                        <td style="font-size:0.85rem; color:#cbd5e1;">${dayName}</td>
-                                        <td>${statusDisplay}</td>
-                                        <td style="font-family:'Courier New';">${clockIn}</td>
-                                        <td style="font-family:'Courier New';">${clockOut}</td>
-                                    </tr>
-                                `;
-                            }
-                        });
-                    }
-
-                    if(attendBody.innerHTML === '') {
-                        attendBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#64748b;">لا توجد سجلات في هذا النطاق</td></tr>';
-                    }
-                }
-            }
-
-            // Quick Range Functions
-            function setQuickRange(range) {
-                const now = new Date();
-                let start, end;
-
-                if (range === 'week') {
-                    // This week: from Sunday to Saturday
-                    const dayOfWeek = now.getDay(); // 0 = Sunday
-                    start = new Date(now);
-                    start.setDate(now.getDate() - dayOfWeek);
-                    end = new Date(start);
-                    end.setDate(start.getDate() + 6);
-                } else if (range === 'month') {
-                    // This month
-                    start = new Date(now.getFullYear(), now.getMonth(), 1);
-                    end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-                } else if (range === 'lastMonth') {
-                    // Last month
-                    start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-                    end = new Date(now.getFullYear(), now.getMonth(), 0);
-                } else if (range === '30days') {
-                    // Last 30 days
-                    end = new Date(now);
-                    start = new Date(now);
-                    start.setDate(now.getDate() - 29); // 30 days including today
+                    btn.classList.remove('scanning');
                 }
 
-                document.getElementById('filterDateStart').value = start.toISOString().split('T')[0];
-                document.getElementById('filterDateEnd').value = end.toISOString().split('T')[0];
-                applyFilter();
+            }, 1500);
+        }
+
+        function markSelfAbsent() {
+            if(!confirm("هل أنت متأكد من تسجيل نفسك كغائب اليوم؟")) return;
+
+            const dateKeyFb = getFbDateKey(new Date());
+            const updates = {};
+            
+            updates[`users/${currentUser.username}/attendance/${dateKeyFb}/status`] = 'Absent';
+            updates[`users/${currentUser.username}/attendance/${dateKeyFb}/clockIn`] = null;
+            updates[`users/${currentUser.username}/attendance/${dateKeyFb}/clockOut`] = null;
+            updates[`users/${currentUser.username}/attendance/${dateKeyFb}/date`] = dateKeyFb;
+
+            db.ref().update(updates).then(() => {
+                if(!currentUser.attendance) currentUser.attendance = {};
+                currentUser.attendance[dateKeyFb] = { status: 'Absent', date: dateKeyFb };
+                updateMyStatusDisplay();
+                renderAttendanceTable();
+                alert("تم تسجيل الغياب");
+            });
+        }
+
+        function updateMyStatusDisplay() {
+            const display = document.getElementById('myCurrentStatus');
+            const dateKeyFb = getFbDateKey(new Date());
+            const att = (currentUser.attendance && currentUser.attendance[dateKeyFb]) ? currentUser.attendance[dateKeyFb] : null;
+
+            if(!att) {
+                display.innerHTML = '<i class="fa fa-info-circle"></i> <span>لم تسجل دخول اليوم</span>';
+                display.style.borderColor = "var(--glass-border)";
+                display.style.color = "var(--text-light)";
+            } else if (att.status === 'Present' || att.status === 'Late') {
+                display.innerHTML = `<i class="fa fa-check-circle"></i> <span>أنت الآن: حاضر (دخول ${att.clockIn})</span>`;
+                display.style.borderColor = "var(--success)";
+                display.style.color = "var(--success)";
+            } else if (att.status === 'Absent') {
+                display.innerHTML = `<i class="fa fa-xmark-circle"></i> <span>أنت اليوم: غائب</span>`;
+                display.style.borderColor = "var(--danger)";
+                display.style.color = "var(--danger)";
+            }
+        }
+
+        // ================= لوحة تحكم المشرف (تعديل الشيفات) =================
+
+        function populateUserSelect() {
+            const sel = document.getElementById('schedUserSelect');
+            sel.innerHTML = '<option value="">-- اختر الموظف --</option>';
+            Object.keys(allUsersData).forEach(u => {
+                if(!MANAGERS.includes(u)) {
+                    const name = allUsersData[u].realName || u;
+                    sel.innerHTML += `<option value="${u}">${name}</option>`;
+                }
+            });
+        }
+
+        function toggleSchedInputs() {
+            const val = document.getElementById('schedStatusSelect').value;
+            const timeGroup = document.getElementById('schedTimeInputs');
+            if(val === 'work') {
+                timeGroup.style.display = 'grid';
+            } else {
+                timeGroup.style.display = 'none';
+            }
+        }
+
+        function saveShiftToDB() {
+            const user = document.getElementById('schedUserSelect').value;
+            const day = document.getElementById('schedDaySelect').value;
+            const status = document.getElementById('schedStatusSelect').value;
+            const start = document.getElementById('schedStartTime').value;
+            const end = document.getElementById('schedEndTime').value;
+
+            if(!user) return alert("يرجى اختيار الموظف");
+
+            let valueToSave = "";
+            if(status === 'work') {
+                if(!start || !end) return alert("يرجى إدخال وقت البداية والنهاية");
+                valueToSave = `${start} - ${end}`;
+            } else {
+                valueToSave = status;
             }
 
-            // Set Week Start based on selected week in month
-            function setWeekStart() {
-                const weekNum = parseInt(document.getElementById('weekSelect').value);
-                const monthNum = parseInt(document.getElementById('monthSelect').value);
-                const year = parseInt(document.getElementById('yearSelect').value);
+            db.ref(`schedules/${user}/${day}`).set(valueToSave).then(() => {
+                alert("✅ تم حفظ الشيفة بنجاح");
+                // الجدول هيتحدث تلقائياً بسبب الـ Listener
+            }).catch(err => {
+                alert("حدث خطأ أثناء الحفظ: " + err.message);
+            });
+        }
 
-                // أول يوم في الشهر المختار
-                const firstDay = new Date(year, monthNum, 1);
+        // ================= الجداول =================
 
-                // حساب أول يوم سبت (سواء كان في بداية الشهر أو السبت الذي يسبقه مباشرة)
-                let weekStart = new Date(firstDay);
-                weekStart.setDate(firstDay.getDate() - (firstDay.getDay() + 1) % 7);
-
-                // الانتقال للأسبوع المطلوب (الأول، الثاني، إلخ) بناءً على أول سبت محسوب
-                weekStart.setDate(weekStart.getDate() + (weekNum - 1) * 7);
-
-                document.getElementById('weekStartDate').value = weekStart.toISOString().split('T')[0];
-                renderTables();
+        function renderAttendanceTable() {
+            let dateInput;
+            if(currentUser.role === 'employee') {
+                dateInput = todayStr; 
+            } else {
+                dateInput = document.getElementById('attendanceDateView').value;
             }
 
-            // Set Week Start for scheduling
-            function setSchedWeekStart() {
-                // This function can be used if needed for scheduling, but currently not required
+            const tbody = document.getElementById('attendanceTableBody');
+            tbody.innerHTML = '';
+            const dateKeyFb = getFbDateKey(new Date(dateInput));
+            
+            let users = [];
+            if(currentUser.role === 'admin') {
+                users = Object.values(allUsersData).filter(u => u.username && !MANAGERS.includes(u.username));
+            } else {
+                users = [currentUser];
             }
 
-            function initListeners() {
-                // الاستماع لبيانات المستخدمين في نظام البريكات
-                db.ref('users').on('value', snap => {
-                    allUsersData = snap.val() || {};
+            users.forEach(u => {
+                const att = (u.attendance && u.attendance[dateKeyFb]) ? u.attendance[dateKeyFb] : null;
+                let statusBadge = '<span class="badge bg-off">--</span>';
+                
+                if(att && att.status) {
+                    let colorClass = 'bg-success';
+                    if(att.status === 'Late') colorClass = 'bg-warning';
+                    if(att.status === 'Absent') colorClass = 'bg-danger';
+                    if(att.status === 'Off') colorClass = 'bg-off';
+                    statusBadge = `<span class="badge ${colorClass}">${att.status}</span>`;
+                }
 
-                    // تحديث القوائم بالأسماء الجديدة
-                    populateSelects();
+                const clockIn = att ? (att.clockIn || '--:--') : '--:--';
+                const clockOut = att ? (att.clockOut || '--:--') : '--:--';
 
-                    // محاولة تسجيل الدخول التلقائي (الذي أضفناه سابقاً)
-                    if (!currentUser) {
-                        const savedU = localStorage.getItem('elshamaa_user');
-                        const savedP = localStorage.getItem('elshamaa_pass');
-                        if (savedU && savedP) {
-                            attemptLogin(savedU, savedP);
+                let actionBtn = '';
+                if(currentUser.role === 'admin') {
+                    actionBtn = `
+                        <button class="btn btn-success" style="width:auto; padding:5px 10px; font-size:0.8rem; display:inline-flex;"
+                        onclick="quickSetStatus('${u.username}', '${dateKeyFb}', 'Present')">حضور</button>
+                        <button class="btn btn-danger" style="width:auto; padding:5px 10px; font-size:0.8rem; display:inline-flex;"
+                        onclick="quickSetStatus('${u.username}', '${dateKeyFb}', 'Absent')">غياب</button>
+                    `;
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${u.realName || u.username}</td>
+                        <td>${statusBadge}</td>
+                        <td style="font-family:monospace; font-size:1.1rem">${clockIn}</td>
+                        <td style="font-family:monospace; font-size:1.1rem">${clockOut}</td>
+                        ${currentUser.role === 'admin' ? `<td>${actionBtn}</td>` : ''}
+                    </tr>
+                `;
+            });
+        }
+
+        function renderShiftsTable() {
+            const thead = document.querySelector('#shiftsTable thead');
+            const tbody = document.getElementById('shiftsTableBody');
+            tbody.innerHTML = '';
+
+            // حساب بداية الأسبوع من الـ Date Picker
+            let inputDateStr = document.getElementById('shiftDateView').value;
+            let inputDate = new Date(inputDateStr);
+            const jsDay = inputDate.getDay();
+            const daysToSaturday = (jsDay + 1) % 7;
+            const saturdayDate = new Date(inputDate);
+            saturdayDate.setDate(inputDate.getDate() - daysToSaturday);
+
+            const dayNames = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
+            
+            let headerHTML = '<tr><th>الموظف</th>';
+            for(let i=0; i<7; i++) {
+                let currentDayDate = new Date(saturdayDate);
+                currentDayDate.setDate(saturdayDate.getDate() + i);
+                const d = String(currentDayDate.getDate()).padStart(2, '0');
+                const m = String(currentDayDate.getMonth() + 1).padStart(2, '0');
+                const dateStr = `${d}/${m}`;
+                const dayName = dayNames[i];
+                headerHTML += `<th>${dayName} <br> <span style="font-size:0.8em">${dateStr}</span></th>`;
+            }
+            headerHTML += '</tr>';
+            thead.innerHTML = headerHTML;
+
+            let users = [];
+            if(currentUser.role === 'admin') {
+                users = Object.values(allUsersData).filter(u => u.username && !MANAGERS.includes(u.username));
+                users.sort((a,b) => (a.realName || a.username).localeCompare(b.realName || b.username));
+            } else {
+                users = [currentUser];
+            }
+
+            users.forEach(u => {
+                let row = `<tr><td>${u.realName || u.username}</td>`;
+                for(let i=0; i<7; i++) {
+                    const shift = (allScheduleData[u.username] && allScheduleData[u.username][i]) ? allScheduleData[u.username][i] : null;
+                    let cellContent = '<span style="color:#555; font-size:0.8rem">-</span>';
+
+                    if(shift) {
+                        if(shift === 'Off') {
+                            cellContent = '<span class="badge bg-off">Off</span>';
+                        } else if(shift.includes('Leave')) {
+                             cellContent = '<span class="badge bg-warning">إجازة</span>';
+                        } else {
+                            cellContent = `<span class="badge bg-info">${shift}</span>`;
                         }
                     }
+                    row += `<td>${cellContent}</td>`;
+                }
+                row += '</tr>';
+                tbody.innerHTML += row;
+            });
+        }
 
-                    if(currentUser && allUsersData[currentUser.username]) {
-                        currentUser = allUsersData[currentUser.username];
-                        renderTables();
-                    }
-                });
-
-                db.ref('schedules').on('value', snap => {
-                    allScheduleData = snap.val() || {};
-                    if(currentUser) renderTables();
-                });
-
-                db.ref('settings').on('value', snap => {
-                    const settings = snap.val() || {};
-                    currentWeek = settings.currentWeek || null;
-                    if(currentUser) renderTables();
-                });
+        function quickSetStatus(username, dateKey, status) {
+            if(!confirm(`تأكيد تغيير الحالة لـ ${status}؟`)) return;
+            const updates = {};
+            updates[`users/${username}/attendance/${dateKey}/status`] = status;
+            if(status === 'Absent') {
+                updates[`users/${username}/attendance/${dateKey}/clockIn`] = null;
+                updates[`users/${username}/attendance/${dateKey}/clockOut`] = null;
             }
+            db.ref().update(updates).then(() => renderAttendanceTable());
+        }
 
-            initListeners();
-        </script>
-    </body>
-    </html>
+        function startAttendanceListener() {
+            db.ref('users').on('child_changed', (snapshot) => {
+                const updatedUser = snapshot.val();
+                const username = snapshot.key;
+                if (username === currentUser.username) return;
+
+                const todayKey = getFbDateKey(new Date());
+                if (updatedUser.attendance && updatedUser.attendance[todayKey]) {
+                    const att = updatedUser.attendance[todayKey];
+                    const name = updatedUser.realName || username;
+                    if (att.clockIn && att.status !== 'Absent') {
+                        showToast(`${name} حضر الآن`, `الوقت: ${att.clockIn}`);
+                    }
+                }
+            });
+        }
+
+        function showToast(title, msg) {
+            const c = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = 'toast success';
+            t.innerHTML = `<div><h5>${title}</h5><p>${msg}</p></div>`;
+            c.appendChild(t);
+            setTimeout(() => t.classList.add('show'), 10);
+            setTimeout(() => { t.classList.remove('show'); setTimeout(()=>t.remove(),400); }, 5000);
+        }
+
+        function init() {
+            db.ref('users').on('value', snap => {
+                allUsersData = snap.val() || {};
+                if(!currentUser) {
+                    const savedU = localStorage.getItem('elshamaa_user');
+                    const savedP = localStorage.getItem('elshamaa_pass');
+                    if(savedU && savedP) attemptLogin(savedU, savedP);
+                } else {
+                    if(allUsersData[currentUser.username]) currentUser = allUsersData[currentUser.username];
+                }
+            });
+
+            db.ref('schedules').on('value', snap => {
+                allScheduleData = snap.val() || {};
+                if(document.getElementById('tab-shifts').classList.contains('active')) {
+                    renderShiftsTable();
+                }
+            });
+        }
+
+        init();
+
+    </script>
+</body>
+</html>
