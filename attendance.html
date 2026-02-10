@@ -3,33 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ELSHAMAA | نظام البصمة والشيفات</title>
+    <title>الشمعة | نظام الموارد البشرية والبصمة</title>
+    <!-- استخدام خط عربي جميل -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase Libraries -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <style>
         :root {
-            --bg-deep: #020617;
+            --bg-deep: #0f172a;
             --primary: #6366f1;
             --accent: #06b6d4;
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
-            --glass: rgba(15, 23, 42, 0.6);
+            --glass: rgba(30, 41, 59, 0.7);
             --glass-border: rgba(255,255,255,0.08);
             --text-light: #f1f5f9;
         }
 
         body { 
             font-family: 'Cairo', sans-serif; 
-            background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%); 
+            background: radial-gradient(circle at 50% 50%, #1e293b 0%, #020617 100%); 
             margin: 0; padding: 20px; min-height: 100vh; color: var(--text-light);
         }
 
         .container { max-width: 1400px; margin: 0 auto; }
 
+        /* Main Card */
         .main-card {
             background: var(--glass);
             backdrop-filter: blur(30px);
@@ -39,12 +42,13 @@
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
         }
 
-        h2 { margin-top: 0; text-align: center; color: var(--accent); margin-bottom: 20px; }
+        h2 { margin-top: 0; text-align: center; color: var(--accent); margin-bottom: 20px; text-shadow: 0 0 20px rgba(6,182,212,0.3); }
         
-        input, select {
+        /* Inputs */
+        input, select, textarea {
             width: 100%;
             padding: 12px;
-            background: rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.4);
             border: 1px solid var(--glass-border);
             border-radius: 12px;
             color: white;
@@ -52,15 +56,16 @@
             margin-bottom: 10px;
             box-sizing: border-box;
             outline: none;
+            transition: 0.3s;
         }
-        input:focus, select:focus { border-color: var(--primary); }
+        textarea { resize: vertical; min-height: 100px; }
         
-        input:disabled {
-            background: rgba(255,255,255,0.05);
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.2); }
+        input:disabled, textarea:disabled { background: rgba(255,255,255,0.05); cursor: not-allowed; opacity: 0.7; }
 
+        label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #cbd5e1; }
+
+        /* Buttons */
         .btn {
             color: white;
             padding: 12px 20px;
@@ -77,112 +82,289 @@
             gap: 8px;
         }
         .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .btn:active { transform: translateY(0); }
         .btn:disabled { opacity: 0.5; cursor: default; transform: none !important; }
-        .btn-danger { background: var(--danger); }
-        .btn-success { background: var(--success); }
-        .btn-accent { background: var(--accent); color: #0f172a; font-weight: 900; }
+        
+        .btn-danger { background: var(--danger); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
+        .btn-success { background: var(--success); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
+        .btn-accent { background: var(--accent); color: #0f172a; font-weight: 900; box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3); }
+        .btn-neutral { background: #475569; }
+        .btn-sm { padding: 6px 12px; font-size: 0.85rem; width: auto; }
 
-        /* منطقة البصمة */
+        /* Fingerprint Section */
         .fingerprint-section {
             text-align: center; padding: 40px;
             background: rgba(255,255,255,0.02); border-radius: 20px;
             border: 1px dashed var(--accent); margin-bottom: 30px;
         }
+        .actions-container { display: flex; justify-content: center; gap: 30px; margin-top: 20px; flex-wrap: wrap; }
 
-        .actions-container {
-            display: flex; justify-content: center; gap: 20px; margin-top: 20px; flex-wrap: wrap;
-        }
-
+        /* Big Fingerprint Button */
         .finger-btn {
-            width: 130px; height: 130px; border-radius: 50%; background: var(--bg-deep);
-            border: 4px solid var(--accent); color: var(--accent); font-size: 3rem;
+            width: 140px; height: 140px; border-radius: 50%; background: var(--bg-deep);
+            border: 4px solid var(--accent); color: var(--accent); font-size: 3.5rem;
             cursor: pointer; transition: 0.3s; display: flex;
             flex-direction: column; justify-content: center; align-items: center;
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.1);
         }
-        .finger-btn span { font-size: 0.9rem; margin-top: 5px; font-weight: bold; }
-        .finger-btn:hover { transform: scale(1.05); box-shadow: 0 0 40px rgba(6, 182, 212, 0.5); }
-        
+        .finger-btn span { font-size: 1rem; margin-top: 10px; font-weight: bold; }
+        .finger-btn:hover { transform: scale(1.05); box-shadow: 0 0 50px rgba(6, 182, 212, 0.4); }
         .finger-btn:active, .finger-btn.scanning {
             background: var(--accent); color: var(--bg-deep);
-            animation: pulse 1s infinite;
+            animation: pulse-ring 1.5s infinite;
         }
-        
-        .absent-btn {
-            width: 130px; height: 130px; border-radius: 50%; background: var(--bg-deep);
-            border: 4px solid var(--danger); color: var(--danger); font-size: 3rem;
-            cursor: pointer; transition: 0.3s; display: flex;
-            flex-direction: column; justify-content: center; align-items: center;
-            box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
-        }
-        .absent-btn span { font-size: 0.9rem; margin-top: 5px; font-weight: bold; }
-        .absent-btn:hover { transform: scale(1.05); box-shadow: 0 0 40px rgba(239, 68, 68, 0.5); }
-        .absent-btn:active { background: var(--danger); color: white; }
 
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(6, 182, 212, 0); } 100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); } }
+        @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); } 70% { box-shadow: 0 0 0 25px rgba(6, 182, 212, 0); } 100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); } }
 
-        .scan-status { margin-top: 20px; font-size: 1.2rem; font-weight: bold; min-height: 40px; }
+        .scan-status { margin-top: 20px; font-size: 1.3rem; font-weight: bold; min-height: 40px; }
         .current-status-badge {
-            background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 50px;
-            border: 1px solid var(--glass-border); display: inline-block; margin-bottom: 10px;
-            font-weight: bold;
+            background: rgba(255,255,255,0.1); padding: 10px 25px; border-radius: 50px;
+            border: 1px solid var(--glass-border); display: inline-block; margin-bottom: 15px;
+            font-weight: bold; font-size: 1.1rem;
         }
 
-        /* التبويبات */
+        /* Tabs */
         .tabs-nav { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; overflow-x: auto; }
-        .tab-btn { background: transparent; border: 1px solid var(--glass-border); color: #94a3b8; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-family: 'Cairo'; transition: 0.3s; white-space: nowrap; }
+        .tab-btn { background: transparent; border: 1px solid var(--glass-border); color: #94a3b8; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-family: 'Cairo'; transition: 0.3s; white-space: nowrap; flex: 1; text-align: center; }
         .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
         .tab-content { display: none; animation: fadeIn 0.4s ease; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* الجداول */
+        /* Tables */
         .table-container {
             overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 20px;
             padding: 15px; border: 1px solid var(--glass-border); margin-top: 20px;
-            margin-bottom: 40px;
+            margin-bottom: 20px;
         }
-        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; min-width: 800px; }
-        th { background: rgba(99, 102, 241, 0.15); color: var(--accent); padding: 15px; text-align: center; font-weight: bold; border-radius: 8px; white-space: nowrap; }
-        tbody tr { background: rgba(255,255,255,0.02); transition: 0.2s; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; min-width: 800px; direction: ltr; /* Force LTR for Tables Content */ }
+        th { background: rgba(99, 102, 241, 0.15); color: var(--accent); padding: 15px; text-align: center; font-weight: bold; border-radius: 8px; white-space: nowrap; font-size: 0.95rem; }
+        tbody tr { background: rgba(255,255,255,0.02); transition: 0.2s; cursor: default; }
         tbody tr:hover { background: rgba(255,255,255,0.05); }
-        td { padding: 15px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        td:first-child { border-top-right-radius: 10px; border-bottom-right-radius: 10px; text-align: right; padding-right: 20px; font-weight: bold;}
-        td:last-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+        td { padding: 15px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.95rem; vertical-align: middle; position: relative; }
+        td:first-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; text-align: left; padding-left: 20px; font-weight: bold;}
+        td:last-child { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
 
-        /* الشارات */
-        .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; display: inline-block;}
+        /* Badges */
+        .badge { padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; display: inline-block; }
         .bg-success { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); }
         .bg-danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
         .bg-warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid var(--warning); }
         .bg-info { background: rgba(6, 182, 212, 0.2); color: var(--accent); border: 1px solid var(--accent); }
         .bg-off { background: rgba(100, 116, 139, 0.2); color: #94a3b8; border: 1px solid #94a3b8; }
 
-        /* الإشعارات */
-        #toast-container { position: fixed; top: 20px; left: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; width: 320px; }
-        .toast { background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px); border-right: 5px solid var(--accent); color: white; padding: 15px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 12px; transform: translateX(-120%); transition: transform 0.4s; }
+        /* Strikethrough Effect for Sick Leave */
+        .strike-text {
+            text-decoration: line-through;
+            text-decoration-color: var(--danger);
+            text-decoration-thickness: 2px;
+            opacity: 0.7;
+        }
+
+        /* Admin Hover Action */
+        .admin-editable:hover::after {
+            content: '\f303'; /* FontAwesome Pen Icon */
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            color: var(--accent);
+            font-size: 0.8rem;
+            opacity: 0.5;
+        }
+
+        /* Toasts */
+        #toast-container { position: fixed; top: 20px; left: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; width: 320px; direction: rtl; }
+        .toast { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border-left: 5px solid var(--accent); color: white; padding: 15px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 12px; transform: translateX(-120%); transition: transform 0.4s; }
         .toast.show { transform: translateX(0); }
         .toast.success { border-color: var(--success); }
 
         .hidden { display: none !important; }
         .section-title { font-size: 1.3rem; color: var(--primary); margin-bottom: 15px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; display: flex; align-items: center; gap: 10px; }
 
-        /* لوحة تحكم المشرف للشيفات */
+        /* Admin Controls */
         .admin-controls {
-            background: rgba(99, 102, 241, 0.1); /* لون بنفسجي خفيف */
+            background: rgba(99, 102, 241, 0.1);
             border: 1px solid var(--primary);
             border-radius: 15px;
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 25px;
-            display: none; /* مخفي افتراضياً */
+            display: none;
         }
         .admin-controls.visible { display: block; }
         
-        .grid-2-col {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
-        }
+        .grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         @media(max-width: 600px) { .grid-2-col { grid-template-columns: 1fr; } }
+
+        .time-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; margin-top: 10px; border: 1px solid var(--glass-border); }
+        .time-field { display: flex; flex-direction: column; }
+        .time-field input { margin-bottom: 0; text-align: center; font-size: 1.1rem; font-weight: bold; }
+
+        /* Report Card */
+        .report-card {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(15, 23, 42, 0.4) 100%);
+            border: 1px solid var(--accent);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .report-title {
+            color: var(--accent);
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .report-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.03);
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            border-left: 3px solid #94a3b8;
+            text-align: right;
+        }
+        .report-item.success { border-left-color: var(--success); }
+        .report-item.warning { border-left-color: var(--warning); }
+        
+        .report-text { font-size: 0.95rem; color: #e2e8f0; }
+        .report-badge { font-size: 0.85rem; font-weight: bold; padding: 4px 10px; border-radius: 8px; }
+        .badge-swap { background: var(--warning); color: #000; }
+
+        /* Date Range Controls for Report */
+        .date-range-controls {
+            display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;
+            background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border);
+            align-items: flex-end;
+        }
+        .date-control { flex: 1; min-width: 140px; }
+        .date-control label { margin-bottom: 5px; font-size: 0.85rem; }
+        .date-control input { margin-bottom: 0; }
+
+        /* English Table Override */
+        .english-text { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        /* Status Icons */
+        .status-icon { font-size: 1.2rem; }
+
+        /* --- ANNOUNCEMENT & ACKNOWLEDGMENT STYLES (NEW) --- */
+        .announcement-card {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.6) 100%);
+            border: 2px solid var(--success);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 25px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.1);
+        }
+        
+        .announcement-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+        }
+
+        .ann-tag {
+            background: var(--success);
+            color: #fff;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .announcement-body {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            margin-bottom: 25px;
+            color: #fff;
+        }
+
+        .announcement-footer {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .ref-me-btn {
+            background: linear-gradient(45deg, var(--success), #059669);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Cairo';
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            transition: 0.3s;
+        }
+        .ref-me-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6); }
+        .ref-me-btn:disabled { background: #334155; color: #94a3b8; cursor: default; transform: none; box-shadow: none; }
+
+        .ref-badge {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-family: monospace;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+
+        /* History List */
+        .history-item {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-right: 3px solid #475569;
+        }
+        .history-item.acknowledged { border-right-color: var(--success); }
+        .history-meta { font-size: 0.8rem; color: #94a3b8; margin-bottom: 5px; display: flex; justify-content: space-between; }
+
+        /* --- CORRECTION MODAL STYLES --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            z-index: 10000; display: none; justify-content: center; align-items: center;
+        }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.3s; }
+        
+        .modal-card {
+            background: #1e293b; border: 1px solid var(--primary); border-radius: 20px;
+            padding: 30px; width: 100%; max-width: 450px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6); position: relative;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-title { font-size: 1.3rem; color: var(--accent); font-weight: bold; }
+        .close-modal { background: none; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer; }
+        .close-modal:hover { color: white; }
+
+        .correction-options { display: grid; gap: 10px; margin-bottom: 20px; }
+        .correction-option {
+            background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px;
+            border: 1px solid var(--glass-border); cursor: pointer; display: flex; align-items: center; gap: 10px;
+            transition: 0.2s;
+        }
+        .correction-option:hover { background: rgba(255,255,255,0.1); }
+        .correction-option.selected { border-color: var(--accent); background: rgba(6,182,212,0.1); }
+        .correction-option input { width: auto; margin: 0; }
+
+        .correction-note { font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; }
 
     </style>
 </head>
@@ -192,75 +374,74 @@
         <div id="toast-container"></div>
 
         <div class="main-card">
-            <h2>🔹 نظام البصمة والشيفات المتكامل</h2>
+            <h2>🔹 نظام الشمعة للموارد البشرية</h2>
 
-            <!-- تسجيل الدخول -->
+            <!-- Login Section -->
             <div id="loginSection" style="max-width: 400px; margin: 50px auto; text-align: center; background: rgba(0,0,0,0.3); padding: 30px; border-radius: 20px;">
                 <input type="text" id="usernameInput" placeholder="اسم المستخدم">
                 <input type="password" id="passwordInput" placeholder="كلمة المرور">
-                <button class="btn btn-success" onclick="attemptLogin()">دخول للنظام</button>
+                <button class="btn btn-success" onclick="attemptLogin()">تسجيل الدخول</button>
             </div>
 
-            <!-- لوحة التحكم -->
+            <!-- Dashboard Section -->
             <div id="dashboardSection" class="hidden">
                 
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <h3 id="welcomeMsg">أهلاً</h3>
-                    <button class="btn btn-danger" onclick="logout()" style="width:auto; font-size:0.9rem;">خروج</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+                    <h3 id="welcomeMsg">أهلاً بك</h3>
+                    
+                    <div style="display:flex; gap: 10px;">
+                        <button class="btn btn-neutral" onclick="goToIndex()" style="width:auto; font-size:0.9rem;">
+                            <i class="fa fa-reply"></i> خروج للرئيسية
+                        </button>
+                        <button class="btn btn-danger" onclick="logout()" style="width:auto; font-size:0.9rem;">تسجيل خروج</button>
+                    </div>
                 </div>
 
-                <!-- التبويبات -->
+                <!-- Navigation Bar -->
                 <div class="tabs-nav">
-                    <button class="tab-btn active" onclick="switchTab('attendance')">📊 الحضور والبصمة</button>
-                    <button class="tab-btn" onclick="switchTab('shifts')">📅 جدول الشيفات</button>
+                    <button class="tab-btn active" onclick="switchTab('attendance')">📊 سجل الحضور</button>
+                    <!-- NEW TAB HERE -->
+                    <button class="tab-btn" onclick="switchTab('announcements')">📢 التنبيهات والإقرارات</button>
+                    <button class="tab-btn" onclick="switchTab('shifts')">📅 جدول المناوبات</button>
+                    <button class="tab-btn admin-only" onclick="switchTab('report')">📝 تقرير الأداء</button>
                 </div>
 
-                <!-- ================= التبويب 1: الحضور ================= -->
+                <!-- Tab 1: Attendance -->
                 <div id="tab-attendance" class="tab-content active">
                     
-                    <!-- منطقة البصمة -->
                     <div class="fingerprint-section">
-                        <p style="color: #94a3b8; margin-bottom: 20px;">سجل حضورك أو أخبرنا بأنك غائب</p>
+                        <p style="color: #94a3b8; margin-bottom: 20px;">يرجى تسجيل الحضور أو الانصراف</p>
                         
-                        <!-- عرض الحالة الحالية -->
                         <div id="myCurrentStatus" class="current-status-badge" style="margin-bottom:20px;">
-                            <i class="fa fa-info-circle"></i> <span>لم تسجل دخول اليوم</span>
+                            <i class="fa fa-info-circle"></i> <span>لا يوجد سجل لهذا اليوم</span>
                         </div>
 
                         <div class="actions-container">
-                            <!-- زر البصمة -->
                             <div class="finger-btn" onclick="scanFingerprint()">
                                 <i class="fa-solid fa-fingerprint"></i>
-                                <span>بصمة<br>Fingerprint</span>
-                            </div>
-
-                            <!-- زر الغائب -->
-                            <div class="absent-btn" onclick="markSelfAbsent()">
-                                <i class="fa-solid fa-user-xmark"></i>
-                                <span>غائب<br>Absent</span>
+                                <span>تسجيل<br>بصمة الحضور</span>
                             </div>
                         </div>
 
                         <div id="scanStatus" class="scan-status"></div>
                     </div>
 
-                    <!-- فلتر التاريخ -->
-                    <div style="display:flex; gap:10px; margin-bottom:15px; align-items:center;">
+                    <div style="display:flex; gap:10px; margin-bottom:15px; align-items:center;" class="admin-only">
                         <label id="dateLabel" for="attendanceDateView">تاريخ العرض:</label>
                         <input type="date" id="attendanceDateView" style="width: auto; display:inline-block;" onchange="renderAttendanceTable()">
+                        <span style="font-size:0.85rem; color:var(--warning); margin-right: auto;"><i class="fa fa-hand-pointer"></i> للمسؤولين: اضغط على أي سجل للتصحيح</span>
                     </div>
 
-                    <!-- جدول الحضور -->
                     <div class="table-container">
                         <div class="section-title">📋 سجل الحضور اليومي</div>
                         <table>
                             <thead>
                                 <tr>
-                                    <th>الموظف</th>
-                                    <th>الحالة</th>
-                                    <th>وقت الدخول</th>
-                                    <th>وقت الخروج</th>
-                                    <th class="admin-only">تحكم</th>
+                                    <th>Employee</th>
+                                    <th>Status</th>
+                                    <th>Clock In</th>
+                                    <th>Clock Out</th>
+                                    <th class="admin-only">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="attendanceTableBody"></tbody>
@@ -269,80 +450,131 @@
 
                 </div>
 
-                <!-- ================= التبويب 2: جدول الشيفات ================= -->
+                <!-- NEW TAB 2: Announcements & Acknowledgments -->
+                <div id="tab-announcements" class="tab-content">
+                    
+                    <!-- Admin: Post Announcement -->
+                    <div class="admin-controls" id="adminAnnouncementPanel">
+                        <h4 style="margin-top:0; color:var(--success); display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+                            <i class="fa fa-bullhorn"></i> نشر تنبيه جديد للموظفين
+                        </h4>
+                        <div style="margin-bottom:15px;">
+                            <label>نص التنبيه / القرار:</label>
+                            <textarea id="announcementInput" placeholder="اكتب التفاصيل هنا... مثلاً: تغيير موعد الدوام الرسمي"></textarea>
+                        </div>
+                        <button class="btn btn-success" onclick="postAnnouncement()">
+                            <i class="fa fa-paper-plane"></i> نشر التنبيه
+                        </button>
+                    </div>
+
+                    <!-- User: Active Announcement -->
+                    <div id="activeAnnouncementArea">
+                        <!-- Will be populated by JS -->
+                        <div style="text-align:center; padding:40px; color:#94a3b8;">
+                            <i class="fa fa-check-circle" style="font-size:3rem; margin-bottom:15px; opacity:0.5;"></i>
+                            <p>لا توجد تنبيهات جديدة تحتاج إلى إقرار حالياً.</p>
+                        </div>
+                    </div>
+
+                    <!-- History List -->
+                    <div class="section-title" style="margin-top:40px;">📜 سجل التنبيهات السابقة</div>
+                    <div id="announcementsHistoryList" style="max-height: 400px; overflow-y: auto; padding-right:5px;">
+                        <!-- History Items -->
+                    </div>
+
+                </div>
+
+                <!-- Tab 3: Shifts -->
                 <div id="tab-shifts" class="tab-content">
                     <div class="table-container">
                         
-                        <!-- تحكم في تاريخ الأسبوع للشيفات -->
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
                             <div>
-                                <div class="section-title" id="shiftTableTitle" style="margin-bottom:0; border:none;">📅 جدول شيفات الأسبوع</div>
+                                <div class="section-title" id="shiftTableTitle" style="margin-bottom:0; border:none;">📅 جدول المناوبات</div>
+                                <small id="weekRangeDisplay" style="color:var(--accent); margin-top:5px; display:block;">الأسبوع: --</small>
                             </div>
-                            <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="display:flex; align-items:center; gap:10px;" class="admin-only">
                                 <label id="shiftDateLabel" for="shiftDateView">اختر الأسبوع:</label>
-                                <input type="date" id="shiftDateView" style="width: auto; display:inline-block;" onchange="renderShiftsTable()">
+                                <input type="date" id="shiftDateView" style="width: auto; display:inline-block;" onchange="onShiftDateChange()">
                             </div>
                         </div>
-                        <p style="color:#94a3b8; margin-bottom:15px;" id="shiftTableDesc">يعرض مواعيد العمل والإجازات</p>
+                        <p style="color:#94a3b8; margin-bottom:15px;" id="shiftTableDesc">إدارة ساعات العمل والإجازات</p>
 
-                        <!-- لوحة تحكم المشرف لإضافة/تعديل الشيفات (جديدة) -->
                         <div id="adminShiftControls" class="admin-controls">
-                            <h4 style="margin-top:0; color:var(--accent); display:flex; align-items:center; gap:8px;">
-                                <i class="fa fa-pen-to-square"></i> تحرير جدول الشيفات (للمدير)
+                            <h4 style="margin-top:0; color:var(--accent); display:flex; align-items:center; gap:8px; margin-bottom:20px;">
+                                <i class="fa fa-pen-to-square"></i> تعديل الجدول (للمسؤولين فقط)
                             </h4>
+                            
                             <div class="grid-2-col">
                                 <div>
-                                    <label style="font-size:0.85rem; color:#cbd5e1;">الموظف:</label>
+                                    <label>الموظف:</label>
                                     <select id="schedUserSelect"></select>
                                 </div>
                                 <div>
-                                    <label style="font-size:0.85rem; color:#cbd5e1;">اليوم:</label>
-                                    <select id="schedDaySelect">
-                                        <option value="0">السبت (Saturday)</option>
-                                        <option value="1">الأحد (Sunday)</option>
-                                        <option value="2">الاثنين (Monday)</option>
-                                        <option value="3">الثلاثاء (Tuesday)</option>
-                                        <option value="4">الأربعاء (Wednesday)</option>
-                                        <option value="5">الخميس (Thursday)</option>
-                                        <option value="6">الجمعة (Friday)</option>
-                                    </select>
+                                    <label>اليوم:</label>
+                                    <select id="schedDaySelect"></select>
                                 </div>
                             </div>
                             
-                            <div style="margin-top:10px;">
-                                <label style="font-size:0.85rem; color:#cbd5e1;">الحالة:</label>
+                            <div style="margin-top:15px;">
+                                <label>الحالة:</label>
                                 <select id="schedStatusSelect" onchange="toggleSchedInputs()">
-                                    <option value="work">⏰ دوام عمل (Work)</option>
-                                    <option value="Off">🌴 إجازة (Off)</option>
-                                    <option value="Annual Leave">🔖 إجازة سنوية (Annual)</option>
-                                    <option value="Sick Leave">🏥 إجازة مرضية (Sick)</option>
+                                    <option value="work">⏰ وردية عمل</option>
+                                    <option value="Off">🌴 إجازة أسبوعية</option>
+                                    <option value="Absent">❌ غياب</option>
+                                    <option value="Annual Leave">🔖 إجازة سنوية</option>
+                                    <option value="Sick Leave">🏥 إجازة مرضية</option>
                                 </select>
                             </div>
 
-                            <!-- حقول الوقت تظهر فقط مع حالة العمل -->
-                            <div id="schedTimeInputs" class="grid-2-col" style="display:none;">
-                                <div>
-                                    <label style="font-size:0.85rem; color:#cbd5e1;">من:</label>
+                            <div id="schedTimeInputs" class="time-group" style="display:none;">
+                                <div class="time-field">
+                                    <label style="font-size:0.8rem; text-align:center;">وقت البدء</label>
                                     <input type="time" id="schedStartTime">
                                 </div>
-                                <div>
-                                    <label style="font-size:0.85rem; color:#cbd5e1;">إلى:</label>
+                                <div class="time-field">
+                                    <label style="font-size:0.8rem; text-align:center;">وقت الانتهاء</label>
                                     <input type="time" id="schedEndTime">
                                 </div>
                             </div>
 
-                            <button class="btn btn-accent" style="margin-top:15px;" onclick="saveShiftToDB()">
-                                <i class="fa fa-save"></i> حفظ في الجدول
+                            <button class="btn btn-accent" style="margin-top:20px;" onclick="saveShiftToDB()">
+                                <i class="fa fa-save"></i> حفظ التغييرات
                             </button>
                         </div>
 
-                        <!-- الجدول -->
                         <table id="shiftsTable">
-                            <thead>
-                                <!-- سيتم توليد الأيام والتواريخ هنا -->
-                            </thead>
+                            <thead></thead>
                             <tbody id="shiftsTableBody"></tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- Tab 4: Report (Admin Only) -->
+                <div id="tab-report" class="tab-content">
+                    <div class="report-card">
+                        <div class="report-title">
+                            <i class="fa-solid fa-clipboard-check"></i>
+                            تقرير الأداء (نطاق تاريخي)
+                        </div>
+                        
+                        <div class="date-range-controls">
+                            <div class="date-control">
+                                <label for="reportFromDate">من تاريخ:</label>
+                                <input type="date" id="reportFromDate">
+                            </div>
+                            <div class="date-control">
+                                <label for="reportToDate">إلى تاريخ:</label>
+                                <input type="date" id="reportToDate">
+                            </div>
+                            <button class="btn btn-accent" onclick="renderReport()" style="margin-bottom:0; width:auto; padding: 0 25px;">
+                                <i class="fa fa-magnifying-glass"></i> إنشاء التقرير
+                            </button>
+                        </div>
+
+                        <div id="reportContainer">
+                            <p style="text-align:center; color:#94a3b8;">اختر نطاق التاريخ لإنشاء التقرير</p>
+                        </div>
                     </div>
                 </div>
 
@@ -350,7 +582,56 @@
         </div>
     </div>
 
+    <!-- CORRECTION MODAL -->
+    <div id="correctionModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa fa-wrench"></i> تصحيح السجل</div>
+                <button class="close-modal" onclick="closeCorrectionModal()">&times;</button>
+            </div>
+            
+            <div class="correction-note">
+                <i class="fa fa-info-circle"></i> هذا التصحيح سيغير الحالة النهائية للموظف في هذا اليوم.
+            </div>
+
+            <div class="correction-options">
+                <!-- Option 1: Sick Leave (Strike through) -->
+                <label class="correction-option" onclick="selectCorrectionOption(this)">
+                    <input type="radio" name="corrType" value="Sick Leave">
+                    <div>
+                        <div style="font-weight:bold; color:var(--warning);">🏥 إجازة مرضية (بصحة)</div>
+                        <div style="font-size:0.8rem; color:#94a3b8;">سيتم شطب وقت الحضور وإحالته لإجازة مرضية.</div>
+                    </div>
+                </label>
+
+                <!-- Option 2: Annual Leave -->
+                <label class="correction-option" onclick="selectCorrectionOption(this)">
+                    <input type="radio" name="corrType" value="Annual Leave">
+                    <div>
+                        <div style="font-weight:bold; color:var(--accent);">🔖 إجازة سنوية</div>
+                        <div style="font-size:0.8rem; color:#94a3b8;">إحالة اليوم كإجازة سنوية مع مراعاة الرصيد.</div>
+                    </div>
+                </label>
+
+                <!-- Option 3: Present (Correcting Absent Mistake) -->
+                <label class="correction-option" onclick="selectCorrectionOption(this)">
+                    <input type="radio" name="corrType" value="Present">
+                    <div>
+                        <div style="font-weight:bold; color:var(--success);">✅ حضور (تصحيح خطأ)</div>
+                        <div style="font-size:0.8rem; color:#94a3b8;">الموظف حضر ولكنه سُجل غياباً بالخطأ.</div>
+                    </div>
+                </label>
+            </div>
+
+            <div class="grid-2-col">
+                <button class="btn btn-neutral" onclick="closeCorrectionModal()">إلغاء</button>
+                <button class="btn btn-accent" onclick="submitCorrection()">تطبيق التصحيح</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // --- Firebase Config ---
         const firebaseConfig = {
             apiKey: "AIzaSyBojsAZ73wpf-4cD8TviULncyxIIOUO2qY",
             authDomain: "brak-nagaf.firebaseapp.com",
@@ -367,19 +648,38 @@
 
         let currentUser = null;
         let allUsersData = {};
-        let allScheduleData = {};
+        let allScheduleData = {}; 
+        let allAnnouncementsData = []; // New: To store announcements
         const MANAGERS = ['mahmoud', 'abutamim', 'ahmed'];
         
-        // تعيين تاريخ اليوم
+        // --- Correction Modal State ---
+        let correctionTarget = { username: null, date: null };
+
+        // --- Initialization ---
         const today = new Date();
         const yyyy = today.getFullYear();
         const mm = String(today.getMonth() + 1).padStart(2, '0');
         const dd = String(today.getDate()).padStart(2, '0');
         const todayStr = `${yyyy}-${mm}-${dd}`;
+        
         document.getElementById('attendanceDateView').value = todayStr;
         document.getElementById('shiftDateView').value = todayStr;
+        document.getElementById('reportFromDate').value = todayStr;
+        document.getElementById('reportToDate').value = todayStr;
 
-        // ================= دوال النظام =================
+        // --- Core Functions ---
+
+        function goToIndex() {
+            window.location.href = 'index.html';
+        }
+
+        function getWeekKey(dateStr) {
+            const d = new Date(dateStr);
+            const day = d.getDay();
+            const diff = (day + 1) % 7; 
+            d.setDate(d.getDate() - diff);
+            return d.toISOString().split('T')[0];
+        }
 
         function attemptLogin(savedU = null, savedP = null) {
             const u = savedU || document.getElementById('usernameInput').value.trim().toLowerCase();
@@ -396,51 +696,56 @@
                 const shiftTitle = document.getElementById('shiftTableTitle');
                 const shiftDesc = document.getElementById('shiftTableDesc');
                 const adminControls = document.getElementById('adminShiftControls');
+                const adminAnnPanel = document.getElementById('adminAnnouncementPanel');
+                const adminOnlyElements = document.querySelectorAll('.admin-only');
 
                 if(currentUser.role === 'employee') {
-                    // للموظف
                     datePicker.disabled = true;
                     datePicker.value = todayStr;
-                    dateLabel.innerText = "تاريخ اليوم (مقفول):";
+                    dateLabel.innerText = "تاريخ اليوم (مغلق):";
                     
                     shiftDatePicker.disabled = true;
                     shiftDatePicker.value = todayStr;
-                    shiftDateLabel.innerText = "الأسبوع الحالي:";
                     
-                    shiftTitle.innerText = "📅 جدول شيفاتي للأسبوع";
-                    shiftDesc.innerText = "تظهر شيفاتك فقط";
+                    shiftTitle.innerText = "📅 جدول مناوباتي لهذا الأسبوع";
+                    shiftDesc.innerText = "جدولك الشخصي (اليومي)";
                     
-                    adminControls.classList.remove('visible'); // إخفاء أدوات المدير
-                    document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+                    adminControls.classList.remove('visible'); 
+                    adminAnnPanel.classList.remove('visible'); // Hide Announcement Input
+                    adminOnlyElements.forEach(el => el.classList.add('hidden'));
+
+                    checkAndSetAutoAbsent(); 
+
                 } else {
-                    // للمشرف
                     datePicker.disabled = false;
                     dateLabel.innerText = "اختر التاريخ للعرض:";
                     
                     shiftDatePicker.disabled = false;
-                    shiftDateLabel.innerText = "اختر الأسبوع للعرض:";
+                    shiftDateLabel.innerText = "اختر الأسبوع للعرض/التعديل:";
                     
-                    shiftTitle.innerText = "📅 جدول شيفات جميع الموظفين";
-                    shiftDesc.innerText = "يعرض مواعيد العمل والإجازات لكل موظف";
+                    shiftTitle.innerText = "📅 جدول جميع الموظفين";
+                    shiftDesc.innerText = "إدارة ساعات العمل والإجازات";
 
-                    adminControls.classList.add('visible'); // إظهار أدوات المدير
-                    populateUserSelect(); // ملء قائمة الموظفين
-                    document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+                    adminControls.classList.add('visible'); 
+                    adminAnnPanel.classList.add('visible'); // Show Announcement Input
+                    populateUserSelect(); 
+                    adminOnlyElements.forEach(el => el.classList.remove('hidden'));
                     startAttendanceListener();
                 }
 
                 document.getElementById('loginSection').classList.add('hidden');
                 document.getElementById('dashboardSection').classList.remove('hidden');
-                document.getElementById('welcomeMsg').innerText = `أهلاً، ${currentUser.realName || currentUser.username}`;
+                document.getElementById('welcomeMsg').innerText = `أهلاً بك، ${currentUser.realName || currentUser.username}`;
 
                 localStorage.setItem('elshamaa_user', u);
                 localStorage.setItem('elshamaa_pass', p);
                 
                 updateMyStatusDisplay(); 
                 renderAttendanceTable();
-                renderShiftsTable();
+                onShiftDateChange(); 
+                renderAnnouncements(); // Load announcements
             } else {
-                if(!savedU) alert("بيانات خاطئة");
+                if(!savedU) alert("بيانات تسجيل الدخول غير صحيحة");
             }
         }
 
@@ -456,17 +761,52 @@
             document.getElementById(`tab-${tabName}`).classList.add('active');
             event.target.classList.add('active');
             
-            if(tabName === 'shifts') renderShiftsTable();
+            if(tabName === 'shifts') {
+                onShiftDateChange();
+                if(currentUser.role === 'admin') updateDayDropdown();
+            }
+            if(tabName === 'report') {
+                renderReport();
+            }
+            if(tabName === 'announcements') {
+                renderAnnouncements();
+            }
         }
 
-        function getFbDateKey(dateObj) {
-            const d = dateObj.getDate().toString().padStart(2, '0');
-            const m = (dateObj.getMonth() + 1).toString().padStart(2, '0');
-            const y = dateObj.getFullYear();
-            return `${y}-${m}-${d}`;
-        }
+        // --- Fingerprint & Attendance ---
 
-        // ================= البصمة =================
+        function checkAndSetAutoAbsent() {
+            const dateKeyFb = todayStr;
+            const weekKey = getWeekKey(dateKeyFb);
+            const dayIndex = (new Date().getDay() + 1) % 7; // 0=Sat, 6=Fri
+            
+            const mySchedule = (allScheduleData[currentUser.username] && allScheduleData[currentUser.username][weekKey])
+                               ? allScheduleData[currentUser.username][weekKey][dayIndex] : null;
+
+            const todayAtt = (currentUser.attendance && currentUser.attendance[dateKeyFb]) ? currentUser.attendance[dateKeyFb] : null;
+
+            if (mySchedule && mySchedule !== 'Off' && !mySchedule.includes('Leave')) {
+                if (!todayAtt) {
+                    db.ref(`users/${currentUser.username}/attendance/${dateKeyFb}`).set({
+                        status: 'Absent',
+                        date: dateKeyFb,
+                        clockIn: null,
+                        clockOut: null,
+                        auto: true
+                    }).then(() => {
+                        console.log("Auto Absent Set");
+                    });
+                }
+            }
+            else if (mySchedule && mySchedule === 'Off' && !todayAtt) {
+                 db.ref(`users/${currentUser.username}/attendance/${dateKeyFb}`).set({
+                        status: 'Off',
+                        date: dateKeyFb,
+                        clockIn: null,
+                        clockOut: null
+                    });
+            }
+        }
 
         function scanFingerprint() {
             const btn = document.querySelector('.finger-btn');
@@ -481,7 +821,12 @@
             setTimeout(() => {
                 const now = new Date();
                 const timeString = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-                const dateKeyFb = getFbDateKey(now); 
+                const dateKeyFb = todayStr;
+
+                const weekKey = getWeekKey(dateKeyFb);
+                const dayIndex = (now.getDay() + 1) % 7; 
+                const mySchedule = (allScheduleData[currentUser.username] && allScheduleData[currentUser.username][weekKey])
+                                   ? allScheduleData[currentUser.username][weekKey][dayIndex] : null;
 
                 const todayAtt = (currentUser.attendance && currentUser.attendance[dateKeyFb]) ? currentUser.attendance[dateKeyFb] : null;
                 
@@ -496,18 +841,25 @@
                     updates[`users/${currentUser.username}/attendance/${dateKeyFb}/status`] = 'Present';
                     updates[`users/${currentUser.username}/attendance/${dateKeyFb}/date`] = dateKeyFb;
                     
-                    if(isCurrentlyAbsent) {
-                        statusTxt.innerText = `✅ تم إلغاء الغياب وتسجيل الحضور: ${timeString}`;
+                    if (mySchedule === 'Off') {
+                        statusTxt.innerText = `✅ يا بطل! شغل في يوم إجازة (${timeString})`;
+                        statusTxt.style.color = "#eab308"; 
+                    } else if (mySchedule && mySchedule.includes('Leave')) {
+                        statusTxt.innerText = `✅ مجهود رائع! العمل في يوم إجازة (${timeString})`;
+                        statusTxt.style.color = "#eab308";
+                    } else if (isCurrentlyAbsent) {
+                        statusTxt.innerText = `✅ تم تصحيح الحضور: ${timeString}`;
+                        statusTxt.style.color = "var(--warning)";
                     } else {
-                        statusTxt.innerText = `✅ تم تسجيل الحضور: ${timeString}`;
+                        statusTxt.innerText = `✅ نورنا يا غالي! تم تسجيل الحضور (${timeString})`;
+                        statusTxt.style.color = "var(--success)";
                     }
-                    statusTxt.style.color = "var(--success)";
                 } else if (!hasClockOut) {
                     updates[`users/${currentUser.username}/attendance/${dateKeyFb}/clockOut`] = timeString;
-                    statusTxt.innerText = `👋 تم تسجيل الخروج: ${timeString}`;
+                    statusTxt.innerText = `👋 تم تسجيل الخروج بنجاح: ${timeString}`;
                     statusTxt.style.color = "var(--accent)";
                 } else {
-                    statusTxt.innerText = "⚠️ لقد أتممت دوامك بالفعل اليوم!";
+                    statusTxt.innerText = "⚠️ لقد أكملت ورديتك بالفعل لهذا اليوم!";
                     statusTxt.style.color = "var(--text-light)";
                 }
 
@@ -531,48 +883,35 @@
             }, 1500);
         }
 
-        function markSelfAbsent() {
-            if(!confirm("هل أنت متأكد من تسجيل نفسك كغائب اليوم؟")) return;
-
-            const dateKeyFb = getFbDateKey(new Date());
-            const updates = {};
-            
-            updates[`users/${currentUser.username}/attendance/${dateKeyFb}/status`] = 'Absent';
-            updates[`users/${currentUser.username}/attendance/${dateKeyFb}/clockIn`] = null;
-            updates[`users/${currentUser.username}/attendance/${dateKeyFb}/clockOut`] = null;
-            updates[`users/${currentUser.username}/attendance/${dateKeyFb}/date`] = dateKeyFb;
-
-            db.ref().update(updates).then(() => {
-                if(!currentUser.attendance) currentUser.attendance = {};
-                currentUser.attendance[dateKeyFb] = { status: 'Absent', date: dateKeyFb };
-                updateMyStatusDisplay();
-                renderAttendanceTable();
-                alert("تم تسجيل الغياب");
-            });
-        }
-
         function updateMyStatusDisplay() {
             const display = document.getElementById('myCurrentStatus');
-            const dateKeyFb = getFbDateKey(new Date());
+            const dateKeyFb = todayStr;
             const att = (currentUser.attendance && currentUser.attendance[dateKeyFb]) ? currentUser.attendance[dateKeyFb] : null;
 
             if(!att) {
-                display.innerHTML = '<i class="fa fa-info-circle"></i> <span>لم تسجل دخول اليوم</span>';
+                display.innerHTML = '<i class="fa fa-info-circle"></i> <span>لا يوجد سجل لهذا اليوم</span>';
                 display.style.borderColor = "var(--glass-border)";
                 display.style.color = "var(--text-light)";
-            } else if (att.status === 'Present' || att.status === 'Late') {
-                display.innerHTML = `<i class="fa fa-check-circle"></i> <span>أنت الآن: حاضر (دخول ${att.clockIn})</span>`;
+            } else if (att.status === 'Present') {
+                display.innerHTML = `<i class="fa fa-check-circle status-icon"></i> <span>حاضر (دخول: ${att.clockIn})</span>`;
                 display.style.borderColor = "var(--success)";
                 display.style.color = "var(--success)";
+            } else if (att.status === 'Sick Leave') {
+                display.innerHTML = `<i class="fa fa-briefcase-medical status-icon"></i> <span>إجازة مرضية (${att.clockIn})</span>`;
+                display.style.borderColor = "var(--warning)";
+                display.style.color = "var(--warning)";
             } else if (att.status === 'Absent') {
-                display.innerHTML = `<i class="fa fa-xmark-circle"></i> <span>أنت اليوم: غائب</span>`;
+                display.innerHTML = `<i class="fa fa-xmark-circle status-icon"></i> <span>غائب (لم يسجل بعد)</span>`;
                 display.style.borderColor = "var(--danger)";
                 display.style.color = "var(--danger)";
+            } else if (att.status === 'Off') {
+                display.innerHTML = `<i class="fa fa-coffee status-icon"></i> <span>إجازة</span>`;
+                display.style.borderColor = "var(--accent)";
+                display.style.color = "var(--accent)";
             }
         }
 
-        // ================= لوحة تحكم المشرف (تعديل الشيفات) =================
-
+        // --- Shift Management (Admin) ---
         function populateUserSelect() {
             const sel = document.getElementById('schedUserSelect');
             sel.innerHTML = '<option value="">-- اختر الموظف --</option>';
@@ -584,54 +923,290 @@
             });
         }
 
+        function onShiftDateChange() {
+            updateDayDropdown();      
+            renderShiftsTable();      
+        }
+
+        function updateDayDropdown() {
+            const inputDateStr = document.getElementById('shiftDateView').value;
+            if(!inputDateStr) return;
+
+            const inputDate = new Date(inputDateStr);
+            const daysToSaturday = (inputDate.getDay() + 1) % 7;
+            const saturdayDate = new Date(inputDate);
+            saturdayDate.setDate(inputDate.getDate() - daysToSaturday);
+
+            const endDate = new Date(saturdayDate);
+            endDate.setDate(saturdayDate.getDate() + 6);
+            const sStr = `${saturdayDate.getDate()}/${saturdayDate.getMonth()+1}`;
+            const eStr = `${endDate.getDate()}/${endDate.getMonth()+1}`;
+            document.getElementById('weekRangeDisplay').innerText = `الأسبوع: ${sStr} - ${eStr}`;
+
+            const dayNames = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
+            const select = document.getElementById('schedDaySelect');
+            const currentVal = select.value;
+            select.innerHTML = '';
+
+            for(let i=0; i<7; i++) {
+                let currentDayDate = new Date(saturdayDate);
+                currentDayDate.setDate(saturdayDate.getDate() + i);
+                const d = String(currentDayDate.getDate()).padStart(2, '0');
+                const m = String(currentDayDate.getMonth() + 1).padStart(2, '0');
+                const dayName = dayNames[i];
+                const dateLabel = `${dayName} (${d}/${m})`; 
+                
+                const option = document.createElement('option');
+                option.value = i;
+                option.text = dateLabel;
+                select.appendChild(option);
+            }
+            
+            if(currentVal !== '') select.value = currentVal;
+        }
+
         function toggleSchedInputs() {
             const val = document.getElementById('schedStatusSelect').value;
             const timeGroup = document.getElementById('schedTimeInputs');
             if(val === 'work') {
                 timeGroup.style.display = 'grid';
             } else {
-                timeGroup.style.display = 'none';
+                timeGroup.style.display = 'none'; 
             }
         }
 
         function saveShiftToDB() {
             const user = document.getElementById('schedUserSelect').value;
-            const day = document.getElementById('schedDaySelect').value;
+            const dayIndex = document.getElementById('schedDaySelect').value;
             const status = document.getElementById('schedStatusSelect').value;
             const start = document.getElementById('schedStartTime').value;
             const end = document.getElementById('schedEndTime').value;
 
-            if(!user) return alert("يرجى اختيار الموظف");
+            if(!user) return alert("يرجى اختيار موظف");
+            if(dayIndex === "") return alert("يرجى اختيار يوم");
+
+            const selectedDateStr = document.getElementById('shiftDateView').value;
+            const weekKey = getWeekKey(selectedDateStr);
 
             let valueToSave = "";
             if(status === 'work') {
-                if(!start || !end) return alert("يرجى إدخال وقت البداية والنهاية");
+                if(!start || !end) return alert("يرجى إدخال وقت البدء والانتهاء");
                 valueToSave = `${start} - ${end}`;
             } else {
                 valueToSave = status;
             }
 
-            db.ref(`schedules/${user}/${day}`).set(valueToSave).then(() => {
-                alert("✅ تم حفظ الشيفة بنجاح");
-                // الجدول هيتحدث تلقائياً بسبب الـ Listener
+            db.ref(`schedules/${user}/${weekKey}/${dayIndex}`).set(valueToSave).then(() => {
+                alert("✅ تم حفظ الجدول بنجاح");
+                renderShiftsTable(); 
             }).catch(err => {
-                alert("حدث خطأ أثناء الحفظ: " + err.message);
+                alert("خطأ في الحفظ: " + err.message);
             });
         }
 
-        // ================= الجداول =================
+        // --- NEW: Announcements & Acknowledgment Logic ---
+
+        function postAnnouncement() {
+            const text = document.getElementById('announcementInput').value.trim();
+            if(!text) return alert("يرجى كتابة نص التنبيه");
+
+            const newAnnRef = db.ref('announcements').push({
+                text: text,
+                author: currentUser.username,
+                timestamp: Date.now(),
+                dateStr: new Date().toLocaleDateString('ar-EG')
+            });
+
+            document.getElementById('announcementInput').value = '';
+            showToast("تم النشر", "تم إرسال التنبيه لجميع الموظفين بنجاح.");
+        }
+
+        function markAsUnderstood(annId) {
+            if(!confirm("هل تريد تأكيد الإطلاع والإقرار بهذا التنبيه؟")) return;
+
+            const refId = 'REF-' + Math.floor(Math.random() * 1000000); // Generate simple ref ID
+            const timestamp = Date.now();
+
+            // Save acknowledgment under user node
+            db.ref(`users/${currentUser.username}/acknowledgments/${annId}`).set({
+                acknowledgedAt: timestamp,
+                refId: refId
+            }).then(() => {
+                showToast("تم الإقرار", `تم تسجيل إقرارك. المرجع: ${refId}`);
+                renderAnnouncements(); // Refresh UI
+            });
+        }
+
+        function renderAnnouncements() {
+            const activeArea = document.getElementById('activeAnnouncementArea');
+            const historyList = document.getElementById('announcementsHistoryList');
+            const announcements = Object.values(allAnnouncementsData || {}).sort((a,b) => b.timestamp - a.timestamp);
+            
+            activeArea.innerHTML = '';
+            historyList.innerHTML = '';
+
+            if(announcements.length === 0) {
+                activeArea.innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;"><i class="fa fa-bell-slash" style="font-size:3rem; margin-bottom:15px; opacity:0.3;"></i><p>لا توجد تنبيهات</p></div>';
+                return;
+            }
+
+            // Get user's acknowledgments
+            const myAcks = currentUser.acknowledgments || {};
+
+            // Determine the latest UNREAD announcement
+            let latestUnread = null;
+            for(let ann of announcements) {
+                if(!myAcks[ann.key || ann.id]) { // Assuming Firebase key handling
+                    // Check if we stored the key. Since I used .push(), I need to access the key.
+                    // The loop structure in init() handles keys.
+                    // Wait, allAnnouncementsData needs to store keys.
+                    break;
+                }
+            }
+
+            // Correct logic for finding key in Object.values is tricky. 
+            // Better to reconstruct with keys.
+            const annArray = Object.keys(allAnnouncementsData || {}).map(key => {
+                return { ...allAnnouncementsData[key], key: key };
+            }).sort((a,b) => b.timestamp - a.timestamp);
+
+            // Find first unacknowledged
+            let activeCard = null;
+            for(let ann of annArray) {
+                if(!myAcks[ann.key]) {
+                    activeCard = ann;
+                    break;
+                }
+            }
+
+            // Render Active Card
+            if(activeCard) {
+                const date = new Date(activeCard.timestamp).toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                
+                activeArea.innerHTML = `
+                    <div class="announcement-card">
+                        <div class="announcement-header">
+                            <span class="ann-tag"><i class="fa fa-exclamation-circle"></i> تنبيه هام جديد</span>
+                            <span style="color:#94a3b8; font-size:0.9rem;">${date}</span>
+                        </div>
+                        <div class="announcement-body">${activeCard.text}</div>
+                        <div class="announcement-footer">
+                            <span style="font-size:0.9rem; color:#cbd5e1; margin-left: auto;">من: الإدارة</span>
+                            <button class="ref-me-btn" onclick="markAsUnderstood('${activeCard.key}')">
+                                <i class="fa fa-check-double"></i> مرجع لي (إقرار بالاستلام)
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if(annArray.length > 0) {
+                // All read, show the latest one as read-only
+                const latest = annArray[0];
+                const ackData = myAcks[latest.key];
+                const date = new Date(latest.timestamp).toLocaleDateString('ar-EG');
+                
+                activeArea.innerHTML = `
+                    <div class="announcement-card" style="border-color: var(--accent); background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(15, 23, 42, 0.4) 100%);">
+                        <div class="announcement-header">
+                            <span class="ann-tag" style="background:var(--accent)"><i class="fa fa-check"></i> تمت القراءة</span>
+                            <span style="color:#94a3b8; font-size:0.9rem;">${date}</span>
+                        </div>
+                        <div class="announcement-body" style="opacity:0.8">${latest.text}</div>
+                        <div class="announcement-footer">
+                            <span class="ref-badge">رقم الإقرار: ${ackData ? ackData.refId : 'N/A'}</span>
+                            <span style="color:var(--success); font-weight:bold;"><i class="fa fa-check-circle"></i> لقد أقررت بهذا مسبقاً</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Render History
+            let historyHTML = '';
+            annArray.forEach(ann => {
+                const isAck = !!myAcks[ann.key];
+                const date = new Date(ann.timestamp).toLocaleDateString('ar-EG');
+                const ackInfo = isAck ? `<span style="color:var(--success)">مُقر (المرجع: ${myAcks[ann.key].refId})</span>` : '<span style="color:var(--warning)">غير مُقر</span>';
+                
+                historyHTML += `
+                    <div class="history-item ${isAck ? 'acknowledged' : ''}">
+                        <div class="history-meta">
+                            <span>${date}</span>
+                            ${ackInfo}
+                        </div>
+                        <div style="font-size:0.95rem;">${ann.text}</div>
+                    </div>
+                `;
+            });
+            historyList.innerHTML = historyHTML;
+        }
+
+        // --- Correction Modal Logic ---
+
+        function openCorrectionModal(username, date) {
+            correctionTarget = { username, date };
+            document.getElementById('correctionModal').classList.add('active');
+            // Reset selection
+            document.querySelectorAll('input[name="corrType"]').forEach(el => el.checked = false);
+            document.querySelectorAll('.correction-option').forEach(el => el.classList.remove('selected'));
+        }
+
+        function closeCorrectionModal() {
+            document.getElementById('correctionModal').classList.remove('active');
+            correctionTarget = { username: null, date: null };
+        }
+
+        function selectCorrectionOption(el) {
+            // Visual selection logic
+            document.querySelectorAll('.correction-option').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+            // Check the radio inside
+            el.querySelector('input').checked = true;
+        }
+
+        function submitCorrection() {
+            const selected = document.querySelector('input[name="corrType"]:checked');
+            if(!selected) return alert("يرجى اختيار نوع التصحيح");
+            
+            const type = selected.value;
+            const { username, date } = correctionTarget;
+            
+            let updates = {};
+
+            // Logic for "Strike through" (Sick Leave) vs "Correction" (Mistake)
+            if (type === 'Sick Leave') {
+                updates[`users/${username}/attendance/${date}/status`] = 'Sick Leave';
+            } 
+            else if (type === 'Annual Leave') {
+                updates[`users/${username}/attendance/${date}/status`] = 'Annual Leave';
+            }
+            else if (type === 'Present') {
+                updates[`users/${username}/attendance/${date}/status`] = 'Present';
+                const att = allUsersData[username].attendance[date];
+                if(!att.clockIn) {
+                    updates[`users/${username}/attendance/${date}/clockIn`] = '09:00'; 
+                    updates[`users/${username}/attendance/${date}/note`] = 'Manual Correction';
+                }
+            }
+
+            db.ref().update(updates).then(() => {
+                closeCorrectionModal();
+                renderAttendanceTable();
+                showToast("تم التصحيح", `تم تغيير حالة ${username} بنجاح.`);
+            });
+        }
+
+        // --- Display Tables ---
 
         function renderAttendanceTable() {
             let dateInput;
             if(currentUser.role === 'employee') {
-                dateInput = todayStr; 
+                dateInput = todayStr;
             } else {
                 dateInput = document.getElementById('attendanceDateView').value;
             }
 
             const tbody = document.getElementById('attendanceTableBody');
             tbody.innerHTML = '';
-            const dateKeyFb = getFbDateKey(new Date(dateInput));
+            const dateKeyFb = dateInput; 
             
             let users = [];
             if(currentUser.role === 'admin') {
@@ -642,36 +1217,57 @@
 
             users.forEach(u => {
                 const att = (u.attendance && u.attendance[dateKeyFb]) ? u.attendance[dateKeyFb] : null;
-                let statusBadge = '<span class="badge bg-off">--</span>';
+                
+                let statusText = '--';
+                let colorClass = 'bg-off';
+                let icon = '';
+                let timeClass = ''; // For strikethrough
                 
                 if(att && att.status) {
-                    let colorClass = 'bg-success';
-                    if(att.status === 'Late') colorClass = 'bg-warning';
-                    if(att.status === 'Absent') colorClass = 'bg-danger';
-                    if(att.status === 'Off') colorClass = 'bg-off';
-                    statusBadge = `<span class="badge ${colorClass}">${att.status}</span>`;
+                    if(att.status === 'Present') { 
+                        statusText = 'Present'; colorClass = 'bg-success'; icon = '<i class="fa fa-check"></i>'; 
+                    }
+                    else if(att.status === 'Late') { statusText = 'Late'; colorClass = 'bg-warning'; icon = '<i class="fa fa-clock"></i>'; }
+                    else if(att.status === 'Absent') { statusText = 'Absent'; colorClass = 'bg-danger'; icon = '<i class="fa fa-xmark"></i>'; }
+                    else if(att.status === 'Off') { statusText = 'Off'; colorClass = 'bg-off'; icon = '<i class="fa fa-coffee"></i>'; }
+                    else if(att.status === 'Sick Leave') { 
+                        statusText = 'Sick Leave'; colorClass = 'bg-warning'; icon = '<i class="fa fa-briefcase-medical"></i>'; 
+                        timeClass = 'strike-text'; // STRIKE THROUGH THE TIME
+                    }
+                    else if(att.status === 'Annual Leave') { 
+                        statusText = 'Annual Leave'; colorClass = 'bg-info'; icon = '<i class="fa fa-plane"></i>'; 
+                        timeClass = 'strike-text';
+                    }
+                    else { statusText = att.status; icon = ''; } 
                 }
+                
+                const statusBadge = `<span class="badge ${colorClass}">${icon} ${statusText}</span>`;
 
+                // Apply strikethrough class to times if needed
                 const clockIn = att ? (att.clockIn || '--:--') : '--:--';
                 const clockOut = att ? (att.clockOut || '--:--') : '--:--';
+                const timeDecoration = timeClass ? `class="${timeClass}"` : '';
 
                 let actionBtn = '';
                 if(currentUser.role === 'admin') {
                     actionBtn = `
-                        <button class="btn btn-success" style="width:auto; padding:5px 10px; font-size:0.8rem; display:inline-flex;"
-                        onclick="quickSetStatus('${u.username}', '${dateKeyFb}', 'Present')">حضور</button>
-                        <button class="btn btn-danger" style="width:auto; padding:5px 10px; font-size:0.8rem; display:inline-flex;"
-                        onclick="quickSetStatus('${u.username}', '${dateKeyFb}', 'Absent')">غياب</button>
+                        <button class="btn btn-sm btn-accent" style="margin:0 5px;" onclick="openCorrectionModal('${u.username}', '${dateKeyFb}')">
+                            <i class="fa fa-wrench"></i> تصحيح
+                        </button>
                     `;
                 }
 
+                // If admin, make row clickable hint
+                const rowClass = (currentUser.role === 'admin') ? 'admin-editable' : '';
+                const rowClick = (currentUser.role === 'admin') ? `onclick="openCorrectionModal('${u.username}', '${dateKeyFb}')"` : '';
+
                 tbody.innerHTML += `
-                    <tr>
-                        <td>${u.realName || u.username}</td>
+                    <tr class="${rowClass}" ${rowClick}>
+                        <td class="english-text">${u.realName || u.username}</td>
                         <td>${statusBadge}</td>
-                        <td style="font-family:monospace; font-size:1.1rem">${clockIn}</td>
-                        <td style="font-family:monospace; font-size:1.1rem">${clockOut}</td>
-                        ${currentUser.role === 'admin' ? `<td>${actionBtn}</td>` : ''}
+                        <td style="font-family:monospace; font-size:1.1rem; direction:ltr" ${timeDecoration}>${clockIn}</td>
+                        <td style="font-family:monospace; font-size:1.1rem; direction:ltr" ${timeDecoration}>${clockOut}</td>
+                        ${currentUser.role === 'admin' ? `<td style="white-space:nowrap">${actionBtn}</td>` : ''}
                     </tr>
                 `;
             });
@@ -681,26 +1277,26 @@
             const thead = document.querySelector('#shiftsTable thead');
             const tbody = document.getElementById('shiftsTableBody');
             tbody.innerHTML = '';
+            let baseDateStr;
+            if(currentUser.role === 'employee') {
+                baseDateStr = todayStr;
+            } else {
+                baseDateStr = document.getElementById('shiftDateView').value;
+            }
 
-            // حساب بداية الأسبوع من الـ Date Picker
-            let inputDateStr = document.getElementById('shiftDateView').value;
-            let inputDate = new Date(inputDateStr);
-            const jsDay = inputDate.getDay();
-            const daysToSaturday = (jsDay + 1) % 7;
-            const saturdayDate = new Date(inputDate);
-            saturdayDate.setDate(inputDate.getDate() - daysToSaturday);
-
-            const dayNames = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
+            const weekKey = getWeekKey(baseDateStr);
+            const saturdayDate = new Date(weekKey);
+            const dayNamesEn = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
             
-            let headerHTML = '<tr><th>الموظف</th>';
+            let headerHTML = '<tr><th class="english-text">Employee</th>';
             for(let i=0; i<7; i++) {
                 let currentDayDate = new Date(saturdayDate);
                 currentDayDate.setDate(saturdayDate.getDate() + i);
                 const d = String(currentDayDate.getDate()).padStart(2, '0');
                 const m = String(currentDayDate.getMonth() + 1).padStart(2, '0');
                 const dateStr = `${d}/${m}`;
-                const dayName = dayNames[i];
-                headerHTML += `<th>${dayName} <br> <span style="font-size:0.8em">${dateStr}</span></th>`;
+                const dayName = dayNamesEn[i];
+                headerHTML += `<th class="english-text">${dayName} <br> <span style="font-size:0.8em">${dateStr}</span></th>`;
             }
             headerHTML += '</tr>';
             thead.innerHTML = headerHTML;
@@ -714,18 +1310,24 @@
             }
 
             users.forEach(u => {
-                let row = `<tr><td>${u.realName || u.username}</td>`;
+                let row = `<tr><td class="english-text">${u.realName || u.username}</td>`;
+                
+                const userWeekData = (allScheduleData[u.username] && allScheduleData[u.username][weekKey]) 
+                                      ? allScheduleData[u.username][weekKey] : {};
+
                 for(let i=0; i<7; i++) {
-                    const shift = (allScheduleData[u.username] && allScheduleData[u.username][i]) ? allScheduleData[u.username][i] : null;
+                    const shift = userWeekData[i]; 
                     let cellContent = '<span style="color:#555; font-size:0.8rem">-</span>';
 
                     if(shift) {
                         if(shift === 'Off') {
-                            cellContent = '<span class="badge bg-off">Off</span>';
+                            cellContent = '<span class="badge bg-off english-text">Off</span>';
+                        } else if(shift === 'Absent') {
+                            cellContent = '<span class="badge bg-danger english-text">Absent</span>';
                         } else if(shift.includes('Leave')) {
-                             cellContent = '<span class="badge bg-warning">إجازة</span>';
+                             cellContent = '<span class="badge bg-warning english-text">Leave</span>';
                         } else {
-                            cellContent = `<span class="badge bg-info">${shift}</span>`;
+                            cellContent = `<span class="badge bg-info english-text" style="direction:ltr; display:inline-block">${shift}</span>`;
                         }
                     }
                     row += `<td>${cellContent}</td>`;
@@ -735,8 +1337,103 @@
             });
         }
 
+        function renderReport() {
+            const container = document.getElementById('reportContainer');
+            const fromDateStr = document.getElementById('reportFromDate').value;
+            const toDateStr = document.getElementById('reportToDate').value;
+
+            if(!fromDateStr || !toDateStr) {
+                container.innerHTML = '<p style="text-align:center; color:var(--danger);">يرجى اختيار تاريخ البدء والانتهاء.</p>';
+                return;
+            }
+
+            if(fromDateStr > toDateStr) {
+                container.innerHTML = '<p style="text-align:center; color:var(--danger);">تاريخ البدء لا يمكن أن يكون بعد تاريخ الانتهاء.</p>';
+                return;
+            }
+
+            let users = [];
+            if(currentUser.role === 'admin') {
+                users = Object.values(allUsersData).filter(u => u.username && !MANAGERS.includes(u.username));
+                users.sort((a,b) => (a.realName || a.username).localeCompare(b.realName || b.username));
+            } else {
+                users = [currentUser];
+            }
+
+            if(users.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-400">لا يوجد موظفين للعرض</p>';
+                return;
+            }
+
+            let htmlContent = '';
+            const dayNamesAr = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
+
+            let current = new Date(fromDateStr);
+            const end = new Date(toDateStr);
+
+            while(current <= end) {
+                const dateStr = current.toISOString().split('T')[0];
+                const dayIndex = (current.getDay() + 1) % 7; 
+                const weekKey = getWeekKey(dateStr);
+                const dayName = dayNamesAr[dayIndex];
+
+                users.forEach(user => {
+                    const username = user.username;
+                    const name = user.realName || username;
+                    
+                    const att = (user.attendance && user.attendance[dateStr]) ? user.attendance[dateStr] : null;
+                    
+                    const schedule = (allScheduleData[username] && allScheduleData[username][weekKey]) 
+                                     ? allScheduleData[username][weekKey][dayIndex] : null;
+
+                    let itemHTML = '';
+
+                    // Logic for Report
+                    if (schedule && (schedule === 'Off' || schedule.includes('Leave'))) {
+                        if (att && att.status === 'Present') {
+                            itemHTML = `
+                                <div class="report-item success">
+                                    <div class="report-text">
+                                        <strong>${name}</strong> (${dateStr} - ${dayName}): <br>
+                                        كان مجدول <strong>${schedule}</strong>، لكنه <strong>حضر وعمل</strong>.
+                                    </div>
+                                    <span class="report-badge bg-success">عمل بدلاً من الإجازة</span>
+                                </div>
+                            `;
+                        }
+                    } 
+                    else if (schedule && schedule !== 'Off' && !schedule.includes('Absent') && !schedule.includes('Leave')) {
+                        if (!att || att.status === 'Absent') {
+                            itemHTML = `
+                                <div class="report-item warning">
+                                    <div class="report-text">
+                                        <strong>${name}</strong> (${dateStr} - ${dayName}): <br>
+                                        مجدول وردية <strong>${schedule}</strong>، ولكنه <strong>غائب</strong>.
+                                    </div>
+                                    <span class="report-badge bg-danger">غياب في وردية</span>
+                                </div>
+                            `;
+                        }
+                    }
+                    
+                    if(itemHTML) {
+                        htmlContent += itemHTML;
+                    }
+                });
+
+                current.setDate(current.getDate() + 1);
+            }
+
+            if(htmlContent === '') {
+                htmlContent = `<div style="text-align:center; padding:20px; color:#94a3b8;">لا توجد مخالفات حضور بين ${fromDateStr} و ${toDateStr}.<br>جميع الموظفين التزموا بجدولهم.</div>`;
+            }
+
+            container.innerHTML = htmlContent;
+        }
+
         function quickSetStatus(username, dateKey, status) {
-            if(!confirm(`تأكيد تغيير الحالة لـ ${status}؟`)) return;
+            let msg = status === 'Present' ? 'حاضر' : 'غائب';
+            if(!confirm(`تأكيد تغيير الحالة إلى ${msg}؟`)) return;
             const updates = {};
             updates[`users/${username}/attendance/${dateKey}/status`] = status;
             if(status === 'Absent') {
@@ -752,12 +1449,12 @@
                 const username = snapshot.key;
                 if (username === currentUser.username) return;
 
-                const todayKey = getFbDateKey(new Date());
+                const todayKey = todayStr;
                 if (updatedUser.attendance && updatedUser.attendance[todayKey]) {
                     const att = updatedUser.attendance[todayKey];
                     const name = updatedUser.realName || username;
                     if (att.clockIn && att.status !== 'Absent') {
-                        showToast(`${name} حضر الآن`, `الوقت: ${att.clockIn}`);
+                        showToast(`${name} سجل دخول`, `الوقت: ${att.clockIn}`);
                     }
                 }
             });
@@ -782,6 +1479,10 @@
                     if(savedU && savedP) attemptLogin(savedU, savedP);
                 } else {
                     if(allUsersData[currentUser.username]) currentUser = allUsersData[currentUser.username];
+                    // Refresh announcements if user data updates (acks change)
+                    if(document.getElementById('tab-announcements').classList.contains('active')) {
+                        renderAnnouncements();
+                    }
                 }
             });
 
@@ -789,6 +1490,17 @@
                 allScheduleData = snap.val() || {};
                 if(document.getElementById('tab-shifts').classList.contains('active')) {
                     renderShiftsTable();
+                }
+                if(document.getElementById('tab-report').classList.contains('active')) {
+                    renderReport();
+                }
+            });
+
+            // NEW: Announcements Listener
+            db.ref('announcements').on('value', snap => {
+                allAnnouncementsData = snap.val() || {};
+                if(currentUser && document.getElementById('tab-announcements').classList.contains('active')) {
+                    renderAnnouncements();
                 }
             });
         }
