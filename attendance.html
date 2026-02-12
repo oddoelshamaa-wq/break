@@ -501,6 +501,14 @@
                         </div>
                         <p style="color:#94a3b8; margin-bottom:15px;" id="shiftTableDesc">إدارة ساعات العمل والإجازات</p>
 
+                        <div style="margin-top: 15px; border-top: 1px solid var(--glass-border); padding-top: 15px;">
+                            <label style="color: var(--warning); font-weight: bold;">📢 عرض الجدول للموظفين:</label>
+                            <select id="configVisibilityWeeks" onchange="updateVisibilitySetting(this.value)">
+                                <option value="1">عرض أسبوع واحد فقط (الحالي)</option>
+                                <option value="2">عرض أسبوعين (الحالي والقادم)</option>
+                            </select>
+                        </div>
+
                         <div id="adminShiftControls" class="admin-controls">
                             <h4 style="margin-top:0; color:var(--accent); display:flex; align-items:center; gap:8px; margin-bottom:20px;">
                                 <i class="fa fa-pen-to-square"></i> تعديل الجدول (للمسؤولين فقط)
@@ -670,6 +678,7 @@
         
         // --- Correction Modal State ---
         let correctionTarget = { username: null, date: null };
+        let visibilityWeeks = 1;
 
         // --- Initialization ---
         const today = new Date();
@@ -954,7 +963,7 @@
             saturdayDate.setDate(inputDate.getDate() - daysToSaturday);
 
             const endDate = new Date(saturdayDate);
-            endDate.setDate(saturdayDate.getDate() + 6);
+            endDate.setDate(saturdayDate.getDate() + (visibilityWeeks * 7) - 1);
             const sStr = `${saturdayDate.getDate()}/${saturdayDate.getMonth()+1}`;
             const eStr = `${endDate.getDate()}/${endDate.getMonth()+1}`;
             document.getElementById('weekRangeDisplay').innerText = `الأسبوع: ${sStr} - ${eStr}`;
@@ -1181,16 +1190,16 @@
         function submitCorrection() {
             const selected = document.querySelector('input[name="corrType"]:checked');
             if(!selected) return alert("يرجى اختيار نوع التصحيح");
-            
+
             const type = selected.value;
             const { username, date } = correctionTarget;
-            
+
             let updates = {};
 
             // Logic for "Strike through" (Sick Leave) vs "Correction" (Mistake)
             if (type === 'Sick Leave') {
                 updates[`users/${username}/attendance/${date}/status`] = 'Sick Leave';
-            } 
+            }
             else if (type === 'Annual Leave') {
                 updates[`users/${username}/attendance/${date}/status`] = 'Annual Leave';
             }
@@ -1198,7 +1207,7 @@
                 updates[`users/${username}/attendance/${date}/status`] = 'Present';
                 const att = allUsersData[username].attendance[date];
                 if(!att.clockIn) {
-                    updates[`users/${username}/attendance/${date}/clockIn`] = '09:00'; 
+                    updates[`users/${username}/attendance/${date}/clockIn`] = '09:00';
                     updates[`users/${username}/attendance/${date}/note`] = 'Manual Correction';
                 }
             }
@@ -1208,6 +1217,12 @@
                 renderAttendanceTable();
                 showToast("تم التصحيح", `تم تغيير حالة ${username} بنجاح.`);
             });
+        }
+
+        function updateVisibilitySetting(val) {
+            visibilityWeeks = parseInt(val);
+            updateDayDropdown();
+            renderShiftsTable();
         }
 
         // --- Display Tables ---
@@ -1303,15 +1318,16 @@
             const weekKey = getWeekKey(baseDateStr);
             const saturdayDate = new Date(weekKey);
             const dayNamesEn = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-            
+            const totalDays = visibilityWeeks * 7;
+
             let headerHTML = '<tr><th class="english-text">Employee</th>';
-            for(let i=0; i<7; i++) {
+            for(let i=0; i<totalDays; i++) {
                 let currentDayDate = new Date(saturdayDate);
                 currentDayDate.setDate(saturdayDate.getDate() + i);
                 const d = String(currentDayDate.getDate()).padStart(2, '0');
                 const m = String(currentDayDate.getMonth() + 1).padStart(2, '0');
                 const dateStr = `${d}/${m}`;
-                const dayName = dayNamesEn[i];
+                const dayName = dayNamesEn[i % 7];
                 headerHTML += `<th class="english-text">${dayName} <br> <span style="font-size:0.8em">${dateStr}</span></th>`;
             }
             headerHTML += '</tr>';
@@ -1327,12 +1343,18 @@
 
             users.forEach(u => {
                 let row = `<tr><td class="english-text">${u.realName || u.username}</td>`;
-                
-                const userWeekData = (allScheduleData[u.username] && allScheduleData[u.username][weekKey]) 
-                                      ? allScheduleData[u.username][weekKey] : {};
 
-                for(let i=0; i<7; i++) {
-                    const shift = userWeekData[i]; 
+                for(let i=0; i<totalDays; i++) {
+                    let currentDayDate = new Date(saturdayDate);
+                    currentDayDate.setDate(saturdayDate.getDate() + i);
+                    const dateStrForDay = currentDayDate.toISOString().split('T')[0];
+                    const weekKeyForDay = getWeekKey(dateStrForDay);
+                    const dayIndex = (currentDayDate.getDay() + 1) % 7;
+
+                    const userWeekData = (allScheduleData[u.username] && allScheduleData[u.username][weekKeyForDay])
+                                          ? allScheduleData[u.username][weekKeyForDay] : {};
+
+                    const shift = userWeekData[dayIndex];
                     let cellContent = '<span style="color:#555; font-size:0.8rem">-</span>';
 
                     if(shift) {
