@@ -10,6 +10,7 @@
     <!-- Firebase Libraries -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
         :root {
@@ -574,6 +575,21 @@
 
                         <div id="reportContainer">
                             <p style="text-align:center; color:#94a3b8;">اختر نطاق التاريخ لإنشاء التقرير</p>
+                        </div>
+
+                        <!-- أزرار التصدير -->
+                        <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
+                            <button onclick="exportProfessionalExcel()" class="btn btn-success" style="height:45px; background: linear-gradient(135deg, #10b981, #059669);">
+                                Excel تقرير مفصل 📥
+                            </button>
+
+                            <button onclick="exportAbsencesOnNonWorkDays()" class="btn btn-warning" style="height:45px; background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                Excel غياب في أيام غير مجدولة 📥
+                            </button>
+
+                            <button onclick="runSmartArchiving()" class="btn btn-dark" style="height:45px; border: 1px solid var(--primary);">
+                                📦 أرشفة البيانات القديمة
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1373,17 +1389,17 @@
 
             while(current <= end) {
                 const dateStr = current.toISOString().split('T')[0];
-                const dayIndex = (current.getDay() + 1) % 7; 
+                const dayIndex = (current.getDay() + 1) % 7;
                 const weekKey = getWeekKey(dateStr);
                 const dayName = dayNamesAr[dayIndex];
 
                 users.forEach(user => {
                     const username = user.username;
                     const name = user.realName || username;
-                    
+
                     const att = (user.attendance && user.attendance[dateStr]) ? user.attendance[dateStr] : null;
-                    
-                    const schedule = (allScheduleData[username] && allScheduleData[username][weekKey]) 
+
+                    const schedule = (allScheduleData[username] && allScheduleData[username][weekKey])
                                      ? allScheduleData[username][weekKey][dayIndex] : null;
 
                     let itemHTML = '';
@@ -1401,7 +1417,7 @@
                                 </div>
                             `;
                         }
-                    } 
+                    }
                     else if (schedule && schedule !== 'Off' && !schedule.includes('Absent') && !schedule.includes('Leave')) {
                         if (!att || att.status === 'Absent') {
                             itemHTML = `
@@ -1415,7 +1431,7 @@
                             `;
                         }
                     }
-                    
+
                     if(itemHTML) {
                         htmlContent += itemHTML;
                     }
@@ -1429,6 +1445,153 @@
             }
 
             container.innerHTML = htmlContent;
+        }
+
+        function exportToExcel() {
+            const fromDateStr = document.getElementById('reportFromDate').value;
+            const toDateStr = document.getElementById('reportToDate').value;
+            const searchName = document.getElementById('searchEmployeeName').value.trim().toLowerCase();
+
+            if (!fromDateStr || !toDateStr) {
+                alert("يرجى تحديد التاريخ أولاً");
+                return;
+            }
+
+            let reportData = [];
+            let absentCount = 0;
+
+            // تحديد الموظفين المستهدفين (طه أو الكل)
+            let usersToProcess = Object.values(allUsersData).filter(u => u.username && !MANAGERS.includes(u.username));
+
+            if (searchName) {
+                usersToProcess = usersToProcess.filter(u =>
+                    (u.realName && u.realName.toLowerCase().includes(searchName)) ||
+                    u.username.toLowerCase().includes(searchName)
+                );
+            }
+
+            let currentDate = new Date(fromDateStr);
+            const endDate = new Date(toDateStr);
+
+            while (currentDate <= endDate) {
+                const dateStr = currentDate.toISOString().split('T')[0];
+                const dayIndex = (currentDate.getDay() + 1) % 7;
+                const weekKey = getWeekKey(dateStr);
+
+                usersToProcess.forEach(user => {
+                    const schedule = (allScheduleData[user.username] && allScheduleData[user.username][weekKey])
+                                     ? allScheduleData[user.username][weekKey][dayIndex] : null;
+
+                    const att = (user.attendance && user.attendance[dateStr]) ? user.attendance[dateStr] : null;
+
+                    // المنطق: إذا كان لديه وردية (وليس إجازة) والحالة غياب أو لا يوجد سجل
+                    const isWorkDay = schedule && schedule !== 'Off' && !schedule.includes('Leave');
+                    const isAbsent = !att || att.status === 'Absent';
+
+                    if (isWorkDay && isAbsent) {
+                        absentCount++;
+                        reportData.push({
+                            "التاريخ": dateStr,
+                            "اليوم": new Intl.DateTimeFormat('ar-EG', {weekday: 'long'}).format(currentDate),
+                            "اسم الموظف": user.realName || user.username,
+                            "الوردية المجدولة": schedule,
+                            "الحالة": "غياب في يوم عمل"
+                        });
+                    }
+                });
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            if (reportData.length === 0) {
+                alert("لا يوجد حالات غياب مسجلة لهذا الموظف في النطاق المحدد.");
+                return;
+            }
+
+            // إنشاء ملف Excel باستخدام مكتبة XLSX
+            const ws = XLSX.utils.json_to_sheet(reportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "تقرير الغياب");
+
+            // تحميل الملف
+            const fileName = `تقرير_غياب_${searchName || 'الموظفين'}_${fromDateStr}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+
+            // تحديث الواجهة برسالة سريعة
+            document.getElementById('reportContainer').innerHTML = `
+                <div class="report-item warning">
+                    <div class="report-text">
+                        تم استخراج تقرير لـ (<strong>${searchName || 'الكل'}</strong>).
+                        عدد مرات الغياب في أيام العمل: <strong>${absentCount}</strong> مرة.
+                    </div>
+                </div>
+            `;
+        }
+
+        function exportAbsencesOnNonWorkDays() {
+            const fromDateStr = document.getElementById('reportFromDate').value;
+            const toDateStr = document.getElementById('reportToDate').value;
+
+            if (!fromDateStr || !toDateStr) {
+                alert("يرجى تحديد التاريخ أولاً");
+                return;
+            }
+
+            let reportData = [];
+
+            let users = Object.values(allUsersData).filter(u => u.username && !MANAGERS.includes(u.username));
+
+            users.forEach(user => {
+                let count = 0;
+                let currentDate = new Date(fromDateStr);
+                const endDate = new Date(toDateStr);
+
+                while (currentDate <= endDate) {
+                    const dateStr = currentDate.toISOString().split('T')[0];
+                    const dayIndex = (currentDate.getDay() + 1) % 7;
+                    const weekKey = getWeekKey(dateStr);
+
+                    const schedule = (allScheduleData[user.username] && allScheduleData[user.username][weekKey])
+                                     ? allScheduleData[user.username][weekKey][dayIndex] : null;
+
+                    const att = (user.attendance && user.attendance[dateStr]) ? user.attendance[dateStr] : null;
+
+                    const isWorkDay = schedule && schedule !== 'Off' && !schedule.includes('Leave') && !schedule.includes('Absent');
+
+                    if (!isWorkDay && att && att.status === 'Absent') {
+                        count++;
+                    }
+
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+
+                if (count > 0) {
+                    reportData.push({
+                        "اسم الموظف": user.realName || user.username,
+                        "عدد مرات الغياب في أيام غير مجدولة": count
+                    });
+                }
+            });
+
+            if (reportData.length === 0) {
+                alert("لا يوجد حالات غياب في أيام غير مجدولة في النطاق المحدد.");
+                return;
+            }
+
+            const ws = XLSX.utils.json_to_sheet(reportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "غياب في أيام غير مجدولة");
+
+            const fileName = `غياب_في_أيام_غير_مجدولة_${fromDateStr}_إلى_${toDateStr}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+
+            document.getElementById('reportContainer').innerHTML = `
+                <div class="report-item warning">
+                    <div class="report-text">
+                        تم استخراج تقرير للغياب في أيام غير مجدولة.
+                        عدد الموظفين الذين غابوا في أيام غير مجدولة: ${reportData.length}.
+                    </div>
+                </div>
+            `;
         }
 
         function quickSetStatus(username, dateKey, status) {
@@ -1502,6 +1665,155 @@
                 if(currentUser && document.getElementById('tab-announcements').classList.contains('active')) {
                     renderAnnouncements();
                 }
+            });
+        }
+
+        // 1. وظيفة تصدير تقرير Excel مفصل واحترافي
+        function exportProfessionalExcel() {
+            const fromDateStr = document.getElementById('reportFromDate').value;
+            const toDateStr = document.getElementById('reportToDate').value;
+
+            if (!fromDateStr || !toDateStr) {
+                alert("يرجى تحديد النطاق الزمني أولاً");
+                return;
+            }
+
+            let reportData = [];
+            let users = Object.values(allUsersData).filter(u => u.username && !MANAGERS.includes(u.username));
+
+            let currentDate = new Date(fromDateStr);
+            const endDate = new Date(toDateStr);
+
+            while (currentDate <= endDate) {
+                const dateStr = currentDate.toISOString().split('T')[0];
+                const dayIndex = (currentDate.getDay() + 1) % 7;
+                const weekKey = getWeekKey(dateStr);
+                const dayNameAr = new Intl.DateTimeFormat('ar-EG', { weekday: 'long' }).format(currentDate);
+
+                users.forEach(user => {
+                    const att = (user.attendance && user.attendance[dateStr]) ? user.attendance[dateStr] : null;
+                    const schedule = (allScheduleData[user.username] && allScheduleData[user.username][weekKey])
+                                     ? allScheduleData[user.username][weekKey][dayIndex] : "غير محدد";
+
+                    reportData.push({
+                        "التاريخ": dateStr,
+                        "اليوم": dayNameAr,
+                        "اسم الموظف": user.realName || user.username,
+                        "الحالة": att ? (att.status || "مسجل") : "لا يوجد سجل",
+                        "وقت الحضور": att ? (att.clockIn || "--") : "--",
+                        "وقت الانصراف": att ? (att.clockOut || "--") : "--",
+                        "الوردية المجدولة": schedule
+                    });
+                });
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            const ws = XLSX.utils.json_to_sheet(reportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "السجل التفصيلي");
+            XLSX.writeFile(wb, `تقرير_الشمعة_المفصل_${fromDateStr}.xlsx`);
+            showToast("تم التصدير", "تم إنشاء ملف Excel بنجاح");
+        }
+
+        // التعديل النهائي: استخراج المجدولين فقط والذين تغيبوا
+        function exportAbsencesOnNonWorkDays() {
+            const fromDateStr = document.getElementById('reportFromDate').value;
+            const toDateStr = document.getElementById('reportToDate').value;
+
+            if (!fromDateStr || !toDateStr) {
+                alert("يا ريس، حدد التاريخ (من وإلى) الأول!");
+                return;
+            }
+
+            let reportData = [];
+            let users = Object.values(allUsersData).filter(u => u.username && !MANAGERS.includes(u.username));
+
+            let currentDate = new Date(fromDateStr);
+            const endDate = new Date(toDateStr);
+
+            while (currentDate <= endDate) {
+                const dateStr = currentDate.toISOString().split('T')[0];
+                const dayIndex = (currentDate.getDay() + 1) % 7;
+                const weekKey = getWeekKey(dateStr);
+                const dayNameAr = new Intl.DateTimeFormat('ar-EG', { weekday: 'long' }).format(currentDate);
+
+                users.forEach(user => {
+                    const att = (user.attendance && user.attendance[dateStr]) ? user.attendance[dateStr] : null;
+                    const schedule = (allScheduleData[user.username] && allScheduleData[user.username][weekKey])
+                                     ? allScheduleData[user.username][weekKey][dayIndex] : null;
+
+                    // 1. فحص هل الشخص عنده وردية فعلاً (مش Off ومش فاضي)
+                    const hasScheduledShift = schedule && schedule !== 'Off' && !schedule.includes('Leave');
+
+                    // 2. فحص هل هو غائب (إما حالته Absent أو مفيش سجل خالص وهو عنده وردية)
+                    const isAbsent = (att && att.status === 'Absent') || (!att && hasScheduledShift);
+
+                    // الشرط بتاعك: "لو عنده وردية ينزل ليا بس.. إنما لو معندوش مينزلش"
+                    if (hasScheduledShift && isAbsent) {
+                        reportData.push({
+                            "اسم الموظف": user.realName || user.username,
+                            "التاريخ": dateStr,
+                            "اليوم": dayNameAr,
+                            "الوردية المجدولة": schedule,
+                            "الحالة": "غائب عن ورديته ❌"
+                        });
+                    }
+                });
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            if (reportData.length === 0) {
+                alert("ملقتش أي حالات غياب لموظفين عندهم ورديات في الفترة دي.");
+                return;
+            }
+
+            try {
+                const ws = XLSX.utils.json_to_sheet(reportData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "غياب المجدولين");
+                XLSX.writeFile(wb, `تقرير_غياب_المجدولين_${fromDateStr}.xlsx`);
+                showToast("تم الاستخراج", "الشيت جاهز وفيه المجدولين اللي غابوا بس.");
+            } catch (err) {
+                alert("حدث خطأ: " + err.message);
+            }
+        }
+
+        // 3. وظيفة الأرشفة الذكية (تنظيف قاعدة البيانات)
+        function runSmartArchiving() {
+            if (!confirm("سيتم نقل البيانات التي مر عليها أكثر من 60 يوماً إلى الأرشيف. هل أنت متأكد؟")) return;
+
+            const sixtyDaysAgo = new Date();
+            sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+            
+            let archiveCount = 0;
+            const updates = {};
+
+            Object.keys(allUsersData).forEach(username => {
+                const attendance = allUsersData[username].attendance;
+                if (attendance) {
+                    Object.keys(attendance).forEach(dateKey => {
+                        const recordDate = new Date(dateKey);
+                        if (recordDate < sixtyDaysAgo) {
+                            // تجهيز النقل للأرشيف
+                            updates[`archives/${username}/${dateKey}`] = attendance[dateKey];
+                            // تجهيز الحذف من السجل النشط
+                            updates[`users/${username}/attendance/${dateKey}`] = null;
+                            archiveCount++;
+                        }
+                    });
+                }
+            });
+
+            if (archiveCount === 0) {
+                alert("لا توجد بيانات قديمة للأرشفة حالياً.");
+                return;
+            }
+
+            db.ref().update(updates).then(() => {
+                alert(`تمت عملية الأرشفة بنجاح! تم نقل ${archiveCount} سجل إلى الأرشيف.`);
+            }).catch(err => {
+                console.error("خطأ أثناء الأرشفة:", err);
+                alert("فشلت عملية الأرشفة.");
             });
         }
 
