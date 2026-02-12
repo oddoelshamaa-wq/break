@@ -1308,71 +1308,92 @@
             const thead = document.querySelector('#shiftsTable thead');
             const tbody = document.getElementById('shiftsTableBody');
             tbody.innerHTML = '';
-            let baseDateStr;
-            if(currentUser.role === 'employee') {
-                baseDateStr = todayStr;
-            } else {
-                baseDateStr = document.getElementById('shiftDateView').value;
-            }
+            thead.innerHTML = '';
 
-            const weekKey = getWeekKey(baseDateStr);
-            const saturdayDate = new Date(weekKey);
-            const dayNamesEn = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-            const totalDays = visibilityWeeks * 7;
+            // تاريخ اليوم للمقارنة (تصفير الوقت للمقارنة بدقة)
+            let today = new Date();
+            today.setHours(0, 0, 0, 0);
 
-            let headerHTML = '<tr><th class="english-text">Employee</th>';
-            for(let i=0; i<totalDays; i++) {
-                let currentDayDate = new Date(saturdayDate);
-                currentDayDate.setDate(saturdayDate.getDate() + i);
-                const d = String(currentDayDate.getDate()).padStart(2, '0');
-                const m = String(currentDayDate.getMonth() + 1).padStart(2, '0');
-                const dateStr = `${d}/${m}`;
-                const dayName = dayNamesEn[i % 7];
-                headerHTML += `<th class="english-text">${dayName} <br> <span style="font-size:0.8em">${dateStr}</span></th>`;
-            }
-            headerHTML += '</tr>';
-            thead.innerHTML = headerHTML;
+            let baseDateStr = document.getElementById('shiftDateView').value || todayStr;
 
-            let users = [];
-            if(currentUser.role === 'admin') {
-                users = Object.values(allUsersData).filter(u => u.username && !MANAGERS.includes(u.username));
-                users.sort((a,b) => (a.realName || a.username).localeCompare(b.realName || b.username));
-            } else {
-                users = [currentUser];
-            }
+            // الإدمن يرى حسب الإعداد، والموظف يرى حسب إعداد المشرف
+            let weeksToDisplay = visibilityWeeks;
 
-            users.forEach(u => {
-                let row = `<tr><td class="english-text">${u.realName || u.username}</td>`;
+            for (let w = 0; w < weeksToDisplay; w++) {
+                let tempDate = new Date(baseDateStr);
+                tempDate.setDate(tempDate.getDate() + (w * 7));
+                const weekKey = getWeekKey(tempDate.toISOString().split('T')[0]);
+                const saturdayDate = new Date(weekKey);
+                const dayNamesEn = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-                for(let i=0; i<totalDays; i++) {
+                // مصفوفة لتخزين أرقام الأيام التي سنعرضها فقط (التي لم تمر بعد)
+                let visibleDaysIndices = [];
+                for (let i = 0; i < 7; i++) {
                     let currentDayDate = new Date(saturdayDate);
                     currentDayDate.setDate(saturdayDate.getDate() + i);
-                    const dateStrForDay = currentDayDate.toISOString().split('T')[0];
-                    const weekKeyForDay = getWeekKey(dateStrForDay);
-                    const dayIndex = (currentDayDate.getDay() + 1) % 7;
 
-                    const userWeekData = (allScheduleData[u.username] && allScheduleData[u.username][weekKeyForDay])
-                                          ? allScheduleData[u.username][weekKeyForDay] : {};
-
-                    const shift = userWeekData[dayIndex];
-                    let cellContent = '<span style="color:#555; font-size:0.8rem">-</span>';
-
-                    if(shift) {
-                        if(shift === 'Off') {
-                            cellContent = '<span class="badge bg-off english-text">Off</span>';
-                        } else if(shift === 'Absent') {
-                            cellContent = '<span class="badge bg-danger english-text">Absent</span>';
-                        } else if(shift.includes('Leave')) {
-                             cellContent = '<span class="badge bg-warning english-text">Leave</span>';
-                        } else {
-                            cellContent = `<span class="badge bg-info english-text" style="direction:ltr; display:inline-block">${shift}</span>`;
-                        }
+                    // إذا كان المستخدم موظف، نعرض فقط اليوم الحالي والأيام القادمة
+                    // أما الإدمن فيرى الأسبوع كاملاً دائماً للتحكم
+                    if (currentUser.role === 'admin' || currentDayDate >= today) {
+                        visibleDaysIndices.push(i);
                     }
-                    row += `<td>${cellContent}</td>`;
                 }
-                row += '</tr>';
-                tbody.innerHTML += row;
-            });
+
+                // إذا كان الأسبوع كله قد مضى (في حالة الموظف)، لا نرسم شيئاً لهذا الأسبوع
+                if (visibleDaysIndices.length === 0) continue;
+
+                // إضافة سطر فاصل إذا كان هناك أكثر من أسبوع
+                if (w > 0) {
+                    tbody.innerHTML += `<tr style="background:var(--primary); opacity:0.3;"><td colspan="${visibleDaysIndices.length + 1}" style="height:5px; padding:0;"></td></tr>`;
+                }
+
+                // إنشاء الهيدر (رؤوس الأعمدة)
+                let headerRow = document.createElement('tr');
+                headerRow.innerHTML = `<th class="english-text" style="background:rgba(99,102,241,0.3)">${w === 0 ? 'This Week' : 'Next Week'}</th>`;
+
+                visibleDaysIndices.forEach(i => {
+                    let currentDayDate = new Date(saturdayDate);
+                    currentDayDate.setDate(saturdayDate.getDate() + i);
+                    const d = String(currentDayDate.getDate()).padStart(2, '0');
+                    const m = String(currentDayDate.getMonth() + 1).padStart(2, '0');
+                    headerRow.innerHTML += `<th class="english-text">${dayNamesEn[i]} <br> <span style="font-size:0.8em">${d}/${m}</span></th>`;
+                });
+
+                if (currentUser.role === 'employee') {
+                    tbody.appendChild(headerRow);
+                } else {
+                    thead.innerHTML = headerRow.innerHTML;
+                }
+
+                // جلب بيانات الموظفين
+                let users = [];
+                if (currentUser.role === 'admin') {
+                    users = Object.values(allUsersData).filter(u => u.username && !MANAGERS.includes(u.username));
+                    users.sort((a, b) => (a.realName || a.username).localeCompare(b.realName || b.username));
+                } else {
+                    users = [currentUser];
+                }
+
+                users.forEach(u => {
+                    let row = `<tr><td class="english-text" style="font-weight:bold; color:var(--accent)">${u.realName || u.username}</td>`;
+                    const userWeekData = (allScheduleData[u.username] && allScheduleData[u.username][weekKey])
+                                          ? allScheduleData[u.username][weekKey] : {};
+
+                    visibleDaysIndices.forEach(i => {
+                        const shift = userWeekData[i];
+                        let cellContent = '<span style="color:#555; font-size:0.8rem">-</span>';
+                        if (shift) {
+                            if (shift === 'Off') cellContent = '<span class="badge bg-off english-text">Off</span>';
+                            else if (shift === 'Absent') cellContent = '<span class="badge bg-danger english-text">Absent</span>';
+                            else if (shift.includes('Leave')) cellContent = '<span class="badge bg-warning english-text">Leave</span>';
+                            else cellContent = `<span class="badge bg-info english-text" style="direction:ltr; display:inline-block">${shift}</span>`;
+                        }
+                        row += `<td>${cellContent}</td>`;
+                    });
+                    row += '</tr>';
+                    tbody.innerHTML += row;
+                });
+            }
         }
 
         function renderReport() {
