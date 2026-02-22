@@ -141,7 +141,10 @@
         <div class="najaf-center">
             <h1>نَجَف</h1>
         </div>
-        <button id="adminBtn" class="btn" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid #333;" onclick="toggleAdminView()">⚙️ الإدارة</button>
+        <div style="display: flex; gap: 10px;">
+            <a href="index2.html" class="btn" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid #333; text-decoration: none;">⬅️ رجوع</a>
+            <button id="adminBtn" class="btn" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid #333;" onclick="toggleAdminView()">⚙️ الإدارة</button>
+        </div>
     </header>
 
     <div class="container">
@@ -298,7 +301,7 @@
                             ${(b.products||[]).filter(p=>p.type==='فطار' || p.type==='كلا').map(p=>`
                                 <div class="item-row ${!p.available?'is-out':''}">
                                     <span>${p.name}</span>
-                                    ${!p.available?'<span class="out-label">خلص</span>':''}
+                                    ${!p.available?'<span class="out-label"> خلص انهاردة </span>':''}
                                 </div>
                             `).join('') || '<div style="opacity:0.3; font-size:0.8rem">لا يوجد أصناف</div>'}
                         </div>
