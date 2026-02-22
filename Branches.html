@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام نَجَف | ELSHAMAA</title>
+    <style>
+        :root {
+            --main-blue: #58b4ff;
+            --dark-bg: #050a0f;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --grid-color: rgba(88, 180, 255, 0.03);
+            --status-iftar: #ff9f43;
+            --status-suhoor: #feca57;
+            --status-both: #48dbfb;
+            --danger: #ff4d4d;
+            --success: #2ed573;
+            --closed: #555;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(88,180,255,0.1);
+            position: sticky; top: 0; z-index: 1000;
+        }
+
+        .side-brand {
+            font-family: 'Arial Black', sans-serif;
+            font-size: 1.5rem;
+            color: var(--main-blue);
+            text-shadow: 0 0 15px var(--main-blue);
+            width: 200px;
+        }
+
+        .najaf-center {
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        .najaf-center h1 {
+            font-size: 4rem;
+            margin: 0;
+            letter-spacing: 5px;
+            text-shadow: 0 0 25px var(--main-blue);
+            background: linear-gradient(to bottom, #fff, var(--main-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .admin-btn-area { width: 200px; text-align: left; }
+
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 2000;
+        }
+
+        .login-card {
+            background: #111; border: 1px solid var(--main-blue);
+            padding: 40px; border-radius: 20px; width: 350px; text-align: center;
+            box-shadow: 0 0 30px rgba(88, 180, 255, 0.2);
+        }
+
+        .container { max-width: 1250px; margin: 40px auto; padding: 0 20px; }
+        .card { background: var(--card-bg); border-radius: 20px; padding: 25px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.08); }
+        
+        input, select {
+            background: #000; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; margin: 8px 0; outline: none; width: 100%; box-sizing: border-box;
+        }
+        
+        .btn { padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-primary { background: var(--main-blue); color: #000; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+
+        .branch-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 25px; }
+        .branch-card { 
+            border-radius: 20px; padding: 25px; background: rgba(255,255,255,0.03); 
+            border: 1px solid rgba(255,255,255,0.05); transition: 0.3s;
+        }
+        .status-tag { display: inline-block; padding: 4px 15px; border-radius: 50px; font-size: 0.85rem; margin-bottom: 15px; font-weight: bold; color: #000; }
+
+        .prod-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .prod-sect { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03); }
+        .prod-sect h5 { margin: 0 0 10px 0; font-size: 0.9rem; letter-spacing: 1px; }
+        
+        .item-row { 
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .is-finished { text-decoration: line-through; color: #555; }
+        .finish-label { background: var(--danger); color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+
+        #adminPanel { display: none; }
+        .admin-item-row { background: #000; padding: 10px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #222; }
+
+        /* لودر بسيط للتحميل */
+        #loader { text-align: center; padding: 50px; font-size: 1.2rem; color: var(--main-blue); }
+    </style>
+</head>
+<body>
+
+    <div id="loginOverlay">
+        <div class="login-card">
+            <h2 style="color: var(--main-blue); margin-bottom: 25px;">🔐 دخول المدير</h2>
+            <input type="text" id="userInput" placeholder="اسم المستخدم">
+            <input type="password" id="passInput" placeholder="كلمة المرور">
+            <button class="btn btn-primary" style="width: 100%; margin-top: 20px;" onclick="validateAdmin()">دخول</button>
+            <button class="btn" style="background:none; color:#555; margin-top:10px" onclick="closeLogin()">إلغاء</button>
+            <p id="errorMsg" style="color:var(--danger); display:none; margin-top:15px;">بيانات الدخول غير صحيحة!</p>
+        </div>
+    </div>
+
+    <header class="main-header">
+        <div class="side-brand">ELSHAMAA</div>
+        <div class="najaf-center">
+            <h1>نَجَف</h1>
+            <div style="color: var(--main-blue); font-size: 0.8rem; letter-spacing: 3px; opacity: 0.6;">SYSTEM MANAGEMENT</div>
+        </div>
+        <div class="admin-btn-area">
+            <button id="navBtn" class="btn" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid #333;" onclick="handleNavClick()">⚙️ الإدارة</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="loader">جاري جلب البيانات من السحابة...</div>
+        
+        <div id="liveView" style="display: none;">
+            <h2 style="margin-bottom: 30px; display: flex; align-items: center; gap: 15px;">
+                <span style="width:12px; height:12px; background:var(--success); border-radius:50%; box-shadow: 0 0 10px var(--success);"></span>
+                حالة الفروع والمنتجات المتاحة الآن
+            </h2>
+            <div class="branch-grid" id="publicGrid"></div>
+        </div>
+
+        <div id="adminPanel">
+            <div class="card" style="border-color: var(--main-blue);">
+                <h2 style="color: var(--main-blue); margin-top: 0;">🛠 لوحة تحكم الإدارة</h2>
+                
+                <div style="background: rgba(88,180,255,0.05); padding: 20px; border-radius: 15px;">
+                    <h4>📍 إضافة فرع جديد للمنظومة:</h4>
+                    <div style="display:flex; gap:10px">
+                        <input type="text" id="branchNameInput" placeholder="اكتب اسم الفرع هنا...">
+                        <button class="btn btn-primary" onclick="createNewBranch()">+ إضافة الفرع</button>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 40px; border-bottom: 1px solid #333; padding-bottom: 10px;">إدارة الفروع القائمة والمنتجات:</h3>
+                <div id="adminList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // إعدادات Firebase الخاصة بك
+        const firebaseConfig = {
+            apiKey: "AIzaSyBojsAZ73wpf-4cD8TviULncyxIIOUO2qY",
+            authDomain: "brak-nagaf.firebaseapp.com",
+            databaseURL: "https://brak-nagaf-default-rtdb.firebaseio.com",
+            projectId: "brak-nagaf",
+            storageBucket: "brak-nagaf.firebasestorage.app",
+            messagingSenderId: "149166416863",
+            appId: "1:149166416863:web:e94fe392f868da07bbda6a",
+            measurementId: "G-Z82Y7NHNGE"
+        };
+
+        // تهيئة Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const dbRef = ref(database, 'najaf_system_data');
+
+        let db = [];
+        let isAdmin = false;
+
+        // استماع للتغييرات في قاعدة البيانات (Real-time)
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            db = data || [];
+            document.getElementById('loader').style.display = 'none';
+            renderAll();
+        });
+
+        // وظيفة حفظ البيانات في Firebase
+        function syncToFirebase() {
+            set(dbRef, db);
+        }
+
+        // --- جعل الوظائف متاحة عالمياً لـ HTML ---
+        
+        window.handleNavClick = () => {
+            if (!isAdmin) {
+                document.getElementById('loginOverlay').style.display = 'flex';
+            } else {
+                isAdmin = false;
+                document.getElementById('navBtn').innerText = "⚙️ الإدارة";
+                renderAll();
+            }
+        };
+
+        window.closeLogin = () => { document.getElementById('loginOverlay').style.display = 'none'; };
+
+        window.validateAdmin = () => {
+            const u = document.getElementById('userInput').value;
+            const p = document.getElementById('passInput').value;
+            if (u === 'elshamaa' && p === '0') {
+                isAdmin = true;
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('navBtn').innerText = "🚪 خروج";
+                document.getElementById('userInput').value = '';
+                document.getElementById('passInput').value = '';
+                renderAll();
+            } else {
+                document.getElementById('errorMsg').style.display = 'block';
+            }
+        };
+
+        window.createNewBranch = () => {
+            const name = document.getElementById('branchNameInput').value;
+            if(name) {
+                db.push({ id: Date.now(), name: name, status: 'closed', products: [] });
+                document.getElementById('branchNameInput').value = '';
+                syncToFirebase();
+            }
+        };
+
+        window.removeBranch = (id) => {
+            if(confirm('هل تريد حذف هذا الفرع نهائياً؟')) {
+                db = db.filter(b => b.id !== id);
+                syncToFirebase();
+            }
+        };
+
+        window.setBranchStatus = (id, stat) => {
+            const branch = db.find(b => b.id === id);
+            if(branch) {
+                branch.status = stat;
+                syncToFirebase();
+            }
+        };
+
+        window.addNewProduct = (bId) => {
+            const name = document.getElementById(`pIn_${bId}`).value;
+            const type = document.getElementById(`tIn_${bId}`).value;
+            if(name) {
+                const branch = db.find(b => b.id === bId);
+                if(!branch.products) branch.products = [];
+                branch.products.push({
+                    id: Date.now(), name: name, type: type, available: true
+                });
+                syncToFirebase();
+            }
+        };
+
+        window.toggleProduct = (bId, pId) => {
+            let p = db.find(b => b.id === bId).products.find(x => x.id === pId);
+            p.available = !p.available;
+            syncToFirebase();
+        };
+
+        window.deleteProduct = (bId, pId) => {
+            let b = db.find(b => b.id === bId);
+            b.products = b.products.filter(x => x.id !== pId);
+            syncToFirebase();
+        };
+
+        function renderAll() {
+            const liveView = document.getElementById('liveView');
+            const adminPanel = document.getElementById('adminPanel');
+
+            if (isAdmin) {
+                liveView.style.display = 'none';
+                adminPanel.style.display = 'block';
+                renderAdmin();
+            } else {
+                liveView.style.display = 'block';
+                adminPanel.style.display = 'none';
+                renderPublic();
+            }
+        }
+
+        function renderPublic() {
+            const grid = document.getElementById('publicGrid');
+            if (db.length === 0) {
+                grid.innerHTML = "<p style='opacity:0.5'>لا يوجد فروع مضافة حالياً...</p>";
+                return;
+            }
+            grid.innerHTML = db.map(b => {
+                const showIftar = (b.status === 'iftar' || b.status === 'both');
+                const showSuhoor = (b.status === 'suhoor' || b.status === 'both');
+                let statusLabel = b.status === 'closed' ? 'مغلق حالياً' : (b.status === 'iftar' ? 'فطار' : (b.status === 'suhoor' ? 'سحور' : 'فطار وسحور'));
+                const products = b.products || [];
+
+                return `
+                <div class="branch-card" style="opacity: ${b.status === 'closed' ? '0.6' : '1'}">
+                    <span class="status-tag" style="background: var(--status-${b.status})">${statusLabel}</span>
+                    <h2 style="margin: 0 0 15px 0">${b.name}</h2>
+                    ${b.status === 'closed' ? '<p style="color:var(--danger)">🔴 نعتذر، الفرع مغلق الآن</p>' : `
+                        <div class="prod-layout">
+                            <div class="prod-sect" style="display: ${showIftar ? 'block' : 'none'}">
+                                <h5 style="color: var(--status-iftar)">☀️ الفطار</h5>
+                                ${products.filter(p => p.type === 'فطار').map(p => `
+                                    <div class="item-row ${!p.available ? 'is-finished' : ''}">
+                                        <span>${p.name}</span>
+                                        ${!p.available ? '<span class="finish-label">خلصان</span>' : ''}
+                                    </div>
+                                `).join('') || '<small style="color:#444">لا يوجد منتجات</small>'}
+                            </div>
+                            <div class="prod-sect" style="display: ${showSuhoor ? 'block' : 'none'}">
+                                <h5 style="color: var(--status-suhoor)">🌙 السحور</h5>
+                                ${products.filter(p => p.type === 'سحور').map(p => `
+                                    <div class="item-row ${!p.available ? 'is-finished' : ''}">
+                                        <span>${p.name}</span>
+                                        ${!p.available ? '<span class="finish-label">خلصان</span>' : ''}
+                                    </div>
+                                `).join('') || '<small style="color:#444">لا يوجد منتجات</small>'}
+                            </div>
+                        </div>
+                    `}
+                </div>`;
+            }).join('');
+        }
+
+        function renderAdmin() {
+            const list = document.getElementById('adminList');
+            list.innerHTML = db.map(b => `
+                <div class="admin-item-row">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222; padding-bottom:10px; margin-bottom:10px">
+                        <b style="font-size:1.2rem">📍 ${b.name}</b>
+                        <div style="display:flex; gap:10px">
+                            <select style="width:150px; margin:0" onchange="setBranchStatus(${b.id}, this.value)">
+                                <option value="closed" ${b.status==='closed'?'selected':''}>مغلق</option>
+                                <option value="iftar" ${b.status==='iftar'?'selected':''}>فطار</option>
+                                <option value="suhoor" ${b.status==='suhoor'?'selected':''}>سحور</option>
+                                <option value="both" ${b.status==='both'?'selected':''}>فطار وسحور</option>
+                            </select>
+                            <button class="btn btn-sm btn-danger" onclick="removeBranch(${b.id})">حذف الفرع</button>
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex; gap:10px; margin-bottom:15px">
+                        <input type="text" id="pIn_${b.id}" style="margin:0" placeholder="اسم المنتج الجديد">
+                        <select id="tIn_${b.id}" style="width:120px; margin:0">
+                            <option value="فطار">فطار</option>
+                            <option value="سحور">سحور</option>
+                        </select>
+                        <button class="btn btn-sm btn-primary" onclick="addNewProduct(${b.id})">+ إضافة</button>
+                    </div>
+
+                    <div>
+                        ${(b.products || []).map(p => `
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; background:rgba(255,255,255,0.02); margin-bottom:5px; border-radius:5px">
+                                <span class="${!p.available ? 'is-finished' : ''}">${p.name} (${p.type})</span>
+                                <div style="display:flex; gap:5px">
+                                    <button class="btn btn-sm" style="background:${p.available ? '#111' : 'var(--success)'}; color:#fff; border:1px solid #333" onclick="toggleProduct(${b.id}, ${p.id})">
+                                        ${p.available ? 'إيقاف (خلص)' : 'تشغيل (متوفر)'}
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteProduct(${b.id}, ${p.id})">حذف</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
