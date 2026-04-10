@@ -2179,7 +2179,36 @@
                                     </div>
                                 </div>
                             </div>
+<!-- حاسبة مبيعات العيش الشامي المطورة -->
+<div style="margin-top: 25px; padding: 20px; background: rgba(99, 102, 241, 0.1); border-radius: 25px; border: 2px solid var(--primary); max-width: 500px; margin: 25px auto;">
+    <h4 style="margin:0 0 15px 0; color:var(--primary); text-align:center;">🥖 حاسبة العيش (2 رغيف بـ 5ج)</h4>
+    
+    <div style="display: flex; flex-direction: column; gap: 15px;">
+        <!-- مدخل عدد الأرغفة -->
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <label style="color:#ccc; font-size:0.9rem; min-width:100px;">عدد الأرغفة المطلوبة:</label>
+            <input type="number" id="breadQtyInput" placeholder="أدخل العدد..." class="form-control-glass" style="margin:0; flex:1; text-align:center; font-size:1.3rem; border-color:var(--primary);" oninput="calculateBreadPrice()">
+        </div>
 
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <!-- عرض الكمية المطلوب إدخالها في السيستم -->
+            <div style="background: rgba(255, 215, 0, 0.1); padding: 10px; border-radius: 15px; border: 1px solid #ffd700; text-align: center;">
+                <div style="color:#ffd700; font-size:0.75rem; margin-bottom:5px;">الكمية (في الجدول)</div>
+                <div id="systemQtyDisplay" style="font-size: 1.5rem; font-weight: 900; color: #fff;">0</div>
+            </div>
+
+            <!-- عرض الإجمالي -->
+            <div style="background: rgba(6, 182, 212, 0.1); padding: 10px; border-radius: 15px; border: 1px solid var(--accent); text-align: center;">
+                <div style="color:var(--accent); font-size:0.75rem; margin-bottom:5px;">إجمالي السعر</div>
+                <div id="breadTotalPriceDisplay" style="font-size: 1.5rem; font-weight: 900; color: #fff;">0.00</div>
+            </div>
+        </div>
+
+        <div style="font-size: 0.7rem; color: #888; text-align: center;">
+            * ملاحظة: أدخل "الكمية الصفراء" في خانة الكمية بالجدول.
+        </div>
+    </div>
+</div>
                             <script>
                                 // منع القائمة اليمنى (Right Click)
                                 document.addEventListener('contextmenu', event => event.preventDefault());
@@ -7406,7 +7435,30 @@ function updateWeeklyLogDisplays() {
             .map(u => u.username);
         currentOffset = 0;
         saveRotation();
+    }function calculateBreadPrice() {
+    const qtyInput = document.getElementById('breadQtyInput');
+    const systemQtyDisplay = document.getElementById('systemQtyDisplay');
+    const totalPriceDisplay = document.getElementById('breadTotalPriceDisplay');
+    
+    let loavesCount = parseFloat(qtyInput.value);
+    
+    if (isNaN(loavesCount) || loavesCount <= 0) {
+        systemQtyDisplay.innerText = "0";
+        totalPriceDisplay.innerText = "0.00";
+        return;
     }
+
+    // المعادلة الجديدة: تقسيم على 2 ثم جبر الكسر لأقرب رقم صحيح أعلى
+    // Math.ceil(3.5) سيعطينا 4
+    let systemQty = Math.ceil(loavesCount / 2);
+    
+    // السعر الإجمالي بناءً على الكمية الصحيحة بعد الجبر
+    let total = systemQty * 5;
+
+    // تحديث الشاشة بالأرقام الصحيحة
+    systemQtyDisplay.innerText = systemQty; 
+    totalPriceDisplay.innerText = total.toFixed(2);
+}
     </script>
     <!-- نافذة تأكيد إتمام الصلاة -->
     <div id="prayerCheckModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:30000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(10px);">
