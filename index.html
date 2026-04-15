@@ -5173,9 +5173,11 @@
 
                                     try {
                                         // الرفع بيحصل هنا في الخلفية
-                                        let imageUrl = "";
-                                        let audioUrl = "";
-
+                                     // ابحث عن هذا الجزء داخل نفس الدالة وعدله ليكون هكذا:
+let audioUrl = "";
+if (audioFile) {
+    audioUrl = await uploadToCloudinary(audioFile);
+}
                                         if (imgFile) imageUrl = await uploadToCloudinary(imgFile);
                                         if (audioFile) audioUrl = await uploadToCloudinary(audioFile);
 
@@ -7397,46 +7399,51 @@ async function uploadCsCall() {
     const audioFile = document.getElementById('csAudioInput').files[0];
     const imageFile = document.getElementById('csImageInput').files[0];
 
-    // التحقق من الحقول الأساسية
+    // التحقق من الحقول الأساسية فقط
     if (!targetUser) return alert("الرجاء اختيار المستلم! ⚠️");
     if (!clientPhone || !clientNote) return alert("برجاء إكمال بيانات رقم العميل وتفاصيل الشكوى");
-    if (!audioFile) return alert("يجب إرفاق تسجيل المكالمة كدليل أساسي! 🎙️");
+    
+    // تم إزالة شرط إجبارية ملف الصوت من هنا
 
     const submitBtn = document.getElementById('btnCsSubmit');
     const originalText = submitBtn.innerText;
 
-    // حالة التحميل
     submitBtn.disabled = true;
     submitBtn.style.opacity = "0.6";
-    submitBtn.innerHTML = "⏳ جاري رفع الملفات للسحابة...";
+    submitBtn.innerHTML = "⏳ جاري المعالجة...";
 
     try {
-        // الرفع لـ Cloudinary (باستخدام الدالة المعرفة مسبقاً في كودك)
-        let audioUrl = await uploadToCloudinary(audioFile);
-        let imageUrl = imageFile ? await uploadToCloudinary(imageFile) : "";
+        // رفع الصوت فقط إذا كان الموظف قد اختار ملفاً
+        let audioUrl = "";
+        if (audioFile) {
+            audioUrl = await uploadToCloudinary(audioFile);
+        }
 
-        submitBtn.innerHTML = "💾 جاري تسجيل البلاغ في النظام...";
+        // رفع الصورة فقط إذا وجدت
+        let imageUrl = "";
+        if (imageFile) {
+            imageUrl = await uploadToCloudinary(imageFile);
+        }
+
+        submitBtn.innerHTML = "💾 جاري حفظ البيانات...";
 
         const reportData = {
             date: getServerDateString(),
             time: getServerTimeString(),
             title: `📞 بلاغ جودة: ${clientPhone}`,
             details: `الموظف المشكو في حقه: ${empName} \n\nشكوى العميل: ${clientNote} \n\nملاحظة خدمة العملاء: ${agentNote}`,
-            audioRecord: audioUrl,
+            audioRecord: audioUrl, // سيكون فارغاً إذا لم يرفق ملف
             evidence: imageUrl,
             type: destType === 'manager' ? "إدارة - تقرير سري" : "مخالفة/تقييم جودة",
             uploader: currentUser.realName || currentUser.username,
-            amount: 0, // يمكن تغييره لاحقاً من قبل المدير
             acknowledged: false,
             seen: false
         };
 
-        // الحفظ في نود الشكاوى (Complaints) للمستلم المختار
         await db.ref(`users/${targetUser}/complaints`).push(reportData);
+        alert(`✅ تم الإرسال بنجاح!`);
 
-        alert(`🚀 تم بنجاح! تم إرسال البلاغ إلى ملف (${targetUser}) وسيتم مراجعته.`);
-
-        // تصفير النموذج بالكامل
+        // تنظيف النموذج
         document.getElementById('csCallTitle').value = "";
         document.getElementById('csTargetEmployeeName').value = "";
         document.getElementById('csClientNote').value = "";
@@ -7449,7 +7456,7 @@ async function uploadCsCall() {
 
     } catch (e) {
         console.error(e);
-        alert("فشل الإرسال.. تأكد من جودة الإنترنت");
+        alert("فشل الإرسال.. تأكد من اتصال الإنترنت");
     } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
@@ -7481,7 +7488,6 @@ async function uploadCsCall() {
     if (!targetUser) return alert("الرجاء اختيار المستلم أولاً! ⚠️");
     if (!clientPhone) return alert("الرجاء إدخال رقم العميل");
     if (!clientNote) return alert("الرجاء كتابة تفاصيل شكوى العميل");
-    if (!audioFile) return alert("يجب إرفاق تسجيل المكالمة كدليل أساسي! 🎙️");
 
     const submitBtn = document.getElementById('btnCsSubmit');
     const originalText = submitBtn.innerText;
