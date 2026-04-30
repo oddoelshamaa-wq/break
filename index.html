@@ -2226,11 +2226,15 @@
                                             </div>
                                         </div>
 
-                                        <!-- زر الإيقاف -->
-                                        <div id="stopArea" class="hidden">
-                                            <button onclick="stopMyBreak()" class="btn btn-danger" style="padding: 25px; width: 100%; max-width: 600px; font-size: 1.6rem; border-radius: 25px;">🛑 إنهاء النشاط والعودة</button>
-                                        </div>
-                                    </div>
+                                      <!-- زر الإيقاف -->
+<div id="stopArea" class="hidden">
+    <button onclick="stopMyBreak()" class="btn btn-danger" style="padding: 25px; width: 100%; max-width: 600px; font-size: 1.6rem; border-radius: 25px;">🛑 إنهاء النشاط والعودة</button>
+    
+    <!-- رسالة تحذير تظهر فقط على الموبايل -->
+    <div class="mobile-only-warning" style="display:none; color: #ff4444; margin-top: 15px; font-weight: bold; background: rgba(255,0,0,0.1); padding: 10px; border-radius: 10px;">
+        ⚠️ تنبيه: زر الإنهاء معطل على الهاتف. يجب الإنهاء من الكمبيوتر.
+    </div>
+</div>
                                     <div style="margin-top: 25px; padding: 20px; background: rgba(99, 102, 241, 0.1); border-radius: 25px; border: 2px solid var(--primary); max-width: 500px; margin: 25px auto;">
         <h4 style="margin:0 0 15px 0; color:var(--primary); text-align:center;">🥖 حاسبة العيش (2 رغيف بـ 5ج)</h4>
         
@@ -4230,19 +4234,25 @@
     }
 
                                 function stopMyBreak() {
-                                    const u = currentUser;
+    // التحقق من نوع الجهاز ومنع الموظف فقط (الأدمن مستثنى)
+    if (getDeviceType() === "mobile" && currentUser.role !== 'admin') {
+        alert("🛑 عذراً يا بطل.. قوانين العمل تمنع إنهاء النشاط من الهاتف المحمول. يرجى تسجيل العودة من جهاز الكمبيوتر الخاص بك لضمان دقة المراقبة.");
+        return; // الخروج من الدالة ومنع الإغلاق
+    }
 
-                                    // إذا كان النشاط صلاة، نظهر نافذة التأكيد أولاً
-                                    if (u.breakType === 'صلاة') {
-                                        const nextPrayerName = document.getElementById('nextPrayerName').innerText.replace("المتبقي على ", "") || "الصلاة";
-                                        document.getElementById('prayerCheckTitle').innerText = `هل أتممت ${nextPrayerName}؟`;
-                                        document.getElementById('prayerCheckModal').classList.remove('hidden');
-                                        return; // نتوقف هنا وننتظر رد الموظف من النافذة
-                                    }
+    const u = currentUser;
 
-                                    // إذا كان نشاطاً عادياً، نكمل الإجراء الطبيعي
-                                    finalizeStopBreak(false); // false تعني ليس صلاة مؤكدة
-                                }
+    // إذا كان النشاط صلاة، نظهر نافذة التأكيد أولاً
+    if (u.breakType === 'صلاة') {
+        const nextPrayerName = document.getElementById('nextPrayerName').innerText.replace("المتبقي على ", "") || "الصلاة";
+        document.getElementById('prayerCheckTitle').innerText = `هل أتممت ${nextPrayerName}؟`;
+        document.getElementById('prayerCheckModal').classList.remove('hidden');
+        return; 
+    }
+
+    // إذا كان نشاطاً عادياً، نكمل الإجراء الطبيعي
+    finalizeStopBreak(false); 
+}
 
                                 // دالة جديدة لإنهاء النشاط بشكل نهائي
                                 function finalizeStopBreak(didFinishPrayer) {
@@ -4488,6 +4498,8 @@
                                             normalControls.classList.remove('hidden');
                                             stopArea.classList.add('hidden');
                                         }
+                                            const mobileWarning = document.querySelector('.mobile-only-warning');
+
                                     }
 
                                     // --- إضافة منطق الطابور (الحالة والتحكم) ---
