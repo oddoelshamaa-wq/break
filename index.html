@@ -3584,73 +3584,72 @@
         }
     }
 
-    // متغيرات لمنع التكرار في نفس الدقيقة
-    let lastAutoDhuhrDate = "";
-    let lastAutoAsrDate = "";
+
 
     function checkAutoPrayerDistribution() {
-        if (!prayerTimesData || currentUser.role !== 'admin') return;
+    if (!prayerTimesData || currentUser.role !== 'admin') return;
 
-        const now = new Date(getServerTime());
-        const todayStr = getServerDateString();
+    const now = new Date(getServerTime());
+    const todayStr = getServerDateString();
 
-        // تعريف الصلوات المستهدفة (الظهر والعصر)
+    // جلب بيانات آخر توزيع من قاعدة البيانات لمنع التكرار عند الريفريش
+    db.ref('settings/lastAutoPrayerTrigger').once('value', (snap) => {
+        const lastTriggers = snap.val() || {};
+
         const targets = [
-            { key: 'Dhuhr', label: 'الظهر', lastCheck: lastAutoDhuhrDate, setLast: (val) => lastAutoDhuhrDate = val },
-            { key: 'Asr', label: 'العصر', lastCheck: lastAutoAsrDate, setLast: (val) => lastAutoAsrDate = val }
+            { key: 'Dhuhr', label: 'الظهر' },
+            { key: 'Asr', label: 'العصر' }
         ];
 
         targets.forEach(p => {
-            if (p.lastCheck === todayStr) return; // تم التوزيع لهذه الصلاة اليوم بالفعل
+            // التحقق هل تم التوزيع لهذه الصلاة اليوم؟
+            if (lastTriggers[p.key] === todayStr) return; 
 
-            const timeStr = prayerTimesData[p.key]; // الوقت القادم من الـ API مثل "12:05"
+            const timeStr = prayerTimesData[p.key]; 
             if (!timeStr) return;
 
             const [h, m] = timeStr.split(':').map(Number);
             const prayerDate = new Date(now);
             prayerDate.setHours(h, m, 0, 0);
 
-            // حساب وقت التفعيل (وقت الصلاة ناقص 10 دقائق)
+            // وقت التفعيل (10 دقائق قبل الصلاة)
             const triggerDate = new Date(prayerDate.getTime() - (10 * 60 * 1000));
 
-            // إذا وصلنا لوقت التفعيل
             if (now >= triggerDate && now < prayerDate) {
-                p.setLast(todayStr);
+                // حفظ التاريخ في قاعدة البيانات فوراً قبل التنفيذ لمنع التكرار
+                db.ref('settings/lastAutoPrayerTrigger/' + p.key).set(todayStr);
                 executeAutoPrayerDistribution(p.label);
             }
         });
-    }
+    });
+}
 
-    function executeAutoPrayerDistribution(prayerName) {
-        console.log(`🚀 جاري توزيع رصيد صلاة ${prayerName} تلقائياً...`);
+  function executeAutoPrayerDistribution(prayerName) {
+    console.log(`🚀 جاري توزيع رصيد صلاة ${prayerName} تلقائياً...`);
 
-        db.ref('users').once('value', (snap) => {
-            const users = snap.val();
-            const updates = {};
-            const timestamp = getServerTime();
+    db.ref('users').once('value', (snap) => {
+        const users = snap.val();
+        const updates = {};
+        
+        Object.keys(users).forEach(un => {
+            if (!MANAGERS.includes(un)) {
+                updates[`users/${un}/prayerLimit`] = 900; 
+                updates[`users/${un}/prayerSeconds`] = 0;
+            }
+        });
 
-            Object.keys(users).forEach(un => {
-                if (!MANAGERS.includes(un)) {
-                    updates[`users/${un}/prayerLimit`] = 900; // 15 دقيقة
-                    updates[`users/${un}/prayerSeconds`] = 0;
-                }
-            });
+        updates['settings/prayerOpen'] = true;
 
-            updates['settings/prayerOpen'] = true;
-
-            db.ref().update(updates).then(() => {
-                // إرسال رسالة بث لجميع الموظفين لإبلاغهم
-                db.ref('broadcasts').push({
-                    message: `📢 تم فتح وقت صلاة ${prayerName} وتوزيع 15 دقيقة رصيد للجميع تلقائياً.`,
-                    timestamp: getServerTime(),
-                    sender: "النظام الذكي 🤖",
-                    target: "all"
-                });
-                console.log(`✅ تم تفعيل رصيد صلاة ${prayerName} للجميع.`);
+        db.ref().update(updates).then(() => {
+            db.ref('broadcasts').push({
+                message: `📢 تم فتح وقت صلاة ${prayerName} وتوزيع 15 دقيقة رصيد للجميع تلقائياً.`,
+                timestamp: getServerTime(),
+                sender: "النظام الذكي 🤖",
+                target: "all"
             });
         });
-    }
-
+    });
+}
     function startGlobalTimer() {
         if(timerInterval) clearInterval(timerInterval);
         
