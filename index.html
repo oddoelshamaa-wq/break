@@ -1388,36 +1388,66 @@
                                         <p id="modalUserName" style="color:#aaa; margin:0;"></p>
                                     </div>
 
-                                    <!-- قسم الإضافة (يظهر للمدير فقط) -->
-                                    <div id="adminAddComplaintArea" class="hidden" style="background:rgba(239,68,68,0.1); padding:20px; border-radius:15px; border:1px dashed var(--danger); margin-bottom:25px;">
-                                        <h4 style="margin-top:0; color:var(--danger);">🚨 تسجيل مخالفة / شكوى جديدة</h4>
-                                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                                            <input type="text" id="complaintTitle" placeholder="عنوان المخالفة (مثلاً: تأخير، سوء سلوك..)">
-                                            <input type="number" id="deductionAmount" placeholder="قيمة الخصم (إن وجد)">
-                                        </div>
-                                        <textarea id="complaintDetails" style="width:100%; height:80px; margin-top:10px;" placeholder="تفاصيل الشكوى..."></textarea>
+                                 <!-- قسم الإضافة (يظهر للمدير فقط) -->
+<div id="adminAddComplaintArea" class="hidden" style="background:rgba(15, 23, 42, 0.8); padding:25px; border-radius:20px; border: 2px solid var(--danger); margin-bottom:25px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);">
+    <h4 style="margin-top:0; color:var(--danger); display:flex; align-items:center; gap:10px;">
+        🚨 تسجيل إجراء إداري جديد
+    </h4>
 
-                                        <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
-                                            <label style="cursor:pointer; background:var(--dark); padding:10px; border-radius:10px; border:1px solid var(--glass-border);">
-                                                📷 إرفاق دليل (سكرين شوت)
-                                                <input type="file" id="complaintEvidence" accept="image/*" style="display:none" onchange="previewEvidence(this)">
-                                            </label>
-                                            <span id="evidenceFileName" style="font-size:0.8rem; color:#aaa;"></span>
-                                        </div>
-                                        <img id="evidencePreview" src="" style="max-height:100px; display:none; margin-top:10px; border-radius:10px; border:1px solid var(--danger);">
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px;">
+        <!-- اختيار نوع الشكوى -->
+        <div>
+            <label style="display:block; margin-bottom:5px; color:#aaa; font-size:0.8rem;">نوع الإجراء:</label>
+            <select id="complaintType" class="form-control-glass" style="width:100%;" onchange="toggleDeductionOptions()">
+                <option value="normal">📝 شكوى عادية / تنبيه</option>
+                <option value="deduction">💸 مخالفة بخصم مالي</option>
+            </select>
+        </div>
 
-                                        <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
-                                            <label style="cursor:pointer; background:var(--primary); color:#000; padding:10px; border-radius:10px; border:1px solid var(--glass-border); font-weight:bold;">
-                                                🎙️ إرفاق تسجيل مكالمة
-                                                <input type="file" id="complaintAudioInput" accept="audio/*" style="display:none" onchange="previewAudio(this)">
-                                            </label>
-                                            <span id="audioFileName" style="font-size:0.8rem; color:#aaa;"></span>
-                                        </div>
+        <!-- خانة العنوان -->
+        <div>
+            <label style="display:block; margin-bottom:5px; color:#aaa; font-size:0.8rem;">عنوان المخالفة:</label>
+            <input type="text" id="complaintTitle" placeholder="مثلاً: تأخير، سوء سلوك، تقصير.." class="form-control-glass" style="width:100%; margin:0;">
+        </div>
+    </div>
 
-                                        <audio id="audioPreviewPlayer" controls style="width:100%; margin-top:10px; display:none; border-radius:20px;"></audio>
+    <!-- قسم خيارات الخصم (يظهر فقط عند اختيار مخالفة بخصم) -->
+    <div id="deductionOptionsArea" style="display:none; background:rgba(239, 68, 68, 0.1); padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid rgba(239, 68, 68, 0.2);">
+        <label style="display:block; margin-bottom:8px; color:var(--danger); font-weight:bold;">حدد قيمة الجزاء:</label>
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px;">
+                  <button onclick="setDeductionValue('ربع يوم')" class="btn btn-dark btn-sm deduction-btn">ربع يوم</button>
+        <button onclick="setDeductionValue('نص يوم')" class="btn btn-dark btn-sm deduction-btn">نص يوم</button>
+        <button onclick="setDeductionValue('يوم كامل')" class="btn btn-dark btn-sm deduction-btn">يوم كامل</button>
+        <button onclick="setDeductionValue('يومين')" class="btn btn-dark btn-sm deduction-btn">يومين</button>
+        <button onclick="setDeductionValue('3 أيام')" class="btn btn-dark btn-sm deduction-btn">3 أيام</button>
+        <button onclick="setDeductionValue('أسبوع')" class="btn btn-dark btn-sm deduction-btn">أسبوع</button>
+            <input type="number" id="customDeduction" placeholder="مبلغ مالي" class="form-control-glass" style="margin:0; padding:5px; font-size:0.8rem;">
+        </div>
+        <input type="hidden" id="deductionAmount" value="0">
+    </div>
 
-                                        <button onclick="submitComplaint()" class="btn btn-danger" style="width:100%; margin-top:15px;">تسجيل المخالفة وحفظ في الملف</button>
-                                    </div>
+    <textarea id="complaintDetails" class="form-control-glass" style="width:100%; height:80px;" placeholder="تفاصيل الشكوى أو الملاحظات..."></textarea>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:15px;">
+        <label class="upload-box" style="cursor:pointer; border:1px dashed #555; padding:10px;">
+            📷 إرفاق دليل (سكرين شوت)
+            <input type="file" id="complaintEvidence" accept="image/*" style="display:none" onchange="previewEvidence(this)">
+        </label>
+        <label class="upload-box" style="cursor:pointer; border:1px dashed #555; padding:10px;">
+            🎙️ إرفاق تسجيل مكالمة
+            <input type="file" id="complaintAudioInput" accept="audio/*" style="display:none" onchange="previewAudio(this)">
+        </label>
+    </div>
+    
+    <div style="display:flex; justify-content:center; gap:20px; margin-top:10px;">
+        <span id="evidenceFileName" style="font-size:0.7rem; color:var(--success);"></span>
+        <span id="audioFileName" style="font-size:0.7rem; color:var(--success);"></span>
+    </div>
+
+    <button onclick="submitComplaint()" class="btn btn-danger" style="width:100%; margin-top:20px; padding:15px; font-size:1.1rem; font-weight:bold;">
+        حفظ الإجراء في ملف الموظف 💾
+    </button>
+</div>
 
                                     <!-- سجل المخالفات -->
                                     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:15px;">
@@ -2533,88 +2563,87 @@
                                 }
 
                                 // 2. تعديل دالة عرض الشكاوى (لإضافة الفلترة + إخفاء الحذف عن abutamim)
-                                function renderComplaintsHistory(username) {
-                                    const tbody = document.getElementById('complaintsHistoryBody');
-                                    tbody.innerHTML = '';
+        function renderComplaintsHistory(username) {
+    const tbody = document.getElementById('complaintsHistoryBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
 
-                                    if (!allUsersData[username]) return;
+    if (!allUsersData[username]) return;
 
-                                    const u = allUsersData[username];
-                                    const viewingMyOwnProfile = (currentUser.username === username);
+    const u = allUsersData[username];
+    const viewingMyOwnProfile = (currentUser.username === username);
+    const isAdmin = currentUser.role === 'admin';
 
-                                    // التعديل هنا: السماح بالحذف لأي شخص رتبته admin بدون استثناءات
-                                    const canDelete = currentUser.role === 'admin';
+    // قراءة الفلاتر
+    const filterFrom = document.getElementById('historyDateFrom').value;
+    const filterTo = document.getElementById('historyDateTo').value;
 
-                                    // قراءة الفلاتر
-                                    const filterFrom = document.getElementById('historyDateFrom').value;
-                                    const filterTo = document.getElementById('historyDateTo').value;
+    if (u.complaints) {
+        const keys = Object.keys(u.complaints).reverse();
 
-                                    if (u.complaints) {
-                                        const keys = Object.keys(u.complaints).reverse().slice(0, 50);
+        keys.forEach(key => {
+            const c = u.complaints[key];
 
-                                        keys.forEach(key => {
-                                            const c = u.complaints[key];
+            // منطق الفلترة بالتاريخ
+            if (filterFrom || filterTo) {
+                const parts = c.date.split('/');
+                const cDateISO = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                if (filterFrom && cDateISO < filterFrom) return;
+                if (filterTo && cDateISO > filterTo) return;
+            }
 
-                                            // منطق الفلترة بالتاريخ
-                                            if (filterFrom || filterTo) {
-                                                // تحويل تاريخ الشكوى من DD/MM/YYYY إلى YYYY-MM-DD للمقارنة
-                                                const parts = c.date.split('/');
-                                                const cDateISO = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            // 1. تحديد "وسم" النوع (تنبيه أو خصم)
+            const typeBadge = c.type === 'خصم مالي' 
+                ? `<span style="background:#ef4444; color:white; padding:3px 8px; border-radius:6px; font-size:0.7rem; margin-left:5px; font-weight:900; box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);">💸 خصم</span>`
+                : `<span style="background:#3b82f6; color:white; padding:3px 8px; border-radius:6px; font-size:0.7rem; margin-left:5px; font-weight:900;">📝 تنبيه</span>`;
 
-                                                if (filterFrom && cDateISO < filterFrom) return; // تخطي
-                                                if (filterTo && cDateISO > filterTo) return; // تخطي
-                                            }
+            // 2. معالجة عرض القيمة (نص أو رقم)
+            // إذا كانت القيمة "0" أو "بدون خصم" سنعرض شرطة، غير ذلك سنعرض النص المكتوب
+            const displayAmount = (c.amount && c.amount !== "0" && c.amount !== "بدون خصم") 
+                ? `<b style="color:#ffd700;">${c.amount}</b>` 
+                : `<span style="color:#666;">-</span>`;
 
-                                            let actionCell = '';
+            // 3. أزرار التحكم
+            let actionCell = '';
+            if (c.acknowledged) {
+                actionCell += `<div style="color:#10b981; font-weight:bold; font-size:0.9rem;">✔ تم التأكيد</div>`;
+            } else if (c.seen) {
+                if (isAdmin) {
+                    actionCell += `<div style="color:#3b82f6; font-size:0.85rem;">👁️ شاهدها</div>`;
+                } else if (viewingMyOwnProfile) {
+                    actionCell += `<button onclick="acknowledgeComplaint('${key}')" class="btn btn-vip btn-sm" style="animation: pulse 2s infinite;">✍ موافق</button>`;
+                }
+            } else {
+                if (isAdmin) actionCell += `<div style="color:#f59e0b; font-size:0.85rem;">⏳ لم يفتح</div>`;
+            }
 
-                                            // منطق الحالات
-                                            if (c.acknowledged) {
-                                                actionCell += `<div style="color:#10b981; font-weight:bold; font-size:0.9rem;">✔ تم التأكيد</div>`;
-                                            } else if (c.seen) {
-                                                if (currentUser.role === 'admin') {
-                                                    actionCell += `<div style="color:#3b82f6; font-size:0.85rem;">👁️ شاهدها</div>`;
-                                                } else if (viewingMyOwnProfile) {
-                                                    actionCell += `<button onclick="acknowledgeComplaint('${key}')" class="btn btn-vip btn-sm" style="animation: pulse 2s infinite;">✍ موافق</button>`;
-                                                }
-                                            } else {
-                                                if (currentUser.role === 'admin') {
-                                                    actionCell += `<div style="color:#f59e0b; font-size:0.85rem;">⏳ لم يفتح</div>`;
-                                                }
-                                            }
+            if (isAdmin) {
+                actionCell += `<div style="margin-top:5px;"><button onclick="deleteComplaint('${username}', '${key}')" class="btn btn-danger btn-sm" title="حذف">🗑</button></div>`;
+            }
 
-                                            // زر الحذف (يظهر فقط إذا كان مسموح له)
-                                            if (canDelete) {
-                                                actionCell += `<div style="margin-top:5px;">
-                                                    <button onclick="deleteComplaint('${username}', '${key}')" class="btn btn-danger btn-sm">🗑</button>
-                                                </div>`;
-                                            }
+            // المرفقات
+            const evidenceBtn = c.evidence ? `<button onclick="showZoomImage('${c.evidence}')" class="btn btn-primary btn-sm">📷</button>` : '';
+            const audioPlayer = c.audioRecord ? `<div style="margin-top:5px;"><audio controls src="${c.audioRecord}" style="height:25px; width:150px;"></audio></div>` : '';
+            const proofCell = (evidenceBtn || audioPlayer) ? `<div>${evidenceBtn} ${audioPlayer}</div>` : '-';
 
-                                            // المرفقات
-                                            const evidenceBtn = c.evidence ? `<button onclick="showZoomImage('${c.evidence}')" class="btn btn-primary btn-sm">📷</button>` : '';
-                                            const audioPlayer = c.audioRecord ? `<div style="margin-top:5px;"><audio controls src="${c.audioRecord}" style="height:25px; width:150px;"></audio></div>` : '';
-                                            const proofCell = (evidenceBtn || audioPlayer) ? `<div>${evidenceBtn} ${audioPlayer}</div>` : '-';
-
-                                            // لون الصف
-                                            let rowColor = 'rgba(255,255,255,0.02)';
-                                            if (!c.acknowledged && !c.seen) rowColor = 'rgba(245, 158, 11, 0.08)';
-                                            if (!c.acknowledged && c.seen) rowColor = 'rgba(59, 130, 246, 0.08)';
-
-                                            tbody.innerHTML += `
-                                                <tr style="background:${rowColor}; border-bottom:1px solid rgba(255,255,255,0.05);">
-                                                    <td>${escapeHtml(c.date)}<br><small style="opacity:0.7">${escapeHtml(c.time)}</small></td>
-                                                    <td style="color:var(--primary); font-weight:bold;">${escapeHtml(c.title)}</td>
-                                                    <td style="font-size:0.9rem;">${escapeHtml(c.details)}</td>
-                                                    <td style="color:#ffd700;">${c.amount > 0 ? escapeHtml(c.amount.toString()) : '-'}</td>
-                                                    <td>${proofCell}</td>
-                                                    <td>${escapeHtml(c.uploader || c.admin || 'System')}</td>
-                                                    <td style="text-align:center;">${actionCell}</td>
-                                                </tr>
-                                            `;
-                                        });
-                                    } else {
-                                        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">نظيف 🌟 (أو لا توجد نتائج للبحث)</td></tr>';
-                                    }
-                                }
+            tbody.innerHTML += `
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <td style="font-size:0.85rem;">${c.date}<br><small style="opacity:0.6;">${c.time}</small></td>
+                    <td style="text-align:right;">
+                        ${typeBadge} <span style="font-weight:bold; color:white;">${c.title}</span>
+                    </td>
+                    <td style="font-size:0.85rem; color:#ccc; max-width:200px; white-space:pre-wrap;">${c.details}</td>
+                    <td style="text-align:center;">${displayAmount}</td>
+                    <td>${proofCell}</td>
+                    <td style="font-size:0.85rem; color:#aaa;">${c.admin || 'الإدارة'}</td>
+                    <td style="text-align:center;">${actionCell}</td>
+                </tr>
+            `;
+        });
+    } else {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:#666;">لا توجد سجلات حالياً 🌟</td></tr>';
+    }
+}
 
                                 // 3. تأمين دالة الحذف أيضاً
                                 // دالة حذف الشكوى (متاحة لجميع المشرفين مع الرقابة الصارمة)
@@ -4311,96 +4340,7 @@
                                     finalizeStopBreak(didPray);
                                 }
 
-                                async function exportProfessionalExcel() {
-                                    const startDateVal = document.getElementById('filterStartDate').value;
-                                    const endDateVal = document.getElementById('filterEndDate').value;
-
-                                    if (!startDateVal || !endDateVal) return alert("📅 حدد التاريخ أولاً يا مدير!");
-
-                                    const workbook = new ExcelJS.Workbook();
-
-                                    // 1. إنشاء ورقة الملخص
-                                    const summarySheet = workbook.addWorksheet('ملخص الأداء العام', { views: [{ rightToLeft: true }] });
-
-                                    // 2. إنشاء ورقة التفاصيل (التفنيدة)
-                                    const detailsSheet = workbook.addWorksheet('سجل التفاصيل اليومي', { views: [{ rightToLeft: true }] });
-
-                                    let summaryRows = [];
-                                    let detailedLogs = [];
-
-                                    // معالجة البيانات من مصفوفة allUsersData الموجودة في الكود
-                                    Object.values(allUsersData).forEach(u => {
-                                        if (!u.username || MANAGERS.includes(u.username)) return;
-
-                                        let uS = { name: u.realName || u.username, days: new Set(), ox: 0, prayer: 0, meet: 0, vip: 0, ot: 0, perm: 0, comp: 0, cash: 0 };
-
-                                        if (u.sessions) {
-                                            let daily = {};
-                                            Object.entries(u.sessions).forEach(([key, s]) => {
-                                                const sD = s.date.split('/').reverse().join('-');
-                                                if (sD >= startDateVal && sD <= endDateVal) {
-                                                    uS.days.add(s.date);
-                                                    const dur = parseInt(s.duration) || 0;
-                                                    const durMin = Math.round(dur/60);
-
-                                                    detailedLogs.push([s.date, uS.name, s.type, durMin + " دقيقة", s.reason || "بدون سبب"]);
-
-                                                    if (s.type === 'بريك عام' || s.type === 'طوارئ') daily[s.date] = (daily[s.date] || 0) + dur;
-                                                    else if (s.type === 'صلاة') uS.prayer += dur;
-                                                    else if (s.type === 'ميتنج') uS.meet += dur;
-                                                    else if (s.type === 'استراحة VIP') uS.vip += dur;
-                                                }
-                                            });
-                                            const allow = (u.allowance || 45) * 60;
-                                            Object.values(daily).forEach(v => { if(v > allow) uS.ox += (v - allow); });
-                                        }
-
-                                        // إضافة بيانات الإضافي والشكاوى
-                                        if (u.overtimeHistory) {
-                                            Object.values(u.overtimeHistory).forEach(ot => {
-                                                const otD = ot.date.split('/').reverse().join('-');
-                                                if (otD >= startDateVal && otD <= endDateVal) {
-                                                    uS.ot += parseFloat(ot.hours) || 0;
-                                                    detailedLogs.push([ot.date, uS.name, "إضافي", ot.hours + " ساعة", "معتمد"]);
-                                                }
-                                            });
-                                        }
-
-                                        if (u.complaints) {
-                                            Object.values(u.complaints).forEach(c => {
-                                                const cD = c.date.split('/').reverse().join('-');
-                                                if (cD >= startDateVal && cD <= endDateVal) {
-                                                    uS.comp++; uS.cash += parseFloat(c.amount) || 0;
-                                                    detailedLogs.push([c.date, uS.name, "مخالفة/خصم", c.amount + " ج.م", c.title]);
-                                                }
-                                            });
-                                        }
-
-                                        summaryRows.push([uS.name, uS.days.size, Math.round(uS.ox/60), Math.round(uS.prayer/60), Math.round(uS.meet/60), Math.round(uS.vip/60), uS.ot, uS.perm, uS.comp, uS.cash]);
-                                    });
-
-                                    // --- تنسيق العناوين والألوان ---
-                                    summarySheet.getRow(1).values = ["اسم الموظف", "أيام الحضور", "الأكسدة (د)", "الصلاة (د)", "الميتنج (د)", "VIP (د)", "إضافي (س)", "استأذان (س)", "المخالفات", "الخصم (ج.م)"];
-                                    summarySheet.getRow(1).eachCell(cell => {
-                                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
-                                        cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
-                                    });
-
-                                    summaryRows.forEach(row => summarySheet.addRow(row));
-
-                                    // تنسيق ورقة التفاصيل
-                                    detailsSheet.getRow(1).values = ["التاريخ", "الموظف", "النوع", "المدة", "السبب"];
-                                    detailsSheet.getRow(1).eachCell(cell => {
-                                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF10B981' } };
-                                        cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
-                                    });
-
-                                    detailedLogs.forEach(row => detailsSheet.addRow(row));
-
-                                    // ضبط العرض وتصدير الملف
-                                    const buffer = await workbook.xlsx.writeBuffer();
-                                    saveAs(new Blob([buffer]), `ELSHAMAA_Report_${startDateVal}.xlsx`);
-                                }
+                              
 
                                 // دالة مساعدة لحذف الموظف من الطابور باسم المستخدم
                                 function removeFromQueueByUsername(username) {
@@ -5153,159 +5093,301 @@
                                 // ==========================================
                                 // 2. دالة حفظ الشكوى (بخاصية منع التعليق)
                                 // ==========================================
-                                async function submitComplaint() {
-                                    if (!currentProfileTarget) return;
-
-                                    // بنمسك الزرار عشان نتحكم فيه
-                                    const submitBtn = document.querySelector('#adminAddComplaintArea button.btn-danger');
-                                    const originalBtnText = submitBtn ? submitBtn.innerText : "تسجيل المخالفة";
-
-                                    const title = document.getElementById('complaintTitle').value.trim();
-                                    const amount = document.getElementById('deductionAmount').value.trim();
-                                    const details = document.getElementById('complaintDetails').value.trim();
-                                    const imgFile = document.getElementById('complaintEvidence').files[0];
-                                    const audioFile = document.getElementById('complaintAudioInput').files[0];
-
-                                    // Input validation
-                                    if (!title) return alert("اكتب عنوان المخالفة الأول!");
-                                    if (title.length < 3) return alert("عنوان المخالفة قصير جداً (أقل من 3 أحرف)");
-                                    if (title.length > 100) return alert("عنوان المخالفة طويل جداً (أكثر من 100 حرف)");
-                                    if (amount && isNaN(parseFloat(amount))) return alert("قيمة الخصم يجب أن تكون رقماً صحيحاً");
-                                    if (parseFloat(amount) < 0) return alert("قيمة الخصم لا يمكن أن تكون سالبة");
-                                    if (details.length > 500) return alert("تفاصيل المخالفة طويلة جداً (أكثر من 500 حرف)");
-
-                                    // ---[ هنا الحماية من التعليق ]---
-                                    if(submitBtn) {
-                                        submitBtn.disabled = true; // بنقفل الزرار خالص
-                                        submitBtn.style.opacity = "0.5"; // بنخفف لونه
-                                        submitBtn.innerHTML = "⏳ لحظة.. جاري رفع الملفات..."; // بنطمن المستخدم
-                                    }
-
-                                    try {
-                                        // الرفع بيحصل هنا في الخلفية
-                                     // ابحث عن هذا الجزء داخل نفس الدالة وعدله ليكون هكذا:
-let audioUrl = "";
-if (audioFile) {
-    audioUrl = await uploadToCloudinary(audioFile);
+                    // 1. وظيفة إظهار وإخفاء خيارات الخصم
+// 1. وظيفة إظهار وإخفاء خيارات الخصم
+function toggleDeductionOptions() {
+    const type = document.getElementById('complaintType').value;
+    const area = document.getElementById('deductionOptionsArea');
+    if (area) {
+        area.style.display = (type === 'deduction') ? 'block' : 'none';
+        if (type !== 'deduction') {
+            document.getElementById('deductionAmount').value = "0";
+            resetDeductionBtns();
+        }
+    }
 }
-                                        if (imgFile) imageUrl = await uploadToCloudinary(imgFile);
-                                        if (audioFile) audioUrl = await uploadToCloudinary(audioFile);
 
-                                        // بعد ما الملفات تترفع، بنحفظ البيانات كنص خفيف
-                                        if(submitBtn) submitBtn.innerHTML = "💾 جاري الحفظ...";
+// 2. وظيفة اختيار قيمة الخصم السريعة
+// وظيفة اختيار قيمة الخصم السريعة
+function setDeductionValue(value) {
+    // حفظ القيمة في الحقل المخفي
+    document.getElementById('deductionAmount').value = value;
+    
+    // تصفير خانة المبلغ المالي إذا تم اختيار زر "أيام"
+    document.getElementById('customDeduction').value = ""; 
+    
+    // إعادة شكل كل الأزرار للوضع الطبيعي
+    document.querySelectorAll('.deduction-btn').forEach(btn => {
+        btn.style.background = "rgba(51, 65, 85, 0.5)"; // لون داكن شفاف
+        btn.style.border = "1px solid rgba(255,255,255,0.1)";
+        btn.style.color = "white";
+        btn.style.transform = "scale(1)";
+    });
 
-                                        const complaintData = {
-                                            date: getServerDateString(),
-                                            time: getServerTimeString(),
-                                            title: title,
-                                            amount: amount || 0,
-                                            details: details || "لا توجد تفاصيل",
-                                            evidence: imageUrl,    // رابط خفيف
-                                            audioRecord: audioUrl, // رابط خفيف
-                                            admin: currentUser.realName || currentUser.username,
-                                            acknowledged: false
-                                        };
+    // تمييز الزر الذي تم الضغط عليه حالياً
+    if (window.event) {
+        const selectedBtn = window.event.target;
+        selectedBtn.style.background = "var(--danger)"; // لون أحمر
+        selectedBtn.style.border = "1px solid white";
+        selectedBtn.style.transform = "scale(1.05)";
+    }
+}
 
-                                        await db.ref('users/' + currentProfileTarget + '/complaints').push(complaintData);
+function resetDeductionBtns() {
+    document.querySelectorAll('.deduction-btn').forEach(btn => {
+        btn.style.background = "#334155";
+        btn.style.color = "white";
+    });
+}
 
-                                        alert("تم الحفظ بنجاح والسرعة تمام! 🚀");
-                                        closeProfileModal();
-                                        triggerGlobalRefresh();
+// 3. دالة الإرسال المصححة
+async function submitComplaint(e) {
+    // منع السلوك الافتراضي
+    if (e) e.preventDefault();
+    
+    if (!currentProfileTarget) {
+        alert("خطأ: لم يتم تحديد الموظف المستهدف");
+        return;
+    }
 
-                                    } catch (e) {
-                                        console.error(e);
-                                        alert("حصلت مشكلة صغيرة، جرب تاني.");
-                                    } finally {
-                                        // بنرجع الزرار يشتغل تاني في الآخر
-                                        if(submitBtn) {
-                                            submitBtn.disabled = false;
-                                            submitBtn.innerHTML = originalBtnText;
-                                            submitBtn.style.opacity = "1";
-                                        }
-                                    }
-                                }
+    const type = document.getElementById('complaintType').value;
+    const title = document.getElementById('complaintTitle').value.trim();
+    const details = document.getElementById('complaintDetails').value.trim();
+    const customAmount = document.getElementById('customDeduction').value.trim();
+    let finalAmount = document.getElementById('deductionAmount').value;
 
-                                function renderComplaintsHistory(username) {
-                                    const tbody = document.getElementById('complaintsHistoryBody');
-                                    tbody.innerHTML = '';
+    if (type === 'deduction' && customAmount !== "") {
+        finalAmount = customAmount + " ج.م";
+    }
 
-                                    if (!allUsersData[username]) return;
+    if (!title) {
+        alert("يرجى كتابة عنوان المخالفة");
+        return;
+    }
+    
+    if (type === 'deduction' && (finalAmount === "0" || finalAmount === "")) {
+        alert("يرجى تحديد قيمة الخصم (اختر مدة أو اكتب مبلغاً)");
+        return;
+    }
 
-                                    const u = allUsersData[username];
-                                    const viewingMyOwnProfile = (currentUser.username === username);
-                                    // السماح لأي مشرف (Admin) برؤية زر الحذف
-                                    const canDelete = currentUser.role === 'admin';
+    // الإمساك بالزرار عن طريق ID لضمان عدم حدوث خطأ
+    const submitBtn = document.getElementById('mainSubmitBtn');
+    const originalText = submitBtn.innerText;
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = "⏳ جاري الرفع والحفظ...";
 
-                                    // قراءة الفلاتر
-                                    const filterFrom = document.getElementById('historyDateFrom').value;
-                                    const filterTo = document.getElementById('historyDateTo').value;
+    try {
+        const imgFile = document.getElementById('complaintEvidence').files[0];
+        const audioFile = document.getElementById('complaintAudioInput').files[0];
 
-                                    if (u.complaints) {
-                                        const keys = Object.keys(u.complaints).reverse();
+        // الرفع لـ Cloudinary (التأكد من وجود الدالة الأصلية في كودك)
+        let imageUrl = "";
+        if (imgFile) {
+            imageUrl = await uploadToCloudinary(imgFile);
+        }
+        
+        let audioUrl = "";
+        if (audioFile) {
+            audioUrl = await uploadToCloudinary(audioFile);
+        }
 
-                                        keys.forEach(key => {
-                                            const c = u.complaints[key];
+        const complaintData = {
+            date: getServerDateString(),
+            time: getServerTimeString(),
+            type: type === 'normal' ? 'شكوى إدارية' : 'خصم مالي',
+            title: title,
+            amount: type === 'normal' ? 'بدون خصم' : finalAmount,
+            details: details || "لا توجد تفاصيل إضافية",
+            evidence: imageUrl,
+            audioRecord: audioUrl,
+            admin: currentUser.realName || currentUser.username,
+            seen: false,
+            acknowledged: false
+        };
 
-                                            // منطق الفلترة بالتاريخ
-                                            if (filterFrom || filterTo) {
-                                                // تحويل تاريخ الشكوى من DD/MM/YYYY إلى YYYY-MM-DD للمقارنة
-                                                const parts = c.date.split('/');
-                                                const cDateISO = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        // الحفظ في Firebase
+        await db.ref(`users/${currentProfileTarget}/complaints`).push(complaintData);
 
-                                                if (filterFrom && cDateISO < filterFrom) return; // تخطي
-                                                if (filterTo && cDateISO > filterTo) return; // تخطي
-                                            }
+        alert("✅ تم حفظ الإجراء بنجاح");
+        
+        // إغلاق المودال وتنظيف البيانات
+        if (typeof closeProfileModal === "function") closeProfileModal();
+        if (typeof triggerGlobalRefresh === "function") triggerGlobalRefresh();
 
-                                            let actionCell = '';
+    } catch (err) {
+        console.error("Error saving complaint:", err);
+        alert("حدث خطأ أثناء الحفظ. تأكد من اتصال الإنترنت.");
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
+}
 
-                                            // منطق الحالات
-                                            if (c.acknowledged) {
-                                                actionCell += `<div style="color:#10b981; font-weight:bold; font-size:0.9rem;">✔ تم التأكيد</div>`;
-                                            } else if (c.seen) {
-                                                if (currentUser.role === 'admin') {
-                                                    actionCell += `<div style="color:#3b82f6; font-size:0.85rem;">👁️ شاهدها</div>`;
-                                                } else if (viewingMyOwnProfile) {
-                                                    actionCell += `<button onclick="acknowledgeComplaint('${key}')" class="btn btn-vip btn-sm" style="animation: pulse 2s infinite;">✍ موافق</button>`;
-                                                }
-                                            } else {
-                                                if (currentUser.role === 'admin') {
-                                                    actionCell += `<div style="color:#f59e0b; font-size:0.85rem;">⏳ لم يفتح</div>`;
-                                                }
-                                            }
+// 2. وظيفة اختيار قيمة الخصم السريعة
+function setDeductionValue(value) {
+    document.getElementById('deductionAmount').value = value;
+    document.getElementById('customDeduction').value = ""; // تصفير المبلغ المالي المخصص
+    
+    // تمييز الزر المختار
+    resetDeductionBtns();
+    event.target.style.background = "var(--danger)";
+    event.target.style.color = "white";
+}
 
-                                            // زر الحذف (يظهر فقط إذا كان مسموح له)
-                                            if (canDelete) {
-                                                actionCell += `<div style="margin-top:5px;">
-                                                    <button onclick="deleteComplaint('${username}', '${key}')" class="btn btn-danger btn-sm">🗑</button>
-                                                </div>`;
-                                            }
+function resetDeductionBtns() {
+    document.querySelectorAll('.deduction-btn').forEach(btn => {
+        btn.style.background = "#334155";
+        btn.style.color = "white";
+    });
+}
 
-                                            // المرفقات
-                                            const evidenceBtn = c.evidence ? `<button onclick="showZoomImage('${c.evidence}')" class="btn btn-primary btn-sm">📷</button>` : '';
-                                            const audioPlayer = c.audioRecord ? `<div style="margin-top:5px;"><audio controls src="${c.audioRecord}" style="height:25px; width:150px;"></audio></div>` : '';
-                                            const proofCell = (evidenceBtn || audioPlayer) ? `<div>${evidenceBtn} ${audioPlayer}</div>` : '-';
+// 3. تعديل دالة الإرسال الرئيسية
+async function submitComplaint() {
+    if (!currentProfileTarget) return;
 
-                                            // لون الصف
-                                            let rowColor = 'rgba(255,255,255,0.02)';
-                                            if (!c.acknowledged && !c.seen) rowColor = 'rgba(245, 158, 11, 0.08)';
-                                            if (!c.acknowledged && c.seen) rowColor = 'rgba(59, 130, 246, 0.08)';
+    // التأكد من الصلاحية (فقط المشرفين)
+    if (!MANAGERS.includes(currentUser.username)) {
+        alert("⛔ عذراً، لا تملك صلاحية تسجيل مخالفات.");
+        return;
+    }
 
-                                            tbody.innerHTML += `
-                                                <tr style="background:${rowColor}; border-bottom:1px solid rgba(255,255,255,0.05);">
-                                                    <td>${c.date}<br><small style="opacity:0.7">${c.time}</small></td>
-                                                    <td style="color:var(--primary); font-weight:bold;">${c.title}</td>
-                                                    <td style="font-size:0.9rem;">${c.details}</td>
-                                                    <td style="color:#ffd700;">${c.amount > 0 ? c.amount : '-'}</td>
-                                                    <td>${proofCell}</td>
-                                                    <td>${c.uploader || c.admin || 'System'}</td>
-                                                    <td style="text-align:center;">${actionCell}</td>
-                                                </tr>
-                                            `;
-                                        });
-                                    } else {
-                                        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">نظيف 🌟 (أو لا توجد نتائج للبحث)</td></tr>';
-                                    }
-                                }
+    const type = document.getElementById('complaintType').value;
+    const title = document.getElementById('complaintTitle').value.trim();
+    const details = document.getElementById('complaintDetails').value.trim();
+    const customAmount = document.getElementById('customDeduction').value.trim();
+    let finalAmount = document.getElementById('deductionAmount').value;
+
+    // لو كتب مبلغ مالي يدوياً، نستخدمه هو
+    if (type === 'deduction' && customAmount !== "") {
+        finalAmount = customAmount + " ج.م";
+    }
+
+    if (!title) return alert("يرجى كتابة عنوان المخالفة");
+    if (type === 'deduction' && finalAmount === "0") return alert("يرجى تحديد قيمة الخصم");
+
+    const submitBtn = event.target;
+    const originalText = submitBtn.innerText;
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = "⏳ جاري الحفظ...";
+
+    try {
+        const imgFile = document.getElementById('complaintEvidence').files[0];
+        const audioFile = document.getElementById('complaintAudioInput').files[0];
+
+        let imageUrl = imgFile ? await uploadToCloudinary(imgFile) : "";
+        let audioUrl = audioFile ? await uploadToCloudinary(audioFile) : "";
+
+        const complaintData = {
+            date: getServerDateString(),
+            time: getServerTimeString(),
+            type: type === 'normal' ? 'شكوى إدارية' : 'خصم مالي',
+            title: title,
+            amount: type === 'normal' ? 'بدون خصم' : finalAmount,
+            details: details || "لا توجد تفاصيل إضافية",
+            evidence: imageUrl,
+            audioRecord: audioUrl,
+            admin: currentUser.realName || currentUser.username,
+            seen: false,
+            acknowledged: false
+        };
+
+        await db.ref(`users/${currentProfileTarget}/complaints`).push(complaintData);
+
+        alert("✅ تم تسجيل الإجراء بنجاح في ملف الموظف.");
+        closeProfileModal();
+        triggerGlobalRefresh();
+
+    } catch (e) {
+        console.error(e);
+        alert("حدث خطأ أثناء الحفظ.");
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
+}
+                               function renderComplaintsHistory(username) {
+    const tbody = document.getElementById('complaintsHistoryBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (!allUsersData[username]) return;
+
+    const u = allUsersData[username];
+    const viewingMyOwnProfile = (currentUser.username === username);
+    const isAdmin = currentUser.role === 'admin';
+
+    // قراءة الفلاتر
+    const filterFrom = document.getElementById('historyDateFrom').value;
+    const filterTo = document.getElementById('historyDateTo').value;
+
+    if (u.complaints) {
+        const keys = Object.keys(u.complaints).reverse();
+
+        keys.forEach(key => {
+            const c = u.complaints[key];
+
+            // منطق الفلترة بالتاريخ
+            if (filterFrom || filterTo) {
+                const parts = c.date.split('/');
+                const cDateISO = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                if (filterFrom && cDateISO < filterFrom) return;
+                if (filterTo && cDateISO > filterTo) return;
+            }
+
+            // 1. تحديد "وسم" النوع (تنبيه أو خصم)
+            const typeBadge = c.type === 'خصم مالي' 
+                ? `<span style="background:#ef4444; color:white; padding:3px 8px; border-radius:6px; font-size:0.7rem; margin-left:5px; font-weight:900; box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);">💸 خصم</span>`
+                : `<span style="background:#3b82f6; color:white; padding:3px 8px; border-radius:6px; font-size:0.7rem; margin-left:5px; font-weight:900;">📝 تنبيه</span>`;
+
+            // 2. معالجة عرض القيمة (نص أو رقم)
+            // إذا كانت القيمة "0" أو "بدون خصم" سنعرض شرطة، غير ذلك سنعرض النص المكتوب
+            const displayAmount = (c.amount && c.amount !== "0" && c.amount !== "بدون خصم") 
+                ? `<b style="color:#ffd700;">${c.amount}</b>` 
+                : `<span style="color:#666;">-</span>`;
+
+            // 3. أزرار التحكم
+            let actionCell = '';
+            if (c.acknowledged) {
+                actionCell += `<div style="color:#10b981; font-weight:bold; font-size:0.9rem;">✔ تم التأكيد</div>`;
+            } else if (c.seen) {
+                if (isAdmin) {
+                    actionCell += `<div style="color:#3b82f6; font-size:0.85rem;">👁️ شاهدها</div>`;
+                } else if (viewingMyOwnProfile) {
+                    actionCell += `<button onclick="acknowledgeComplaint('${key}')" class="btn btn-vip btn-sm" style="animation: pulse 2s infinite;">✍ موافق</button>`;
+                }
+            } else {
+                if (isAdmin) actionCell += `<div style="color:#f59e0b; font-size:0.85rem;">⏳ لم يفتح</div>`;
+            }
+
+            if (isAdmin) {
+                actionCell += `<div style="margin-top:5px;"><button onclick="deleteComplaint('${username}', '${key}')" class="btn btn-danger btn-sm" title="حذف">🗑</button></div>`;
+            }
+
+            // المرفقات
+            const evidenceBtn = c.evidence ? `<button onclick="showZoomImage('${c.evidence}')" class="btn btn-primary btn-sm">📷</button>` : '';
+            const audioPlayer = c.audioRecord ? `<div style="margin-top:5px;"><audio controls src="${c.audioRecord}" style="height:25px; width:150px;"></audio></div>` : '';
+            const proofCell = (evidenceBtn || audioPlayer) ? `<div>${evidenceBtn} ${audioPlayer}</div>` : '-';
+
+            tbody.innerHTML += `
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <td style="font-size:0.85rem;">${c.date}<br><small style="opacity:0.6;">${c.time}</small></td>
+                    <td style="text-align:right;">
+                        ${typeBadge} <span style="font-weight:bold; color:white;">${c.title}</span>
+                    </td>
+                    <td style="font-size:0.85rem; color:#ccc; max-width:200px; white-space:pre-wrap;">${c.details}</td>
+                    <td style="text-align:center;">${displayAmount}</td>
+                    <td>${proofCell}</td>
+                    <td style="font-size:0.85rem; color:#aaa;">${c.admin || 'الإدارة'}</td>
+                    <td style="text-align:center;">${actionCell}</td>
+                </tr>
+            `;
+        });
+    } else {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:#666;">لا توجد سجلات حالياً 🌟</td></tr>';
+    }
+}
 
                                 function deleteComplaint(username, key) {
                                     // 1. التأكد أن القائم بالحذف هو مشرف
@@ -6236,177 +6318,7 @@ async function uploadCsCall() {
             triggerGlobalRefresh();
         }
     }
-    async function exportProfessionalExcel() {
-        const startDateVal = document.getElementById('filterStartDate').value;
-        const endDateVal = document.getElementById('filterEndDate').value;
 
-        if (!startDateVal || !endDateVal) return alert("📅 حدد التاريخ الأول يا مدير!");
-
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('تقرير الأداء الشامل', {
-            views: [{ rightToLeft: true }] // اتجاه من اليمين للشمال
-        });
-
-        // 1. حساب البيانات (نفس المنطق بتاعك)
-        let rows = [];
-        let totals = { days: 0, ox: 0, ot: 0, perm: 0, cash: 0, count: 0 };
-
-        Object.values(allUsersData).forEach(u => {
-            if (!u.username || MANAGERS.includes(u.username)) return;
-
-            let uS = { name: u.realName || u.username, days: new Set(), ox: 0, prayer: 0, meet: 0, vip: 0, ot: 0, perm: 0, comp: 0, cash: 0 };
-
-            let clockInTime = "--:--";
-            let clockOutTime = "--:--";
-
-            // جلب وقت الحضور والانصراف من تاريخ البداية المختار (أو أول يوم في الفلتر)
-            if (u.attendance) {
-                // نبحث عن حضور الموظف في تواريخ الفلتر (سنأخذ متوسط أو عرض أول يوم متاح)
-                const attendanceDates = Object.keys(u.attendance);
-                const targetDate = startDateVal.split('-').reverse().join('-'); // تحويل YYYY-MM-DD لـ DD-MM-YYYY
-                
-                // نأخذ بيانات الحضور لليوم المختار في التقرير
-                const dayData = u.attendance[startDateVal] || u.attendance[Object.keys(u.attendance)[0]]; 
-                if(dayData) {
-                    clockInTime = dayData.clockIn || "--:--";
-                    clockOutTime = dayData.clockOut || dayData.lastSeen || "--:--";
-                }
-            }
-
-            // إضافة وقت الحضور والانصراف لصفوف الإكسيل
-            rows.push([uS.name, uS.days.size, clockInTime, clockOutTime, Math.round(uS.ox/60), Math.round(uS.prayer/60), Math.round(uS.meet/60), Math.round(uS.vip/60), uS.ot, uS.perm, uS.comp, uS.cash]);
-
-            if (u.sessions) {
-                let daily = {};
-                Object.values(u.sessions).forEach(s => {
-                    const sD = s.date.split('/').reverse().join('-');
-                    if (sD >= startDateVal && sD <= endDateVal) {
-                        uS.days.add(s.date);
-                        const dur = parseInt(s.duration) || 0;
-                        if (s.type === 'بريك عام' || s.type === 'طوارئ') daily[s.date] = (daily[s.date] || 0) + dur;
-                        else if (s.type === 'صلاة') uS.prayer += dur;
-                        else if (s.type === 'ميتنج') uS.meet += dur;
-                        else if (s.type === 'استراحة VIP') uS.vip += dur;
-                    }
-                });
-                const allow = (u.allowance || 45) * 60;
-                Object.values(daily).forEach(v => { if(v > allow) uS.ox += (v - allow); });
-            }
-
-            if (u.overtimeHistory) {
-                Object.values(u.overtimeHistory).forEach(ot => {
-                    const otD = ot.date.split('/').reverse().join('-');
-                    if (otD >= startDateVal && otD <= endDateVal) uS.ot += parseFloat(ot.hours) || 0;
-                });
-            }
-
-            if (u.permHistory) {
-                Object.values(u.permHistory).forEach(p => {
-                    const pD = p.date.split('/').reverse().join('-');
-                    if (pD >= startDateVal && pD <= endDateVal) uS.perm += parseFloat(p.hours) || 0;
-                });
-            }
-
-            if (u.complaints) {
-                Object.values(u.complaints).forEach(c => {
-                    const cD = c.date.split('/').reverse().join('-');
-                    if (cD >= startDateVal && cD <= endDateVal) { uS.comp++; uS.cash += parseFloat(c.amount) || 0; }
-                });
-            }
-
-            totals.days += uS.days.size;
-            totals.ox += Math.round(uS.ox/60);
-            totals.ot += uS.ot;
-            totals.perm += uS.perm;
-            totals.cash += uS.cash;
-            totals.count++;
-
-            rows.push([uS.name, uS.days.size, clockInTime, clockOutTime, Math.round(uS.ox/60), Math.round(uS.prayer/60), Math.round(uS.meet/60), Math.round(uS.vip/60), uS.ot, uS.perm, uS.comp, uS.cash]);
-        });
-
-        // --- تنسيق الصفحة ---
-
-        // الصف الأول: العنوان الكبير
-        worksheet.mergeCells('A1:L1');
-        const titleCell = worksheet.getCell('A1');
-        titleCell.value = 'نظام ELSHAMAA لإدارة الموارد البشرية - التقرير التحليلي';
-        titleCell.font = { size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
-        titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
-        titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
-
-        // الصف الثاني: التواريخ (مثل الصورة)
-        worksheet.mergeCells('A2:L2');
-        const dateRangeCell = worksheet.getCell('A2');
-        dateRangeCell.value = `الفترة من ${startDateVal} إلى ${endDateVal} | تاريخ الاستخراج: ${getServerDateString()}`;
-        dateRangeCell.font = { bold: true };
-        dateRangeCell.alignment = { horizontal: 'center' };
-        dateRangeCell.border = { bottom: { style: 'double', color: { argb: 'FF000000' } } };
-
-        worksheet.addRow([]); // صف فارغ للفصل
-
-        // --- الجدول العلوي (اللون الأصفر - ملخص الإدارة) ---
-        // دمج الخلايا للبدء من المنتصف قليلاً مثل الصورة
-        const summaryHeader = ["إجمالي الأيام", "إجمالي الأكسدة (د)", "إجمالي الإضافي (س)", "إجمالي الخصم (ج.م)", "عدد الموظفين"];
-        const summaryRow = worksheet.addRow(["", "", "", "", ...summaryHeader]);
-
-        // تنسيق عناوين الملخص (الأصفر)
-        for (let i = 5; i <= 10; i++) {
-            const cell = summaryRow.getCell(i);
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFD700' } }; // اللون الذهبي/الأصفر
-            cell.font = { bold: true };
-            cell.alignment = { horizontal: 'center' };
-            cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-        }
-
-        const summaryData = worksheet.addRow(["", "", "", "", totals.days, totals.ox, totals.ot, totals.cash, totals.count]);
-        for (let i = 5; i <= 10; i++) {
-            const cell = summaryData.getCell(i);
-            cell.alignment = { horizontal: 'center' };
-            cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-        }
-
-        worksheet.addRow([]); // صف فارغ
-
-        // --- الجدول الرئيسي (اللون الأزرق - بيانات الموظفين) ---
-        const mainHeader = ["اسم الموظف", "أيام الحضور", "وقت الحضور", "وقت الانصراف", "الأكسدة (د)", "الصلاة (د)", "الميتنج (د)", "VIP (د)", "إضافي (س)", "استأذان (س)", "المخالفات", "الخصم (ج.م)"];
-        const headerRow = worksheet.addRow(mainHeader);
-
-        headerRow.eachCell((cell) => {
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } }; // اللون الأزرق
-            cell.font = { color: { argb: 'FFFFFFFF' }, bold: true }; // نص أبيض عريض
-            cell.alignment = { horizontal: 'center', vertical: 'middle' };
-            cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-        });
-
-        // إضافة بيانات الموظفين
-        rows.forEach((rowData, index) => {
-            const row = worksheet.addRow(rowData);
-            row.eachCell((cell) => {
-                cell.alignment = { horizontal: 'center' };
-                cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-
-                // تلوين الصفوف بالتناوب (اختياري لسهولة القراءة)
-                if (index % 2 !== 0) {
-                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
-                }
-            });
-
-            // تنبيه بالأحمر لو الأكسدة عالية (أكثر من 60 دقيقة)
-            if (rowData[2] > 60) {
-                row.getCell(3).font = { color: { argb: 'FFFF0000' }, bold: true };
-            }
-        });
-
-        // ضبط عرض الأعمدة تلقائياً
-        worksheet.getColumn(1).width = 25; // اسم الموظف عريض
-        for (let i = 2; i <= 10; i++) {
-            worksheet.getColumn(i).width = 15;
-        }
-
-        // تصدير الملف
-        const buffer = await workbook.xlsx.writeBuffer();
-        saveAs(new Blob([buffer]), `ELSHAMAA_Report_${startDateVal}.xlsx`);
-    }
 
     let currentSelectedDay = null;
     let tempWeeklyOrder = [];
@@ -7036,326 +6948,139 @@ function updateWeeklyLogDisplays() {
         XLSX.writeFile(workbook, `Report_${startDateVal}.xlsx`);
     }
 
-    async function exportProfessionalExcel() {
-        const startDateVal = document.getElementById('filterStartDate').value;
-        const endDateVal = document.getElementById('filterEndDate').value;
+async function exportProfessionalExcel() {
+    const startDateVal = document.getElementById('filterStartDate').value;
+    const endDateVal = document.getElementById('filterEndDate').value;
 
-        if (!startDateVal || !endDateVal) return alert("📅 حدد التاريخ أولاً يا مدير!");
+    if (!startDateVal || !endDateVal) return alert("📅 حدد التاريخ الأول يا مدير!");
 
-        const workbook = new ExcelJS.Workbook();
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('تقرير الأداء الشامل', {
+        views: [{ rightToLeft: true }] 
+    });
 
-        // 1. إنشاء ورقة الملخص
-        const summarySheet = workbook.addWorksheet('ملخص الأداء العام', { views: [{ rightToLeft: true }] });
+    let summaryRows = [];
 
-        // 2. إنشاء ورقة التفاصيل (التفنيدة)
-        const detailsSheet = workbook.addWorksheet('سجل التفاصيل اليومي', { views: [{ rightToLeft: true }] });
+    Object.values(allUsersData).forEach(u => {
+        if (!u.username || MANAGERS.includes(u.username)) return;
 
-        // 3. إنشاء ورقة تقرير الموظفين المفصل
-        const employeeReportSheet = workbook.addWorksheet('تقرير الموظفين المفصل', { views: [{ rightToLeft: true }] });
+        let uS = { 
+            name: u.realName || u.username, 
+            days: new Set(), 
+            ox: 0, 
+            prayer: 0, 
+            meet: 0, 
+            ot: 0, 
+            perm: 0, 
+            normalComp: 0, 
+            deductComp: 0, 
+            cash: 0 
+        };
 
-        let summaryRows = [];
-        let detailedLogs = [];
-        let totals = { days: 0, ox: 0, ot: 0, perm: 0, cash: 0, count: 0 };
+        let clockInTime = "--:--";
+        let clockOutTime = "--:--";
+        if (u.attendance && u.attendance[startDateVal]) {
+            clockInTime = u.attendance[startDateVal].clockIn || "--:--";
+            clockOutTime = u.attendance[startDateVal].clockOut || u.attendance[startDateVal].lastSeen || "--:--";
+        }
 
-        Object.values(allUsersData).forEach(u => {
-            if (!u.username || MANAGERS.includes(u.username)) return;
+        if (u.sessions) {
+            let daily = {};
+            Object.values(u.sessions).forEach(s => {
+                const sD = s.date.split('/').reverse().join('-');
+                if (sD >= startDateVal && sD <= endDateVal) {
+                    uS.days.add(s.date);
+                    const dur = parseInt(s.duration) || 0;
+                    if (s.type === 'بريك عام' || s.type === 'طوارئ') daily[s.date] = (daily[s.date] || 0) + dur;
+                    else if (s.type === 'صلاة') uS.prayer += dur;
+                    else if (s.type === 'ميتنج') uS.meet += dur;
+                }
+            });
+            const allow = (u.allowance || 45) * 60;
+            Object.values(daily).forEach(v => { if(v > allow) uS.ox += (v - allow); });
+        }
 
-            let uS = { name: u.realName || u.username, days: new Set(), ox: 0, prayer: 0, meet: 0, vip: 0, ot: 0, perm: 0, comp: 0, cash: 0 };
+        if (u.overtimeHistory) {
+            Object.values(u.overtimeHistory).forEach(ot => {
+                const otD = ot.date.split('/').reverse().join('-');
+                if (otD >= startDateVal && otD <= endDateVal) uS.ot += parseFloat(ot.hours) || 0;
+            });
+        }
 
-            if (u.sessions) {
-                let daily = {};
-                Object.entries(u.sessions).forEach(([key, s]) => {
-                    const sD = s.date.split('/').reverse().join('-');
-                    if (sD >= startDateVal && sD <= endDateVal) {
-                        uS.days.add(s.date);
-                        const dur = parseInt(s.duration) || 0;
-                        const durMin = Math.round(dur/60);
+        if (u.permHistory) {
+            Object.values(u.permHistory).forEach(p => {
+                const pD = p.date.split('/').reverse().join('-');
+                if (pD >= startDateVal && pD <= endDateVal) uS.perm += parseFloat(p.hours) || 0;
+            });
+        }
 
-                        detailedLogs.push([
-                            s.date,
-                            uS.name,
-                            s.type,
-                            durMin + " دقيقة",
-                            (s.startTime ? "بداية: " + s.startTime : "") + (s.endTime ? " | نهاية: " + s.endTime : "") + " | " + (s.reason || "بدون سبب")
-                        ]);
-
-                        if (s.type === 'بريك عام' || s.type === 'طوارئ') daily[s.date] = (daily[s.date] || 0) + dur;
-                        else if (s.type === 'صلاة') uS.prayer += dur;
-                        else if (s.type === 'ميتنج') uS.meet += dur;
-                        else if (s.type === 'استراحة VIP') uS.vip += dur;
+        if (u.complaints) {
+            Object.values(u.complaints).forEach(c => {
+                const cD = c.date.split('/').reverse().join('-');
+                if (cD >= startDateVal && cD <= endDateVal) {
+                    if (c.type === 'شكوى إدارية' || c.amount === 'بدون خصم' || c.amount == 0) {
+                        uS.normalComp++;
+                    } else {
+                        uS.deductComp++;
+                        let amt = parseFloat(c.amount) || 0;
+                        uS.cash += amt;
                     }
-                });
-                const allow = (u.allowance || 45) * 60;
-                Object.values(daily).forEach(v => { if(v > allow) uS.ox += (v - allow); });
-            }
+                }
+            });
+        }
 
-            if (u.overtimeHistory) {
-                Object.values(u.overtimeHistory).forEach(ot => {
-                    const otD = ot.date.split('/').reverse().join('-');
-                    if (otD >= startDateVal && otD <= endDateVal) {
-                        uS.ot += parseFloat(ot.hours) || 0;
-                        detailedLogs.push([ot.date, uS.name, "إضافي", ot.hours + " ساعة", "معتمد من: " + ot.approvedBy]);
-                    }
-                });
-            }
+        summaryRows.push([
+            uS.name, 
+            uS.days.size, 
+            clockInTime, 
+            clockOutTime, 
+            Math.round(uS.ox/60), 
+            Math.round(uS.prayer/60), 
+            Math.round(uS.meet/60), 
+            uS.ot, 
+            uS.perm, 
+            uS.normalComp, 
+            uS.deductComp, 
+            uS.cash 
+        ]);
+    });
 
-            if (u.complaints) {
-                Object.values(u.complaints).forEach(c => {
-                    const cD = c.date.split('/').reverse().join('-');
-                    if (cD >= startDateVal && cD <= endDateVal) {
-                        uS.comp++; uS.cash += parseFloat(c.amount) || 0;
-                        detailedLogs.push([c.date, uS.name, "مخالفة/خصم", c.amount + " ج.م", c.title + ": " + c.details]);
-                    }
-                });
-            }
+    worksheet.mergeCells('A1:L1');
+    const titleCell = worksheet.getCell('A1');
+    titleCell.value = 'نظام ELSHAMAA - تقرير الأداء والمخالفات المطور';
+    titleCell.font = { size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+    titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
-            totals.days += uS.days.size; totals.ox += Math.round(uS.ox/60); totals.ot += uS.ot; totals.perm += uS.perm; totals.cash += uS.cash; totals.count++;
-            summaryRows.push([uS.name, uS.days.size, Math.round(uS.ox/60), Math.round(uS.prayer/60), Math.round(uS.meet/60), Math.round(uS.vip/60), uS.ot, uS.perm, uS.comp, uS.cash]);
-        });
+    const mainHeader = ["اسم الموظف", "أيام الحضور", "وقت الحضور", "وقت الانصراف", "الأكسدة (د)", "الصلاة (د)", "الميتنج (د)", "إضافي (س)", "استأذان (س)", "مخالفات عادية", "مخالفات بخصم", "إجمالي الخصم (ج.م)"];
+    const headerRow = worksheet.addRow(mainHeader);
 
-        // --- تنسيق ورقة الملخص ---
-        summarySheet.mergeCells('A1:J1');
-        summarySheet.getCell('A1').value = 'ELSHAMAA - تقرير الأداء التفصيلي 2026';
-        summarySheet.getCell('A1').font = { size: 18, bold: true, color: { argb: 'FFFFFFFF' } };
-        summarySheet.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
-        summarySheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'center' };
+    headerRow.eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+        cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    });
 
-        const headerRow = summarySheet.getRow(7);
-        const mainHeader = ["اسم الموظف", "أيام الحضور", "وقت الحضور", "وقت الانصراف", "الأكسدة (د)", "الصلاة (د)", "الميتنج (د)", "VIP (د)", "إضافي (س)", "استأذان (س)", "المخالفات", "الخصم (ج.م)"];
-
-        headerRow.values = mainHeader;
-        headerRow.eachCell(cell => {
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
-            cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+    summaryRows.forEach((rowData) => {
+        const row = worksheet.addRow(rowData);
+        row.eachCell((cell, colNumber) => {
             cell.alignment = { horizontal: 'center' };
             cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-        });
-
-        summaryRows.forEach(rowData => {
-            summarySheet.addRow(rowData).eachCell(cell => {
-                cell.alignment = { horizontal: 'center' };
-                cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-            });
-        });
-
-        // إضافة الفلتر لورقة الملخص
-        summarySheet.autoFilter = 'A7:L7';
-        summarySheet.getColumn(1).width = 25;
-        for(let i=2; i<=12; i++) summarySheet.getColumn(i).width = 14;
-
-        // --- تنسيق ورقة التفاصيل (التفنيدة) مع الفلتر ---
-        detailsSheet.mergeCells('A1:E1');
-        detailsSheet.getCell('A1').value = 'تفاصيل الحركات اليومية (تفنيدة النشاط)';
-        detailsSheet.getCell('A1').font = { size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
-        detailsSheet.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF059669' } };
-        detailsSheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'center' };
-
-        const dHeaderRow = detailsSheet.getRow(3);
-        dHeaderRow.values = ["التاريخ", "الموظف", "نوع النشاط", "المدة/القيمة", "السبب/التفاصيل"];
-        dHeaderRow.eachCell(cell => {
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF334155' } };
-            cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
-            cell.alignment = { horizontal: 'center' };
-            cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-        });
-
-        // إضافة البيانات
-        detailedLogs.sort((a,b) => b[0].localeCompare(a[0])).forEach((log, index) => {
-            const row = detailsSheet.addRow(log);
-            row.eachCell(cell => {
-                cell.alignment = { horizontal: 'center' };
-                cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-            });
-            // تلوين الصفوف (Zebra Style) لسهولة القراءة في التفاصيل
-            if(index % 2 !== 0) {
-                row.eachCell(cell => { cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } }; });
+            if(colNumber === 11 && rowData[10] > 0) {
+                cell.font = { color: { argb: 'FFFF0000' }, bold: true };
             }
         });
+    });
 
-        // السحر هنا: إضافة خاصية الفلتر لجدول التفاصيل (الصف الثالث)
-        detailsSheet.autoFilter = 'A3:E3';
+    worksheet.getColumn(1).width = 25;
+    for (let i = 2; i <= 12; i++) { worksheet.getColumn(i).width = 15; }
 
-        detailsSheet.getColumn(1).width = 15;
-        detailsSheet.getColumn(2).width = 20;
-        detailsSheet.getColumn(3).width = 15;
-        detailsSheet.getColumn(4).width = 15;
-        detailsSheet.getColumn(5).width = 45;
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), `ELSHAMAA_Advanced_Report_${startDateVal}.xlsx`);
+}
 
-        // --- تنسيق ورقة تقرير الموظفين المفصل ---
-        employeeReportSheet.mergeCells('A1:E1');
-        employeeReportSheet.getCell('A1').value = 'تقرير الموظفين المفصل (مثل الواجهة)';
-        employeeReportSheet.getCell('A1').font = { size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
-        employeeReportSheet.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF7C3AED' } };
-        employeeReportSheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'center' };
-
-        let currentRow = 3;
-
-        Object.values(allUsersData).forEach(u => {
-            if (!u.username || MANAGERS.includes(u.username)) return;
-
-            // عنوان الموظف
-            employeeReportSheet.mergeCells(`A${currentRow}:E${currentRow}`);
-            employeeReportSheet.getCell(`A${currentRow}`).value = `الموظف: ${u.realName || u.username}`;
-            employeeReportSheet.getCell(`A${currentRow}`).font = { size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
-            employeeReportSheet.getCell(`A${currentRow}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF374151' } };
-            employeeReportSheet.getCell(`A${currentRow}`).alignment = { horizontal: 'center' };
-            currentRow++;
-
-            if (u.sessions) {
-                const grouped = {};
-                Object.keys(u.sessions).forEach(k => {
-                    const s = u.sessions[k], cD = s.date.split('/').reverse().join('-');
-                    if (cD >= startDateVal && cD <= endDateVal) {
-                        if(!grouped[s.date]) grouped[s.date] = { acts: [] };
-                        const timeDisplay = s.startTime ? `[${s.startTime}${s.endTime ? ' - ' + s.endTime : ''}]` : "";
-                        grouped[s.date].acts.push(`${timeDisplay} ${s.type}: ${Math.round(parseInt(s.duration)/60)}د (${s.reason||'--'})`);
-                    }
-                });
-
-                Object.keys(grouped).sort((a,b)=>b.localeCompare(a)).forEach(d => {
-                    employeeReportSheet.addRow([d, '', grouped[d].acts.join(' | '), '', '']);
-                    currentRow++;
-                });
-            }
-
-            // صف فارغ بين الموظفين
-            currentRow++;
-        });
-
-        employeeReportSheet.getColumn(1).width = 15;
-        employeeReportSheet.getColumn(2).width = 10;
-        employeeReportSheet.getColumn(3).width = 60;
-        employeeReportSheet.getColumn(4).width = 10;
-        employeeReportSheet.getColumn(5).width = 10;
-
-        const buffer = await workbook.xlsx.writeBuffer();
-        saveAs(new Blob([buffer]), `ELSHAMAA_Report_${startDateVal}.xlsx`);
-    }
-
-    async function exportProfessionalExcel() {
-        const startDateVal = document.getElementById('filterStartDate').value;
-        const endDateVal = document.getElementById('filterEndDate').value;
-
-        if (!startDateVal || !endDateVal) return alert("📅 حدد التاريخ أولاً يا مدير!");
-
-        const workbook = new ExcelJS.Workbook();
-
-        // 1. إنشاء ورقة الملخص (Summary Sheet)
-        const summarySheet = workbook.addWorksheet('ملخص الأداء العام', { views: [{ rightToLeft: true }] });
-
-        // 2. إنشاء ورقة التفاصيل (Details Sheet)
-        const detailsSheet = workbook.addWorksheet('سجل التفاصيل اليومي', { views: [{ rightToLeft: true }] });
-
-        let summaryRows = [];
-        let detailedLogs = [];
-        let totals = { days: 0, ox: 0, ot: 0, perm: 0, cash: 0, count: 0 };
-
-        // معالجة البيانات من قاعدة البيانات
-        Object.values(allUsersData).forEach(u => {
-            if (!u.username || MANAGERS.includes(u.username)) return;
-
-            let uS = { name: u.realName || u.username, days: new Set(), ox: 0, prayer: 0, meet: 0, vip: 0, ot: 0, perm: 0, comp: 0, cash: 0 };
-
-            // حساب سجلات النشاط (البريك، الصلاة، الميتنج)
-            if (u.sessions) {
-                let daily = {};
-                Object.entries(u.sessions).forEach(([key, s]) => {
-                    const sD = s.date.split('/').reverse().join('-'); // تحويل التاريخ للمقارنة
-                    if (sD >= startDateVal && sD <= endDateVal) {
-                        uS.days.add(s.date);
-                        const dur = parseInt(s.duration) || 0;
-                        const durMin = Math.round(dur/60);
-
-                        // إضافة لتفنيدة التفاصيل
-                        detailedLogs.push([s.date, uS.name, s.type, durMin + " دقيقة", s.reason || "بدون سبب"]);
-
-                        if (s.type === 'بريك عام' || s.type === 'طوارئ') daily[s.date] = (daily[s.date] || 0) + dur;
-                        else if (s.type === 'صلاة') uS.prayer += dur;
-                        else if (s.type === 'ميتنج') uS.meet += dur;
-                        else if (s.type === 'استراحة VIP') uS.vip += dur;
-                    }
-                });
-                // حساب الأكسدة (الوقت الزائد عن المسموح)
-                const allow = (u.allowance || 45) * 60;
-                Object.values(daily).forEach(v => { if(v > allow) uS.ox += (v - allow); });
-            }
-
-            // حساب الإضافي (Overtime)
-            if (u.overtimeHistory) {
-                Object.values(u.overtimeHistory).forEach(ot => {
-                    const otD = ot.date.split('/').reverse().join('-');
-                    if (otD >= startDateVal && otD <= endDateVal) {
-                        uS.ot += parseFloat(ot.hours) || 0;
-                        detailedLogs.push([ot.date, uS.name, "إضافي", ot.hours + " ساعة", "معتمد من: " + ot.approvedBy]);
-                    }
-                });
-            }
-
-            // حساب المخالفات والخصومات
-            if (u.complaints) {
-                Object.values(u.complaints).forEach(c => {
-                    const cD = c.date.split('/').reverse().join('-');
-                    if (cD >= startDateVal && cD <= endDateVal) {
-                        uS.comp++; uS.cash += parseFloat(c.amount) || 0;
-                        detailedLogs.push([c.date, uS.name, "مخالفة/خصم", c.amount + " ج.م", c.title + ": " + c.details]);
-                    }
-                });
-            }
-
-            // تجميع الإجماليات العامة
-            totals.days += uS.days.size; totals.ox += Math.round(uS.ox/60); totals.ot += uS.ot; totals.cash += uS.cash; totals.count++;
-
-            // تجهيز صف الملخص للموظف
-            summaryRows.push([uS.name, uS.days.size, Math.round(uS.ox/60), Math.round(uS.prayer/60), Math.round(uS.meet/60), Math.round(uS.vip/60), uS.ot, uS.perm, uS.comp, uS.cash]);
-        });
-
-        // --- تنسيق ورقة الملخص (Summary) ---
-        summarySheet.mergeCells('A1:J1');
-        const titleCell = summarySheet.getCell('A1');
-        titleCell.value = 'نظام ELSHAMAA - تقرير الأداء التحليلي الشامل';
-        titleCell.font = { size: 18, bold: true, color: { argb: 'FFFFFFFF' } };
-        titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
-        titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
-
-        // رأس الجدول للملخص
-        const headerRow = summarySheet.getRow(7);
-        const mainHeader = ["اسم الموظف", "أيام الحضور", "الأكسدة (د)", "الصلاة (د)", "الميتنج (د)", "VIP (د)", "إضافي (س)", "استأذان (س)", "المخالفات", "الخصم (ج.م)"];
-        headerRow.values = mainHeader;
-        headerRow.eachCell(cell => {
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
-            cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
-            cell.alignment = { horizontal: 'center' };
-            cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-        });
-
-        summaryRows.forEach(rowData => {
-            summarySheet.addRow(rowData).eachCell(cell => {
-                cell.alignment = { horizontal: 'center' };
-                cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-            });
-        });
-
-        // --- تنسيق ورقة التفاصيل (Detailed Logs) ---
-        detailsSheet.getRow(1).values = ["التاريخ", "الموظف", "نوع النشاط", "المدة/القيمة", "السبب/التفاصيل"];
-        detailsSheet.getRow(1).eachCell(cell => {
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF059669' } };
-            cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
-        });
-
-        detailedLogs.forEach(log => {
-            detailsSheet.addRow(log).eachCell(cell => {
-                cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-            });
-        });
-
-        // ضبط عرض الأعمدة
-        summarySheet.getColumn(1).width = 25;
-        detailsSheet.getColumn(5).width = 50;
-
-        // تصدير الملف
-        const buffer = await workbook.xlsx.writeBuffer();
-        saveAs(new Blob([buffer]), `ELSHAMAA_Report_${startDateVal}_to_${endDateVal}.xlsx`);
-    }
+   
     // 1. دالة تحديث قائمة الأسماء بناءً على نوع المستلم (موظف أم مشرف)
 // 1. وظيفة تحديث قائمة المستلمين بناءً على النوع (موظف / مدير)
 function updateCsTargetList() {
