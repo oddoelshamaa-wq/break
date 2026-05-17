@@ -4643,7 +4643,6 @@
                                 function stopAlarm() { document.body.classList.remove('وضع-التنبيه'); if(document.getElementById('overtimeAlert')) document.getElementById('overtimeAlert').classList.add('hidden'); document.getElementById('alarmSound').pause(); }
                                 function saveAdminTyping(u, v) { adminTypingBuffer[u] = v; }
                                 function saveAdminSelect(u, v) { adminSelectBuffer[u] = v; }
-                                function updateReportSelect() { const sel = document.getElementById('reportUserSelect'); sel.innerHTML = '<option value="">-- اختر موظف --</option>'; Object.values(allUsersData).forEach(u => { if(u.username && !MANAGERS.includes(u.username)) sel.innerHTML += `<option value="${u.username}">${u.realName || u.username}</option>`; }); }
                                 function updateBroadcastTargets() {
                                     const sel = document.getElementById('broadcastTarget'); const old = Array.from(sel.selectedOptions).map(o => o.value);
                                     let h = '<option value="all">📣 للجميع</option>';
@@ -7743,20 +7742,27 @@ async function uploadCsCall() {
     systemQtyDisplay.innerText = systemQty; 
     totalPriceDisplay.innerText = total.toFixed(2);
 }
-// 1. تحديث التبويبات لتدعم التبويب الجديد
-// ابحث عن دالة switchAdminTab وحدث مصفوفة الـ tabs لتشمل 'cs-reports'
 function switchAdminTab(t) {
-    const tabs = ['tab-monitor', 'tab-reports', 'tab-users', 'tab-groups', 'tab-overtime', 'tab-emergency', 'tab-meetings', 'tab-permissions', 'cs-reports'];
+    // قائمة بجميع معرفات التبويبات في لوحة المشرف
+    const tabs = ['tab-monitor', 'tab-reports', 'tab-users', 'tab-groups', 'tab-overtime', 'tab-emergency', 'tab-meetings', 'tab-permissions', 'tab-cs-reports'];
+    
     tabs.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     });
-    const target = document.getElementById('tab-' + t) || document.getElementById(t);
-    if (target) target.classList.remove('hidden');
-    
-    if(t === 'cs-reports') renderAdminCsReports();
-}
 
+    // إظهار التبويب المختار
+    const target = document.getElementById('tab-' + t);
+    if (target) {
+        target.classList.remove('hidden');
+    }
+
+    // استدعاء دالة التحديث الخاصة بكل تبويب
+    if(t === 'reports') updateReportSelect();
+    if(t === 'cs-reports') renderAdminCsReports(); // تحديث البلاغات فور فتح التبويب
+    if(t === 'groups') { updateMembersSelector(); renderGroupsTable(); }
+    if(t === 'monitor') { populateQueueSelect(); renderPrayerQueue(); }
+}
 // 2. دالة جلب وعرض بلاغات خدمة العملاء
 function renderAdminCsReports() {
     const tbody = document.getElementById('adminCsReportsBody');
@@ -7816,6 +7822,29 @@ function markCsReportSeen(userId, reportKey) {
     }).then(() => {
         renderAdminCsReports();
     });
+}
+// وظيفة ملء قائمة الموظفين في صفحة التقارير
+function updateReportSelect() {
+    const sel = document.getElementById('reportUserSelect');
+    if (!sel) return;
+
+    const currentVal = sel.value; // حفظ الموظف المختار حالياً
+    let html = '<option value="">-- اختر الموظف --</option>';
+
+    if (allUsersData && Object.keys(allUsersData).length > 0) {
+        Object.values(allUsersData).forEach(u => {
+            // استثناء المديرين وإضافة الموظفين فقط
+            if (u && u.username && !['mahmoud', 'abutamim', 'ahmed'].includes(u.username)) {
+                html += `<option value="${u.username}">${u.realName || u.username}</option>`;
+            }
+        });
+        console.log("تم تحديث قائمة الموظفين في التقارير");
+    } else {
+        console.log("بانتظار تحميل بيانات الموظفين...");
+    }
+
+    sel.innerHTML = html;
+    if (currentVal) sel.value = currentVal; // إعادة الاختيار لو كان موجوداً
 }
     </script>
     <!-- نافذة تأكيد إتمام الصلاة -->
