@@ -2563,7 +2563,7 @@
                                 }
 
                                 // 2. تعديل دالة عرض الشكاوى (لإضافة الفلترة + إخفاء الحذف عن abutamim)
-        function renderComplaintsHistory(username) {
+function renderComplaintsHistory(username) {
     const tbody = document.getElementById('complaintsHistoryBody');
     if (!tbody) return;
     tbody.innerHTML = '';
@@ -2572,7 +2572,10 @@
 
     const u = allUsersData[username];
     const viewingMyOwnProfile = (currentUser.username === username);
-    const isAdmin = currentUser.role === 'admin';
+    const isAdmin = (currentUser.role === 'admin');
+    
+    // تعريف المشرفين اللي ليهم صلاحية حذف كل شيء (محمود وأحمد)
+    const isSuperAdmin = (currentUser.username === 'mahmoud' || currentUser.username === 'ahmed');
 
     // قراءة الفلاتر
     const filterFrom = document.getElementById('historyDateFrom').value;
@@ -2598,12 +2601,11 @@
                 : `<span style="background:#3b82f6; color:white; padding:3px 8px; border-radius:6px; font-size:0.7rem; margin-left:5px; font-weight:900;">📝 تنبيه</span>`;
 
             // 2. معالجة عرض القيمة (نص أو رقم)
-            // إذا كانت القيمة "0" أو "بدون خصم" سنعرض شرطة، غير ذلك سنعرض النص المكتوب
             const displayAmount = (c.amount && c.amount !== "0" && c.amount !== "بدون خصم") 
                 ? `<b style="color:#ffd700;">${c.amount}</b>` 
                 : `<span style="color:#666;">-</span>`;
 
-            // 3. أزرار التحكم
+            // 3. أزرار التحكم والظهور
             let actionCell = '';
             if (c.acknowledged) {
                 actionCell += `<div style="color:#10b981; font-weight:bold; font-size:0.9rem;">✔ تم التأكيد</div>`;
@@ -2617,8 +2619,18 @@
                 if (isAdmin) actionCell += `<div style="color:#f59e0b; font-size:0.85rem;">⏳ لم يفتح</div>`;
             }
 
+            // === المنطق الجديد لزرار الحذف (سلة المهملات) ===
             if (isAdmin) {
-                actionCell += `<div style="margin-top:5px;"><button onclick="deleteComplaint('${username}', '${key}')" class="btn btn-danger btn-sm" title="حذف">🗑</button></div>`;
+                const myName = currentUser.realName || currentUser.username;
+                // هل الشخص اللي فاتح هو صاحب الشكوى؟
+                const isOwner = (c.admin === myName || c.admin === currentUser.username);
+
+                // يظهر الزرار لو هو (سوبر أدمن) أو لو هو (صاحب الشكوى)
+                if (isSuperAdmin || isOwner) {
+                    actionCell += `<div style="margin-top:5px;">
+                        <button onclick="deleteComplaint('${username}', '${key}')" class="btn btn-danger btn-sm" title="حذف">🗑</button>
+                    </div>`;
+                }
             }
 
             // المرفقات
@@ -5307,7 +5319,7 @@ async function submitComplaint() {
         submitBtn.innerHTML = originalText;
     }
 }
-                               function renderComplaintsHistory(username) {
+function renderComplaintsHistory(username) {
     const tbody = document.getElementById('complaintsHistoryBody');
     if (!tbody) return;
     tbody.innerHTML = '';
@@ -5316,7 +5328,10 @@ async function submitComplaint() {
 
     const u = allUsersData[username];
     const viewingMyOwnProfile = (currentUser.username === username);
-    const isAdmin = currentUser.role === 'admin';
+    const isAdmin = (currentUser.role === 'admin');
+    
+    // تعريف المشرفين اللي ليهم صلاحية حذف كل شيء (محمود وأحمد)
+    const isSuperAdmin = (currentUser.username === 'mahmoud' || currentUser.username === 'ahmed');
 
     // قراءة الفلاتر
     const filterFrom = document.getElementById('historyDateFrom').value;
@@ -5342,12 +5357,11 @@ async function submitComplaint() {
                 : `<span style="background:#3b82f6; color:white; padding:3px 8px; border-radius:6px; font-size:0.7rem; margin-left:5px; font-weight:900;">📝 تنبيه</span>`;
 
             // 2. معالجة عرض القيمة (نص أو رقم)
-            // إذا كانت القيمة "0" أو "بدون خصم" سنعرض شرطة، غير ذلك سنعرض النص المكتوب
             const displayAmount = (c.amount && c.amount !== "0" && c.amount !== "بدون خصم") 
                 ? `<b style="color:#ffd700;">${c.amount}</b>` 
                 : `<span style="color:#666;">-</span>`;
 
-            // 3. أزرار التحكم
+            // 3. أزرار التحكم والظهور
             let actionCell = '';
             if (c.acknowledged) {
                 actionCell += `<div style="color:#10b981; font-weight:bold; font-size:0.9rem;">✔ تم التأكيد</div>`;
@@ -5361,8 +5375,18 @@ async function submitComplaint() {
                 if (isAdmin) actionCell += `<div style="color:#f59e0b; font-size:0.85rem;">⏳ لم يفتح</div>`;
             }
 
+            // === المنطق الجديد لزرار الحذف (سلة المهملات) ===
             if (isAdmin) {
-                actionCell += `<div style="margin-top:5px;"><button onclick="deleteComplaint('${username}', '${key}')" class="btn btn-danger btn-sm" title="حذف">🗑</button></div>`;
+                const myName = currentUser.realName || currentUser.username;
+                // هل الشخص اللي فاتح هو صاحب الشكوى؟
+                const isOwner = (c.admin === myName || c.admin === currentUser.username);
+
+                // يظهر الزرار لو هو (سوبر أدمن) أو لو هو (صاحب الشكوى)
+                if (isSuperAdmin || isOwner) {
+                    actionCell += `<div style="margin-top:5px;">
+                        <button onclick="deleteComplaint('${username}', '${key}')" class="btn btn-danger btn-sm" title="حذف">🗑</button>
+                    </div>`;
+                }
             }
 
             // المرفقات
@@ -5389,42 +5413,57 @@ async function submitComplaint() {
     }
 }
 
-                                function deleteComplaint(username, key) {
-                                    // 1. التأكد أن القائم بالحذف هو مشرف
-                                    if (currentUser.role !== 'admin') {
-                                        alert("⛔ عذراً، هذه الصلاحية للمشرفين فقط.");
-                                        return;
-                                    }
+                 function deleteComplaint(username, key) {
+    // 1. التأكد أن المستخدم مشرف
+    if (currentUser.role !== 'admin') {
+        alert("⛔ عذراً، الحذف للمشرفين فقط.");
+        return;
+    }
 
-                                    // 2. رسالة تأكيد إدارية
-                                    if(!confirm("⚠️ تنبيه إداري:\nسيتم حذف هذه المخالفة نهائياً من ملف الموظف.\n\nسيتم تسجيل تفاصيل المخالفة واسمك في أرشيف الرقابة للإدارة العليا.\n\nهل تريد المتابعة؟")) return;
+    const complaintRef = db.ref('users/' + username + '/complaints/' + key);
 
-                                    const complaintRef = db.ref('users/' + username + '/complaints/' + key);
+    // 2. قراءة البيانات أولاً للتحقق من صاحب الشكوى
+    complaintRef.once('value', (snapshot) => {
+        const data = snapshot.val();
+        
+        if (data) {
+            // === منطق التقييد الخاص بأبو تميم ===
+            if (currentUser.username === 'abutamim') {
+                const creator = data.admin; // اسم الأدمن اللي سجل الشكوى
+                const myName = currentUser.realName || currentUser.username;
 
-                                    // 3. جلب بيانات الشكوى قبل حذفها لأرشفتها
-                                    complaintRef.once('value', (snapshot) => {
-                                        const data = snapshot.val();
-                                        if (data) {
-                                            // تجميع محتوى الشكوى المحذوفة في نص واحد
-                                            const deletedDetails = `[محتوى الشكوى المحذوفة]: العنوان: (${data.title}) - الخصم: ${data.amount || 0} - التفاصيل: ${data.details} - التاريخ الأصلي: ${data.date}`;
-                                            
-                                            // 4. تسجيل العملية في سجل الرقابة (admin_logs)
-                                            logDeletionAction("حذف مخالفة من السجل", username, deletedDetails);
+                // إذا لم يكن أبو تميم هو من كتب الشكوى، منعه من الحذف
+                // ملاحظة: نقارن بالاسم الحقيقي واليوزر نيم للأمان
+                if (creator !== myName && creator !== 'abutamim') {
+                    alert("⛔ عذراً يا أبو تميم.. قوانين الإدارة تمنعك من حذف شكوى سجلها مشرف آخر. يمكنك فقط حذف الشكاوى التي سجلتها بنفسك.");
+                    return; // إيقاف العملية هنا
+                }
+            }
+            // ===================================
 
-                                            // 5. الحذف الفعلي
-                                            complaintRef.remove()
-                                                .then(() => {
-                                                    alert("✅ تم الحذف بنجاح، وتم تسجيل العملية في أرشيف الرقابة.");
-                                                    renderComplaintsHistory(username); // تحديث الجدول
-                                                })
-                                                .catch((error) => {
-                                                    alert("حدث خطأ أثناء الحذف: " + error.message);
-                                                });
-                                        } else {
-                                            alert("هذه الشكوى غير موجودة بالفعل.");
-                                        }
-                                    });
-                                }
+            // 3. رسالة تأكيد (لبقية المشرفين أو لأبو تميم لو كانت شكواه)
+            if(!confirm("⚠️ هل أنت متأكد من حذف هذه المخالفة؟\n\nسيتم تسجيل العملية في سجل الرقابة (الأرشيف) مع اسمك وتفاصيل المحذوف.")) return;
+
+            // تجهيز نص الأرشيف للرقابة
+            const deletedDetails = `قام (${currentUser.realName || currentUser.username}) بحذف مخالفة للموظف (${username}). تفاصيل المخالفة المحذوفة: [العنوان: ${data.title}] - [الخصم: ${data.amount || 0}] - [بواسطة: ${data.admin}]`;
+
+            // 4. التسجيل في الأرشيف (admin_logs)
+            logDeletionAction("حذف مخالفة من الملف", username, deletedDetails);
+
+            // 5. تنفيذ الحذف الفعلي
+            complaintRef.remove()
+                .then(() => {
+                    alert("✅ تم الحذف بنجاح وتسجيل العملية في الأرشيف.");
+                    renderComplaintsHistory(username); // تحديث الجدول فوراً
+                })
+                .catch((error) => {
+                    alert("حدث خطأ: " + error.message);
+                });
+        } else {
+            alert("المخالفة غير موجودة أو تم حذفها مسبقاً.");
+        }
+    });
+}
 
                                 function acknowledgeComplaint(key) {
                                     const username = currentProfileTarget;
