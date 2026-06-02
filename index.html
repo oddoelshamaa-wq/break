@@ -7052,21 +7052,27 @@ async function exportProfessionalExcel() {
                 if (pD >= startDateVal && pD <= endDateVal) uS.perm += parseFloat(p.hours) || 0;
             });
         }
+// ابحث عن الجزء ده جوه دالة exportProfessionalExcel:
+if (u.complaints) {
+    Object.values(u.complaints).forEach(c => {
+        const cD = c.date.split('/').reverse().join('-');
+        if (cD >= startDateVal && cD <= endDateVal) {
+            
+            // المنطق المطور للعد:
+            // لو المبلغ "بدون خصم" أو القيمة صفرية، تُحسب مخالفة عادية
+            const isNormal = !c.amount || c.amount === 'بدون خصم' || c.amount === '0' || c.amount === 0;
 
-        if (u.complaints) {
-            Object.values(u.complaints).forEach(c => {
-                const cD = c.date.split('/').reverse().join('-');
-                if (cD >= startDateVal && cD <= endDateVal) {
-                    if (c.type === 'شكوى إدارية' || c.amount === 'بدون خصم' || c.amount == 0) {
-                        uS.normalComp++;
-                    } else {
-                        uS.deductComp++;
-                        let amt = parseFloat(c.amount) || 0;
-                        uS.cash += amt;
-                    }
-                }
-            });
+            if (isNormal) {
+                uS.normalComp++;
+            } else {
+                uS.deductComp++;
+                // محاولة استخراج الرقم فقط لو كان الخصم مالي (مثلاً 50 ج.م)
+                let amt = parseFloat(c.amount) || 0;
+                uS.cash += amt;
+            }
         }
+    });
+}
 
         summaryRows.push([
             uS.name, 
