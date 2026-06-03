@@ -3081,30 +3081,36 @@ function renderComplaintsHistory(username) {
         });
     }
 
-                                function addPrayerTimeGlobal() {
-                                    if(!confirm("توزيع 15 دقيقة صلاة للكل؟")) return;
+                             function addPrayerTimeGlobal() {
+    if(!confirm("توزيع 15 دقيقة صلاة للكل؟")) return;
 
-                                    db.ref('users').once('value', (snap) => {
-                                        const users = snap.val();
-                                        const updates = {};
-                                        const timestamp = getServerTime();
+    db.ref('users').once('value', (snap) => {
+        const users = snap.val();
+        const updates = {};
+        const timestamp = getServerTime();
 
-                                        Object.keys(users).forEach(un => {
-                                            if(!MANAGERS.includes(un)) {
-                                                updates[`users/${un}/prayerLimit`] = 900; // 15 دقيقة
-                                                updates[`users/${un}/prayerSeconds`] = 0;
-                                                // إضافة سجل صغير للمتابعة (اختياري)
-                                                updates[`users/${un}/lastPrayerDistribution`] = timestamp;
-                                            }
-                                        });
+        Object.keys(users).forEach(un => {
+            if(!MANAGERS.includes(un)) {
+                // تصفير عداد الثواني المستهلكة للصلاة اليوم وبدء رصيد جديد
+                updates[`users/${un}/prayerLimit`] = 900; // الـ 15 دقيقة
+                updates[`users/${un}/prayerSeconds`] = 0; 
+                updates[`users/${un}/prayerCountToday`] = 0; // تصفير عدد المرات للبدء من جديد
+                
+                // إذا كان الموظف "علق" في وضع الصلاة وهو مش في بريك فعلي، بنرجعه متاح
+                if (users[un].breakType === 'صلاة' && !users[un].isOnBreak) {
+                    updates[`users/${un}/breakType`] = "";
+                }
+            }
+        });
 
-                                        updates['settings/prayerOpen'] = true;
+        // فتح نافذة الصلاة أوتوماتيكياً عند التوزيع
+        updates['settings/prayerOpen'] = true;
 
-                                        db.ref().update(updates).then(() => {
-                                            alert("🚀 تم توزيع الرصيد على الجميع بنجاح. يمكنك الآن رؤية العداد المحدث في الأعلى.");
-                                        });
-                                    });
-                                }
+        db.ref().update(updates).then(() => {
+            alert("🚀 تم توزيع الرصيد وفتح الصلاة بنجاح.");
+        });
+    });
+}
 
                                 function deleteBroadcast(key) {
                                     // رسالة توضح إنها هتفضل في المعرض
@@ -4294,59 +4300,36 @@ function renderComplaintsHistory(username) {
     finalizeStopBreak(false); 
 }
 
-                                // دالة جديدة لإنهاء النشاط بشكل نهائي
-                                function finalizeStopBreak(didFinishPrayer) {
-                                    const u = currentUser;
-                                    const d = Math.floor((getServerTime() - u.lastStartTime) / 1000);
+                            function finalizeStopBreak(didFinishPrayer) {
+    const u = currentUser;
+    const d = Math.floor((getServerTime() - u.lastStartTime) / 1000);
 
-                                    // تسجيل الجلسة في السجل
-                                    db.ref('users/' + u.username + '/sessions').push({
-                                        date: getServerDateString(),
-                                        type: u.breakType,
-                                        reason: u.lastReason + (u.breakType === 'صلاة' ? (didFinishPrayer ? " (أتم الصلاة ✅)" : " (لم يصلِّ ❌)") : ""),
-                                        duration: d,
-                                        startTime: new Date(u.lastStartTime).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'}),
-                                        endTime: getServerTimeString()
-                                    });
+    const updates = {
+        isOnBreak: false,
+        lastStartTime: null,
+        lastEndedTime: getServerTime(),
+        lastEndedType: u.breakType
+    };
 
-                                    const up = {
-                                        isOnBreak: false,
-                                        lastStartTime: null,
-                                        lastEndedTime: getServerTime(),
-                                        lastEndedType: u.breakType
-                                    };
+    if (u.breakType === 'صلاة') {
+        updates.prayerSeconds = (u.prayerSeconds || 0) + d;
+        updates.prayerCountToday = (u.prayerCountToday || 0) + 1;
+        
+        // إذا ضغط "نعم أتممت الصلاة" أو حتى لو ضغط لا، طالما أنهى النشاط يدوياً يخرج من الطابور
+        removeFromQueueByUsername(u.username);
+    } 
+    // باقي الأنواع (بريك، ميتنج...)
+    else {
+        if (u.breakType === 'بريك عام' || u.breakType === 'طوارئ') {
+            updates.usedSeconds = (u.usedSeconds || 0) + d;
+        }
+    }
 
-                                    // تحديث العدادات
-                                    if (u.breakType === 'بريك عام' || u.breakType === 'طوارئ') {
-                                        up.usedSeconds = (u.usedSeconds || 0) + d;
-                                        if (u.breakType === 'طوارئ') up.emRequest = null;
-                                    } else if (u.breakType === 'صلاة') {
-                                        up.prayerSeconds = (u.prayerSeconds || 0) + d;
-                                        up.prayerCountToday = (u.prayerCountToday || 0) + 1;
-
-                                        // --- الجزء الأهم: إدارة الطابور بناءً على الإجابة ---
-                                        if (didFinishPrayer) {
-                                            // لو صلى: نمسحه من الطابور فوراً عشان اللي بعده يدخل
-                                            removeFromQueueByUsername(u.username);
-                                        } else {
-                                            // لو ما صلاش: يفضل في الطابور زي ما هو عشان دوره ما يروحش
-                                            console.log("الموظف لم يصلِّ، سيبقى في الطابور.");
-                                        }
-                                    } else if (u.breakType === 'ميتنج') {
-                                        up.meetingSeconds = (u.meetingSeconds || 0) + d;
-                                        up.meetingRequest = null;
-                                    } else if (u.breakType === 'متابع عميل') {
-                                        up.followUpSeconds = (u.followUpSeconds || 0) + d;
-                                    } else if (u.breakType === 'استراحة VIP') {
-                                        up.vipSeconds = (u.vipSeconds || 0) + d;
-                                    }
-
-                                    db.ref('users/' + u.username).update(up).then(() => {
-                                        document.getElementById('breakReason').value = "";
-                                        document.getElementById('prayerCheckModal').classList.add('hidden');
-                                    });
-                                }
-
+    db.ref('users/' + u.username).update(updates).then(() => {
+        document.getElementById('breakReason').value = "";
+        document.getElementById('prayerCheckModal').classList.add('hidden');
+    });
+}
                                 // دالة التعامل مع ضغطة الزر في نافذة الصلاة
                                 function confirmPrayerStatus(didPray) {
                                     finalizeStopBreak(didPray);
@@ -5885,43 +5868,32 @@ async function uploadCsCall() {
             XLSX.writeFile(workbook, `Report_${startDateVal}_to_${endDateVal}.xlsx`);
         }
 
-        function autoConvertPrayerToBreak() {
-            // حماية عشان الدالة متتكررش ألف مرة في الثانية
-            if (window.isConvertingPrayer) return;
-            window.isConvertingPrayer = true;
+function autoConvertPrayerToBreak() {
+    if (window.isConvertingPrayer) return;
+    window.isConvertingPrayer = true;
 
-            const u = currentUser;
-            const prayerLimitSeconds = 900; // 15 دقيقة
-            
-            // تشغيل صوت تنبيه عشان يعرف إن الوقت خلص
-            const sound = document.getElementById('notifySound');
-            if(sound) sound.play().catch(e => {});
+    const u = currentUser;
+    const prayerLimitSeconds = 900; 
 
-            // 1. حفظ جلسة الصلاة في السجل (عشان تتحسب له إنه صلى)
-            db.ref('users/' + u.username + '/sessions').push({
-                date: getServerDateString(),
-                type: 'صلاة',
-                reason: 'انتهاء وقت الصلاة (15د)',
-                duration: prayerLimitSeconds
-            });
+    // إيقاف أي أصوات تنبيه سابقة
+    stopAlarm();
 
-            // 2. تحديث حالة الموظف:
-            // - زيادة عداد مرات الصلاة 1
-            // - تحويل الحالة لـ "بريك عام"
-            // - تصفير وقت البداية عشان يبدأ يعد بريك من الصفر
-            const updates = {
-                prayerCountToday: (u.prayerCountToday || 0) + 1, // كده حسبنا عليه المرة دي
-                prayerSeconds: (u.prayerSeconds || 0) + prayerLimitSeconds, // ضيفنا الوقت لإجمالي صلواته
-                breakType: 'بريك عام', // حولناه بريك
-                lastStartTime: getServerTime(), // تصفير العداد للبريك الجديد
-                lastReason: 'أكسدة تلقائية بعد الصلاة 🕌'
-            };
+    const updates = {
+        prayerCountToday: (u.prayerCountToday || 0) + 1,
+        prayerSeconds: 900, // تسجيل إنه استهلك الـ 15 كاملة
+        breakType: 'بريك عام', 
+        lastStartTime: getServerTime(), // إعادة تشغيل التايمر ليحسب "أكسدة" من اللحظة دي
+        lastReason: 'تحويل تلقائي (انتهاء وقت الصلاة) 🕌'
+    };
 
-            db.ref('users/' + u.username).update(updates).then(() => {
-                window.isConvertingPrayer = false;
-                alert("انتهى وقت الصلاة (15 دقيقة) 🛑\nتم تحويلك الآن لنظام (البريك العام) تلقائياً.");
-            });
-        }
+    // الأهم: حذفه من الطابور فوراً لفتح الطريق لغيره
+    removeFromQueueByUsername(u.username);
+
+    db.ref('users/' + u.username).update(updates).then(() => {
+        window.isConvertingPrayer = false;
+        alert("⚠️ انتهى وقت الصلاة! تم تحويلك للبريك العام وحذفك من الطابور لفتح الدور لزملائك.");
+    });
+}
 
         /* ==========================================
         نظام مواقيت الصلاة والعد التنازلي
