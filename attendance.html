@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الشمعة | نظام الموارد البشرية والبصمة</title>
+    <title>ELSHAMAA | نظام  والبصمة</title>
     <!-- استخدام خط عربي جميل -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -375,7 +375,7 @@
         <div id="toast-container"></div>
 
         <div class="main-card">
-            <h2>🔹 نظام الشمعة للموارد البشرية</h2>
+            <h2>🔹 نظام البصمه  الشماع  </h2>
 
             <!-- Login Section -->
             <div id="loginSection" style="max-width: 400px; margin: 50px auto; text-align: center; background: rgba(0,0,0,0.3); padding: 30px; border-radius: 20px;">
@@ -566,7 +566,23 @@
                             <i class="fa-solid fa-clipboard-check"></i>
                             تقرير الأداء (نطاق تاريخي)
                         </div>
-                        
+                        <button onclick="exportSmartAnalyticsExcel()" class="btn" style="height:45px; background: linear-gradient(135deg, #6366f1, #4338ca); margin-top:10px;">
+    📊 استخراج تحليل الالتزام (إحصائيات)
+</button
+>
+<button onclick="exportDetailedExceptionsExcel()" class="btn" style="height:45px; background: linear-gradient(135deg, #06b6d4, #0891b2); margin-top:10px;">
+    📂 استخراج سجل الشفتات والبصمات (تفصيلي)
+</button>
+<button onclick="exportComprehensiveAnalytics()" class="btn" style="height:45px; background: linear-gradient(135deg, #8b5cf6, #6d28d9); margin-top:10px;">
+    📊 استخراج ملخص (الغياب + تغيير الورديات + العمل في الإجازة)
+</button>
+// البحث عن هذا الجزء في الكود وإضافة الزر الجديد
+<button onclick="exportComprehensiveAnalytics()" class="btn" style="height:45px; background: linear-gradient(135deg, #8b5cf6, #6d28d9); margin-top:10px;">
+    📊 استخراج ملخص (الغياب + العمل في الإجازة)
+</button>
+<button onclick="exportPerformanceSummary()" class="btn" style="height:45px; background: linear-gradient(135deg, #f43f5e, #be123c); margin-top:10px;">
+    📊 تقرير (مخالفات الشفتات والأيام) 📥
+</button>
                         <div class="date-range-controls">
                             <div class="date-control">
                                 <label for="reportFromDate">من تاريخ:</label>
@@ -606,7 +622,7 @@
         </div>
     </div>
 
-    <!-- CORRECTION MODAL -->
+<!-- CORRECTION MODAL UPDATED -->
     <div id="correctionModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
@@ -615,41 +631,50 @@
             </div>
             
             <div class="correction-note">
-                <i class="fa fa-info-circle"></i> هذا التصحيح سيغير الحالة النهائية للموظف في هذا اليوم.
+                <i class="fa fa-info-circle"></i> يمكنك تغيير الحالة أو تعديل أوقات البصمة يدوياً.
             </div>
 
             <div class="correction-options">
-                <!-- Option 1: Sick Leave (Strike through) -->
-                <label class="correction-option" onclick="selectCorrectionOption(this)">
+                <label class="correction-option" onclick="selectCorrectionOption(this, false)">
                     <input type="radio" name="corrType" value="Sick Leave">
                     <div>
                         <div style="font-weight:bold; color:var(--warning);">🏥 إجازة مرضية (بصحة)</div>
-                        <div style="font-size:0.8rem; color:#94a3b8;">سيتم شطب وقت الحضور وإحالته لإجازة مرضية.</div>
                     </div>
                 </label>
 
-                <!-- Option 2: Annual Leave -->
-                <label class="correction-option" onclick="selectCorrectionOption(this)">
+                <label class="correction-option" onclick="selectCorrectionOption(this, false)">
                     <input type="radio" name="corrType" value="Annual Leave">
                     <div>
                         <div style="font-weight:bold; color:var(--accent);">🔖 إجازة سنوية</div>
-                        <div style="font-size:0.8rem; color:#94a3b8;">إحالة اليوم كإجازة سنوية مع مراعاة الرصيد.</div>
                     </div>
                 </label>
 
-                <!-- Option 3: Present (Correcting Absent Mistake) -->
-                <label class="correction-option" onclick="selectCorrectionOption(this)">
-                    <input type="radio" name="corrType" value="Present">
+                <label class="correction-option" onclick="selectCorrectionOption(this, true)">
+                    <input type="radio" name="corrType" value="Present" id="radioPresent">
                     <div>
-                        <div style="font-weight:bold; color:var(--success);">✅ حضور (تصحيح خطأ)</div>
-                        <div style="font-size:0.8rem; color:#94a3b8;">الموظف حضر ولكنه سُجل غياباً بالخطأ.</div>
+                        <div style="font-weight:bold; color:var(--success);">✅ حضور / تعديل بصمة يدوياً</div>
                     </div>
                 </label>
+            </div>
+
+            <!-- الحقول الجديدة لإدخال الوقت يدوياً -->
+            <div id="manualTimeFields" style="display:none; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border); margin-bottom: 20px;">
+                <p style="margin-top:0; font-size:0.85rem; color:var(--accent);">أدخل الوقت يدوياً:</p>
+                <div class="grid-2-col">
+                    <div class="time-field">
+                        <label>وقت الحضور</label>
+                        <input type="time" id="manualClockIn">
+                    </div>
+                    <div class="time-field">
+                        <label>وقت الانصراف</label>
+                        <input type="time" id="manualClockOut">
+                    </div>
+                </div>
             </div>
 
             <div class="grid-2-col">
                 <button class="btn btn-neutral" onclick="closeCorrectionModal()">إلغاء</button>
-                <button class="btn btn-accent" onclick="submitCorrection()">تطبيق التصحيح</button>
+                <button class="btn btn-accent" onclick="submitCorrection()">تطبيق التعديل</button>
             </div>
         </div>
     </div>
@@ -949,10 +974,10 @@
         }
 
         function onShiftDateChange() {
-            updateDayDropdown();      
-            renderShiftsTable();      
-        }
-
+    updateDayDropdown();      
+    renderShiftsTable();      
+    toggleSchedInputs(); // أضف هذا السطر هنا ليتأكد من حالة الخانات فوراً
+}
         function updateDayDropdown() {
             const inputDateStr = document.getElementById('shiftDateView').value;
             if(!inputDateStr) return;
@@ -1166,56 +1191,82 @@
 
         // --- Correction Modal Logic ---
 
+ // 1. فتح النافذة وجلب البيانات الحالية إن وجدت
         function openCorrectionModal(username, date) {
             correctionTarget = { username, date };
             document.getElementById('correctionModal').classList.add('active');
-            // Reset selection
+            
+            // إعادة ضبط الخيارات
             document.querySelectorAll('input[name="corrType"]').forEach(el => el.checked = false);
             document.querySelectorAll('.correction-option').forEach(el => el.classList.remove('selected'));
+            document.getElementById('manualTimeFields').style.display = 'none';
+
+            // إذا كان الموظف لديه بيانات مسجلة مسبقاً، نضعها في الحقول ليسهل تعديلها
+            const userData = allUsersData[username];
+            if(userData && userData.attendance && userData.attendance[date]) {
+                const record = userData.attendance[date];
+                document.getElementById('manualClockIn').value = record.clockIn || "";
+                document.getElementById('manualClockOut').value = record.clockOut || "";
+                
+                // إذا كان الموظف حاضر، نفعل خيار الحضور تلقائياً ونظهر حقول الوقت
+                if(record.status === 'Present') {
+                   const radio = document.getElementById('radioPresent');
+                   radio.checked = true;
+                   radio.parentElement.parentElement.classList.add('selected');
+                   document.getElementById('manualTimeFields').style.display = 'block';
+                }
+            } else {
+                document.getElementById('manualClockIn').value = "";
+                document.getElementById('manualClockOut').value = "";
+            }
         }
 
-        function closeCorrectionModal() {
-            document.getElementById('correctionModal').classList.remove('active');
-            correctionTarget = { username: null, date: null };
-        }
-
-        function selectCorrectionOption(el) {
-            // Visual selection logic
+        // 2. التحكم في ظهور حقول الوقت عند اختيار "حضور"
+        function selectCorrectionOption(el, showTime) {
             document.querySelectorAll('.correction-option').forEach(opt => opt.classList.remove('selected'));
             el.classList.add('selected');
-            // Check the radio inside
             el.querySelector('input').checked = true;
+
+            const timeFields = document.getElementById('manualTimeFields');
+            timeFields.style.display = showTime ? 'block' : 'none';
         }
 
+        // 3. حفظ البيانات (النوع + الوقت اليدوي)
         function submitCorrection() {
             const selected = document.querySelector('input[name="corrType"]:checked');
             if(!selected) return alert("يرجى اختيار نوع التصحيح");
 
             const type = selected.value;
             const { username, date } = correctionTarget;
+            const clockIn = document.getElementById('manualClockIn').value;
+            const clockOut = document.getElementById('manualClockOut').value;
 
             let updates = {};
+            let path = `users/${username}/attendance/${date}`;
 
-            // Logic for "Strike through" (Sick Leave) vs "Correction" (Mistake)
             if (type === 'Sick Leave') {
-                updates[`users/${username}/attendance/${date}/status`] = 'Sick Leave';
+                updates[`${path}/status`] = 'Sick Leave';
+                updates[`${path}/date`] = date;
             }
             else if (type === 'Annual Leave') {
-                updates[`users/${username}/attendance/${date}/status`] = 'Annual Leave';
+                updates[`${path}/status`] = 'Annual Leave';
+                updates[`${path}/date`] = date;
             }
             else if (type === 'Present') {
-                updates[`users/${username}/attendance/${date}/status`] = 'Present';
-                const att = allUsersData[username].attendance[date];
-                if(!att.clockIn) {
-                    updates[`users/${username}/attendance/${date}/clockIn`] = '09:00';
-                    updates[`users/${username}/attendance/${date}/note`] = 'Manual Correction';
-                }
+                // حفظ الحالة مع الوقت المكتوب يدوياً
+                updates[`${path}/status`] = 'Present';
+                updates[`${path}/clockIn`] = clockIn || null;
+                updates[`${path}/clockOut`] = clockOut || null;
+                updates[`${path}/date`] = date;
+                updates[`${path}/editedBy`] = currentUser.username; // توثيق أن المسؤول هو من عدل
             }
 
             db.ref().update(updates).then(() => {
                 closeCorrectionModal();
                 renderAttendanceTable();
-                showToast("تم التصحيح", `تم تغيير حالة ${username} بنجاح.`);
+                showToast("تم التحديث", `تم تعديل بيانات ${username} بنجاح.`);
+            }).catch(err => {
+                alert("حدث خطأ أثناء الحفظ: " + err.message);
             });
         }
 
@@ -1861,7 +1912,446 @@
         }
 
         init();
+function exportSmartAnalyticsExcel() {
+    const fromDateStr = document.getElementById('reportFromDate').value;
+    const toDateStr = document.getElementById('reportToDate').value;
 
+    if (!fromDateStr || !toDateStr) {
+        alert("يرجى تحديد التاريخ أولاً");
+        return;
+    }
+
+    let summaryData = [];
+    let users = Object.values(allUsersData).filter(u => u.username && !MANAGERS.includes(u.username));
+
+    users.forEach(user => {
+        let stats = {
+            "اسم الموظف": user.realName || user.username,
+            "العمل في أيام الإجازة (بطل)": 0,
+            "غياب في أيام الوردية (تقصير)": 0,
+            "إجمالي أيام الحضور": 0,
+            "إجمالي أيام الغياب": 0,
+            "ملاحظات": ""
+        };
+
+        let currentDate = new Date(fromDateStr);
+        const endDate = new Date(toDateStr);
+
+        while (currentDate <= endDate) {
+            const dateStr = currentDate.toISOString().split('T')[0];
+            const dayIndex = (currentDate.getDay() + 1) % 7;
+            const weekKey = getWeekKey(dateStr);
+
+            const att = (user.attendance && user.attendance[dateStr]) ? user.attendance[dateStr] : null;
+            const schedule = (allScheduleData[user.username] && allScheduleData[user.username][weekKey])
+                             ? allScheduleData[user.username][weekKey][dayIndex] : null;
+
+            const hasShift = schedule && schedule !== 'Off' && !schedule.includes('Leave');
+            const isPresent = att && att.status === 'Present';
+            const isAbsent = (att && att.status === 'Absent') || (!att && hasShift);
+
+            // 1. حضر في يوم إجازة (شغل في غير ميعاده)
+            if (!hasShift && isPresent) {
+                stats["العمل في أيام الإجازة (بطل)"]++;
+            }
+
+            // 2. غاب في يوم وردية (كان المفروض ييجي ومجاش)
+            if (hasShift && isAbsent) {
+                stats["غياب في أيام الوردية (تقصير)"]++;
+            }
+
+            if (isPresent) stats["إجمالي أيام الحضور"]++;
+            if (isAbsent) stats["إجمالي أيام الغياب"]++;
+
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        summaryData.push(stats);
+    });
+
+    // تصدير الملف
+    const ws = XLSX.utils.json_to_sheet(summaryData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "تحليل الأداء");
+    
+    // ضبط عرض الأعمدة ليكون الملف مرتباً
+    ws['!cols'] = [{wch:20}, {wch:25}, {wch:25}, {wch:15}, {wch:15}, {wch:20}];
+
+    XLSX.writeFile(wb, `تحليل_التزام_الموظفين_${fromDateStr}_to_${toDateStr}.xlsx`);
+    showToast("تم التصدير", "تم استخراج تقرير التحليل الذكي بنجاح.");
+}function exportSmartAnalyticsExcel() {
+    const fromDateStr = document.getElementById('reportFromDate').value;
+    const toDateStr = document.getElementById('reportToDate').value;
+
+    if (!fromDateStr || !toDateStr) {
+        alert("يرجى تحديد التاريخ أولاً");
+        return;
+    }
+
+    let summaryData = [];
+    let users = Object.values(allUsersData).filter(u => u.username && !MANAGERS.includes(u.username));
+
+    users.forEach(user => {
+        let stats = {
+            "اسم الموظف": user.realName || user.username,
+            "العمل في أيام الإجازة (بطل)": 0,
+            "غياب في أيام الوردية (تقصير)": 0,
+            "إجمالي أيام الحضور": 0,
+            "إجمالي أيام الغياب": 0,
+            "ملاحظات": ""
+        };
+
+        let currentDate = new Date(fromDateStr);
+        const endDate = new Date(toDateStr);
+
+        while (currentDate <= endDate) {
+            const dateStr = currentDate.toISOString().split('T')[0];
+            const dayIndex = (currentDate.getDay() + 1) % 7;
+            const weekKey = getWeekKey(dateStr);
+
+            const att = (user.attendance && user.attendance[dateStr]) ? user.attendance[dateStr] : null;
+            const schedule = (allScheduleData[user.username] && allScheduleData[user.username][weekKey])
+                             ? allScheduleData[user.username][weekKey][dayIndex] : null;
+
+            const hasShift = schedule && schedule !== 'Off' && !schedule.includes('Leave');
+            const isPresent = att && att.status === 'Present';
+            const isAbsent = (att && att.status === 'Absent') || (!att && hasShift);
+
+            // 1. حضر في يوم إجازة (شغل في غير ميعاده)
+            if (!hasShift && isPresent) {
+                stats["العمل في أيام الإجازة (بطل)"]++;
+            }
+
+            // 2. غاب في يوم وردية (كان المفروض ييجي ومجاش)
+            if (hasShift && isAbsent) {
+                stats["غياب في أيام الوردية (تقصير)"]++;
+            }
+
+            if (isPresent) stats["إجمالي أيام الحضور"]++;
+            if (isAbsent) stats["إجمالي أيام الغياب"]++;
+
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        summaryData.push(stats);
+    });
+
+    // تصدير الملف
+    const ws = XLSX.utils.json_to_sheet(summaryData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "تحليل الأداء");
+    
+    // ضبط عرض الأعمدة ليكون الملف مرتباً
+    ws['!cols'] = [{wch:20}, {wch:25}, {wch:25}, {wch:15}, {wch:15}, {wch:20}];
+
+    XLSX.writeFile(wb, `تحليل_التزام_الموظفين_${fromDateStr}_to_${toDateStr}.xlsx`);
+    showToast("تم التصدير", "تم استخراج تقرير التحليل الذكي بنجاح.");
+}function exportDetailedExceptionsExcel() {
+    const fromDateStr = document.getElementById('reportFromDate').value;
+    const toDateStr = document.getElementById('reportToDate').value;
+
+    if (!fromDateStr || !toDateStr) {
+        alert("يرجى تحديد التاريخ أولاً");
+        return;
+    }
+
+    let detailedData = [];
+    let users = Object.values(allUsersData).filter(u => u.username && !MANAGERS.includes(u.username));
+
+    let currentDate = new Date(fromDateStr);
+    const endDate = new Date(toDateStr);
+
+    while (currentDate <= endDate) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        const dayIndex = (currentDate.getDay() + 1) % 7;
+        const weekKey = getWeekKey(dateStr);
+        const dayNameAr = new Intl.DateTimeFormat('ar-EG', { weekday: 'long' }).format(currentDate);
+
+        users.forEach(user => {
+            const att = (user.attendance && user.attendance[dateStr]) ? user.attendance[dateStr] : null;
+            const schedule = (allScheduleData[user.username] && allScheduleData[user.username][weekKey])
+                             ? allScheduleData[user.username][weekKey][dayIndex] : "Off";
+
+            const isPresent = att && att.status === 'Present';
+            // هل لديه وردية عمل (يحتوي على وقت)؟
+            const hasShift = schedule && schedule !== 'Off' && !schedule.includes('Leave') && schedule.includes(" - ");
+            
+            let exceptionType = "";
+
+            if (hasShift) {
+                // حالة: عنده شغل
+                if (isPresent) {
+                    const scheduledStartTime = schedule.split(" - ")[0];
+                    const actualStartTime = att.clockIn;
+                    if (actualStartTime > scheduledStartTime) {
+                        exceptionType = `تأخير (الموعد ${scheduledStartTime} وحضر ${actualStartTime})`;
+                    } else {
+                        exceptionType = "حضور في الموعد ✅";
+                    }
+                } else {
+                    exceptionType = "غياب عن الوردية ❌";
+                }
+            } else {
+                // حالة: معندوش شغل (Off أو إجازة)
+                if (isPresent) {
+                    exceptionType = "عمل في يوم إجازة ⚠️";
+                } else {
+                    // الحالة التي طلبتها: إجازة ولم يحضر (مطابق للجدول)
+                    exceptionType = "إجازة (التزام بالجدول) ✅";
+                }
+            }
+
+            detailedData.push({
+                "التاريخ": dateStr,
+                "اليوم": dayNameAr,
+                "اسم الموظف": user.realName || user.username,
+                "الوردية المجدولة": (schedule === "Off" || schedule === "غير مجدول") ? "إجازة (Off)" : schedule,
+                "حضر الساعة": att ? (att.clockIn || "--") : "--",
+                "انصرف الساعة": att ? (att.clockOut || "--") : "--",
+                "حالة الحضور": exceptionType
+            });
+        });
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    const ws = XLSX.utils.json_to_sheet(detailedData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "تقرير الانضباط الشامل");
+    
+    // ضبط التنسيق ليظهر بشكل احترافي
+    ws['!cols'] = [{wch:12}, {wch:10}, {wch:20}, {wch:18}, {wch:12}, {wch:12}, {wch:35}];
+
+    XLSX.writeFile(wb, `التقرير_الشامل_للانضباط_${fromDateStr}.xlsx`);
+    showToast("تم التصدير", "التقرير الآن يشمل أيام الإجازات الملتزم بها.");
+}function exportComprehensiveAnalytics() {
+    const fromDateStr = document.getElementById('reportFromDate').value;
+    const toDateStr = document.getElementById('reportToDate').value;
+
+    if (!fromDateStr || !toDateStr) {
+        alert("يرجى تحديد التاريخ أولاً");
+        return;
+    }
+
+    let summaryData = [];
+    let users = Object.values(allUsersData).filter(u => u.username && !MANAGERS.includes(u.username));
+
+    users.forEach(user => {
+        let stats = {
+            "اسم الموظف": user.realName || user.username,
+            "غياب عن وردية مجدولة (تقصير) ❌": 0,
+            "شغل في يوم إجازة (بطل/إضافي) ⚠️": 0,
+            "إجمالي أيام الحضور الفعلي": 0,
+            "التزام بالجدول (حضر ورديته) ✅": 0
+        };
+
+        let currentDate = new Date(fromDateStr);
+        const endDate = new Date(toDateStr);
+
+        while (currentDate <= endDate) {
+            const dateStr = currentDate.toISOString().split('T')[0];
+            const dayIndex = (currentDate.getDay() + 1) % 7;
+            const weekKey = getWeekKey(dateStr);
+
+            const att = (user.attendance && user.attendance[dateStr]) ? user.attendance[dateStr] : null;
+            const schedule = (allScheduleData[user.username] && allScheduleData[user.username][weekKey])
+                             ? allScheduleData[user.username][weekKey][dayIndex] : "Off";
+
+            // هل اليوم ده "يوم عمل" في الجدول؟
+            const hasShift = schedule && schedule !== 'Off' && !schedule.includes('Leave') && schedule.includes(" - ");
+            // هل الموظف "حضر" فعلياً؟
+            const isPresent = att && att.status === 'Present';
+
+            // --- 1. منطق الغياب (التقصير) ---
+            // لو عنده وردية (hasShift) وهو (مش حاضر)
+            if (hasShift && !isPresent) {
+                stats["غياب عن وردية مجدولة (تقصير) ❌"]++;
+            }
+
+            // --- 2. منطق الشغل في الإجازة (البطولة) ---
+            // لو اليوم (إجازة Off) وهو (حضر)
+            if (!hasShift && isPresent) {
+                stats["شغل في يوم إجازة (بطل/إضافي) ⚠️"]++;
+            }
+
+            // --- إحصائيات عامة ---
+            if (isPresent) {
+                stats["إجمالي أيام الحضور الفعلي"]++;
+                if (hasShift) {
+                    stats["التزام بالجدول (حضر ورديته) ✅"]++;
+                }
+            }
+
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        summaryData.push(stats);
+    });
+
+    // تصدير الإكسل
+    const ws = XLSX.utils.json_to_sheet(summaryData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "التحليل الإحصائي");
+    
+    // ضبط العرض
+    ws['!cols'] = [{wch:20}, {wch:25}, {wch:25}, {wch:20}, {wch:20}];
+
+    XLSX.writeFile(wb, `إحصائيات_الشمعة_المفصلة_${fromDateStr}.xlsx`);
+    showToast("تم الاستخراج", "تم فصل التقارير بنجاح");
+}
+function exportComprehensiveAnalytics() {
+    const fromDateStr = document.getElementById('reportFromDate').value;
+    const toDateStr = document.getElementById('reportToDate').value;
+
+    if (!fromDateStr || !toDateStr) {
+        alert("يرجى تحديد التاريخ أولاً");
+        return;
+    }
+
+    let summaryData = [];
+    let users = Object.values(allUsersData).filter(u => u.username && !MANAGERS.includes(u.username));
+
+    users.forEach(user => {
+        let missedShifts = 0; // أيام غاب فيها عن ورديته
+        let extraDaysWorked = 0; // أيام حضر فيها وهي إجازة
+        let totalAttendance = 0;
+        let onTimeAttendance = 0;
+
+        let currentDate = new Date(fromDateStr);
+        const endDate = new Date(toDateStr);
+
+        while (currentDate <= endDate) {
+            const dateStr = currentDate.toISOString().split('T')[0];
+            const dayIndex = (currentDate.getDay() + 1) % 7;
+            const weekKey = getWeekKey(dateStr);
+
+            const att = (user.attendance && user.attendance[dateStr]) ? user.attendance[dateStr] : null;
+            const schedule = (allScheduleData[user.username] && allScheduleData[user.username][weekKey])
+                             ? allScheduleData[user.username][weekKey][dayIndex] : "Off";
+
+            const hasShift = schedule && schedule !== 'Off' && !schedule.includes('Leave') && schedule.includes(" - ");
+            const isPresent = att && att.status === 'Present';
+
+            // حساب الغياب عن الوردية
+            if (hasShift && !isPresent) {
+                missedShifts++;
+            }
+
+            // حساب الحضور في يوم إجازة
+            if (!hasShift && isPresent) {
+                extraDaysWorked++;
+            }
+
+            if (isPresent) {
+                totalAttendance++;
+                if (hasShift) onTimeAttendance++;
+            }
+
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        // --- المنطق الذكي للتبديل ---
+        // التبديل هو أقل قيمة بين (أيام الغياب) و (أيام الحضور الإضافي)
+        let shiftsSwapped = Math.min(missedShifts, extraDaysWorked);
+        let pureAbsence = missedShifts - shiftsSwapped;
+        let pureExtraWork = extraDaysWorked - shiftsSwapped;
+
+        summaryData.push({
+            "اسم الموظف": user.realName || user.username,
+            "مبدل شيفت (تبديل أيام) 🔄": shiftsSwapped,
+            "غياب (بدون تعويض) ❌": pureAbsence,
+            "عمل إضافي / بطل ⚠️": pureExtraWork,
+            "إجمالي أيام الحضور الفعلي": totalAttendance,
+            "التزام بالجدول (حضر ورديته) ✅": onTimeAttendance
+        });
+    });
+
+    // تصدير الإكسل
+    const ws = XLSX.utils.json_to_sheet(summaryData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "التحليل الذكي للشفتات");
+    
+    // تنسيق الأعمدة
+    ws['!cols'] = [{wch:20}, {wch:22}, {wch:20}, {wch:20}, {wch:20}, {wch:25}];
+
+    XLSX.writeFile(wb, `تحليل_تبديل_الشفتات_${fromDateStr}.xlsx`);
+    showToast("تم الاستخراج", "تم تصنيف الحالات لـ (تبديل، غياب، إضافي) بنجاح.");
+}
+function exportPerformanceSummary() {
+    const fromDateStr = document.getElementById('reportFromDate').value;
+    const toDateStr = document.getElementById('reportToDate').value;
+
+    if (!fromDateStr || !toDateStr) {
+        alert("يا ريس، حدد التاريخ الأول من فوق!");
+        return;
+    }
+
+    let summaryData = [];
+    let users = Object.values(allUsersData).filter(u => u.username && !MANAGERS.includes(u.username));
+
+    users.forEach(user => {
+        let countWorkedOnDayOff = 0;    // جيه في يوم مش بتاعه (إجازة)
+        let countMissedWorkDay = 0;     // غاب في يوم بتاعه (عمل)
+        let countWrongShiftTime = 0;    // جيه في شيفت مش بتاعه (وقت مختلف)
+
+        let currentDate = new Date(fromDateStr);
+        const endDate = new Date(toDateStr);
+
+        while (currentDate <= endDate) {
+            const dateStr = currentDate.toISOString().split('T')[0];
+            const dayIndex = (currentDate.getDay() + 1) % 7;
+            const weekKey = getWeekKey(dateStr);
+
+            const att = (user.attendance && user.attendance[dateStr]) ? user.attendance[dateStr] : null;
+            const schedule = (allScheduleData[user.username] && allScheduleData[user.username][weekKey])
+                             ? allScheduleData[user.username][weekKey][dayIndex] : "Off";
+
+            const isPresent = att && att.status === 'Present' && att.clockIn;
+            const hasScheduledShift = schedule && schedule.includes(" - "); // لو فيه "-" يعني فيه توقيت
+
+            // 1. منطق: غاب في يوم حضور (يوم بتاعه)
+            if (hasScheduledShift && !isPresent) {
+                countMissedWorkDay++;
+            }
+
+            // 2. منطق: جيه في يوم مش بتاعه (يوم إجازة)
+            if (!hasScheduledShift && isPresent) {
+                countWorkedOnDayOff++;
+            }
+
+            // 3. منطق: جيه في شيفت مش بتاعه (وقت مختلف)
+            if (hasScheduledShift && isPresent) {
+                const scheduledStart = schedule.split(" - ")[0].trim(); // مثلاً 09:00
+                const actualStart = att.clockIn.trim(); // مثلاً 10:00
+
+                // لو الموظف بصم في وقت مختلف عن بداية الشفت المجدول بأكثر من 15 دقيقة مثلاً
+                // ملاحظة: هنا بنقارن الساعة بالدقيقة
+                if (scheduledStart !== actualStart) {
+                    countWrongShiftTime++;
+                }
+            }
+
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        summaryData.push({
+            "اسم الموظف": user.realName || user.username,
+            "غاب في يوم حضوره (تقصير) ❌": countMissedWorkDay,
+            "جيه في يوم إجازته (يوم مش بتاعه) ⚠️": countWorkedOnDayOff,
+            "جيه في وقت غير شيفته (ساعة مش بتاعته) ⏰": countWrongShiftTime
+        });
+    });
+
+    // تصدير الإكسل
+    const ws = XLSX.utils.json_to_sheet(summaryData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "ملخص الالتزام");
+    
+    // تنسيق عرض الأعمدة
+    ws['!cols'] = [{wch:25}, {wch:25}, {wch:25}, {wch:25}];
+
+    XLSX.writeFile(wb, `تقرير_الالتزام_المخصص_${fromDateStr}.xlsx`);
+    showToast("تم الاستخراج", "التقرير جاهز وفيه الـ 3 حالات اللي طلبتهم.");
+}
     </script>
 </body>
 </html>
